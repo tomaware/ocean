@@ -1,6 +1,6 @@
 # PRODUCT_ARCHITECTURE — Phase 0 / 1
 
-*OCEAN · architecture cible proposée · 10/11/2026 · v0.1 — **proposition, rien n'est développé avant validation des décisions §8***
+*OCEAN · architecture cible · 10/11/2026 · v0.2 — décisions §8 validées par Tom le 10/11 ; M1 (collecte) en service, voir docs/migration/M1-collecte.md*
 
 ## 1. Cadre validé par Tom (10/11/2026)
 
@@ -143,9 +143,9 @@ Les apps actuelles restent en ligne jusqu'à ce que leur remplaçante soit véri
 | ID | Décision proposée | Statut |
 |---|---|---|
 | D-08 | App publique + mode perso par clé sur l'appareil | **Validée (10/11)** |
-| D-10 | Nouveau dépôt `tomaware/ocean` (public) ; les dépôts actuels restent en service jusqu'à la bascule | Proposée |
-| D-11 | Chaîne en 5 modules avec contrats typés (§2-3) | Proposée |
-| D-12 | Moteur VENT : rester sur Apps Script en M2, porter le calcul dans `ocean` en M3+ après preuve d'équivalence ; Winds-Up reste sur Apps Script. Migrer Apps Script vers le compte Google perso | Proposée |
-| D-13 | Stack : TypeScript strict + Vite + Preact + uPlot + Leaflet, statique sur GitHub Pages | Proposée |
-| D-14 | Note WING / KITE : formule rédigée et validée par Tom avant le code ; spots = les 6 de la super prévision (La Franqui → Almanarre) | Proposée |
-| D-15 | Notes comparables entre disciplines : même échelle 0-10 mais **pas de classement croisé** tant que les retours terrain ne l'ont pas calibré (l'accueil affiche la meilleure option par discipline) | Proposée |
+| D-10 | Nouveau dépôt `tomaware/ocean` (public) ; les dépôts actuels restent en service jusqu'à la bascule | **Validée (10/11)** |
+| D-11 | Chaîne en 5 modules avec contrats typés (§2-3) | **Validée (10/11)** |
+| D-12 | Moteur VENT : rester sur Apps Script en M2, porter le calcul dans `ocean` en M3+ après preuve d'équivalence ; Winds-Up reste sur Apps Script. Migrer Apps Script vers le compte Google perso | **Validée (10/11)** |
+| D-13 | Stack : TypeScript strict + Vite + Preact + uPlot + Leaflet, statique sur GitHub Pages | **Validée (10/11)** |
+| D-14 | Note WING / KITE : formule rédigée et validée par Tom avant le code ; spots = les 6 de la super prévision (La Franqui → Almanarre) | **Validée (10/11)** |
+| D-15 | Notes comparables entre disciplines : même échelle 0-10 mais **pas de classement croisé** tant que les retours terrain ne l'ont pas calibré (l'accueil affiche la meilleure option par discipline) | **Validée (10/11)** |
