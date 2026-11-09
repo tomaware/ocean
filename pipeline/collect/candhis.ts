@@ -48,5 +48,5 @@ export function parseCandhisHistory(raw: Record<string, RawObs[]>, registry: Reg
 export async function collectCandhis(registry: Registry, sinceMs: number) {
   const fetchedAt = Date.now();
   const raw = await getJSON<Record<string, RawObs[]>>(CANDHIS_HISTORY_URL, { timeoutMs: 60_000 });
-  return parseCandhisHistory(raw, registry, fetchedAt, sinceMs);
+  return { ...parseCandhisHistory(raw, registry, fetchedAt, sinceMs), raw };
 }

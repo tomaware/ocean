@@ -1,3 +1,6 @@
 node_modules/
 data/v1/collect/bundle.json
+data/private/
 .DS_Store
+data/v1/engines/surf.json
+data/v1/engines/downwind.json

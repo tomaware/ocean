@@ -12,6 +12,13 @@ import { coverage, coverageSuper, fidelityMarine, fidelityWind, freshness, hourl
 
 const OUT = new URL('../../data/v1/collect/', import.meta.url);
 const REPORT = new URL('../../docs/quality/COLLECT_REPORT.md', import.meta.url);
+// Fichiers de travail PRIVÉS (réponses brutes pour les tests golden, relevés Winds-Up pour le recalage) :
+// ignorés par git, jamais archivés ni publiés.
+const PRIVATE = new URL('../../data/private/', import.meta.url);
+function keepPrivate(name: string, data: unknown): void {
+  mkdirSync(PRIVATE, { recursive: true });
+  writeFileSync(new URL(name, PRIVATE), JSON.stringify(data));
+}
 
 async function step<T>(id: string, fn: () => Promise<T & { stats?: Partial<SourceStatus> }>, status: SourceStatus[], describe: (r: T) => Partial<SourceStatus>): Promise<T | null> {
   const t0 = Date.now();
@@ -41,11 +48,13 @@ async function main(): Promise<void> {
   const marine = await step('open-meteo-marine', () => collectOpenMeteo('open-meteo-marine', marineUrl(plan.marine), plan.marine, MARINE_VARS, WAVE_MODELS), status, (r) => span(r.block));
   if (marine) {
     forecasts.push(marine.block);
+    keepPrivate('raw-open-meteo-marine.json', marine.json);
     checks.push(fidelityMarine(marine.json, plan.marine, marine.block), hourlyGrid(marine.block, now), coverage(marine.block, 'wave_height', now), modelAvailability(marine.block, 'wave_height', now));
   }
   const wind = await step('open-meteo-vent-moteurs', () => collectOpenMeteo('open-meteo-vent-moteurs', windUrl(plan.engineWind, ENGINE_WIND_MODELS), plan.engineWind, WIND_VARS, ENGINE_WIND_MODELS), status, (r) => span(r.block));
   if (wind) {
     forecasts.push(wind.block);
+    keepPrivate('raw-open-meteo-vent-moteurs.json', wind.json);
     checks.push(fidelityWind(wind.json, plan.engineWind, wind.block), hourlyGrid(wind.block, now), coverage(wind.block, 'wind_speed_10m', now), modelAvailability(wind.block, 'wind_speed_10m', now));
   }
   const spots = await step('open-meteo-vent-spots', () => collectOpenMeteo('open-meteo-vent-spots', windUrl(plan.windSpots, SPOT_WIND_MODELS), plan.windSpots, WIND_VARS, SPOT_WIND_MODELS), status, (r) => span(r.block));
@@ -53,14 +62,15 @@ async function main(): Promise<void> {
 
   if (secretUrl) {
     const sp = await step('super-prevision', () => collectSuperPrevision(secretUrl, registry), status, (r) => ({ ...span(r.block), points: r.stats.points }));
-    if (sp) { forecasts.push(sp.block); checks.push(coverageSuper(sp.block, now)); }
+    if (sp) { forecasts.push(sp.block); checks.push(coverageSuper(sp.block, now)); keepPrivate('super-prevision-live.json', sp.live); keepPrivate('raw-super-prevision-spots.json', { spots: sp.raw.spots ?? {} }); }
   } else {
     status.push({ id: 'super-prevision', ok: false, message: 'secret SUPER_PREVISION_URL absent', durationMs: 0, points: 0, models: [], values: 0, missing: 0, rejected: 0 });
   }
 
-  const candhis = await step('candhis', () => collectCandhis(registry, now - 4 * 86400e3), status, (r) => ({ points: Object.keys(r.block.stations).length }));
+  const candhis = await step('candhis', () => collectCandhis(registry, now - 30 * 86400e3 /* = verification.maxAgeDays des moteurs */), status, (r) => ({ points: Object.keys(r.block.stations).length }));
   if (candhis) {
     observations.push(candhis.block);
+    keepPrivate('raw-candhis.json', candhis.raw);
     const live = registry.buoys.filter((b) => b.status === 'en service' && !b.nearshore).map((b) => b.code);
     checks.push(freshness(candhis.block, 180, live));
   }

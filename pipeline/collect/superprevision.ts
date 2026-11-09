@@ -50,7 +50,17 @@ export function parseSuperPrevision(json: { spots?: Record<string, SpPoint[]> },
 
 export async function collectSuperPrevision(secretUrl: string, registry: Registry) {
   const fetchedAt = Date.now();
-  const json = await getJSON<{ spots?: Record<string, SpPoint[]>; error?: string }>(secretUrl + (secretUrl.includes('?') ? '&' : '?') + 'action=widget', { timeoutMs: 120_000, tries: 2 });
+  const json = await getJSON<{ spots?: Record<string, SpPoint[]>; error?: string; live?: { spots?: Record<string, { t?: number; v?: number; o?: string; panne?: boolean }> } }>(secretUrl + (secretUrl.includes('?') ? '&' : '?') + 'action=widget', { timeoutMs: 120_000, tries: 2 });
   if (json && (json as { error?: string }).error) throw new Error('super prévision : ' + (json as { error?: string }).error);
-  return parseSuperPrevision(json, registry, fetchedAt);
+  return { ...parseSuperPrevision(json, registry, fetchedAt), raw: json, live: privateLive(json) };
+}
+
+/**
+ * Dernier relevé Winds-Up par spot (t, v, o, panne) : PRIVÉ. Sert uniquement au recalage des moteurs dans la
+ * même exécution (fichier de travail jamais publié, jamais versionné). Ne doit jamais entrer dans le bundle.
+ */
+export function privateLive(json: { live?: { spots?: Record<string, { t?: number; v?: number; o?: string; panne?: boolean }> } }) {
+  const out: Record<string, { t?: number; v?: number; o?: string; panne?: boolean }> = {};
+  for (const [id, x] of Object.entries(json.live?.spots ?? {})) out[id] = x.panne ? { panne: true } : { t: x.t, v: x.v, o: x.o };
+  return { spots: out };
 }

@@ -1,4 +1,4 @@
-name: ① Collecte
+name: ① Collecte + ② Analyse
 
 on:
   schedule:
@@ -39,11 +39,30 @@ jobs:
           name: collect-bundle
           path: data/v1/collect/bundle.json
           retention-days: 7
-      - name: Publier le rapport
+      - name: Analyse (moteurs surf + downwind, test golden)
+        env:
+          SUPER_PREVISION_URL: ${{ secrets.SUPER_PREVISION_URL }}   # seulement pour vérifier qu'il ne fuit pas
+        run: npm run engines
+      - name: Archiver les prévisions calculées
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: engines-output
+          path: |
+            data/v1/engines/surf.json
+            data/v1/engines/downwind.json
+          if-no-files-found: ignore
+          retention-days: 7
+      - name: Supprimer les fichiers privés
+        if: always()
+        run: rm -rf data/private
+      - name: Publier les rapports
+        if: always()
         run: |
           git config user.name "ocean-bot"
           git config user.email "ocean-bot@users.noreply.github.com"
           git add data/v1/collect/status.json docs/quality/COLLECT_REPORT.md
+          git add data/v1/engines/status.json docs/quality/ENGINES_REPORT.md 2>/dev/null || true
           git diff --cached --quiet && exit 0
           git commit -qm "collecte : $(date -u +%Y-%m-%dT%H:%MZ)"
           for i in 1 2 3; do
