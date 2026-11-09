@@ -38,7 +38,7 @@ Moteurs indépendants, chacun avec ses règles et ses tests :
 | VENT | super prévision (Apps Script) : pondération, facteurs par secteur, A-B-C-D, champion | vent corrigé par spot, par heure, avec confiance |
 | VAGUE | `surf-engine.js` | hauteur au déferlement, note surf, bascule |
 | HOULE | `downwind-engine.js` | note downwind par parcours et par sens |
-| WING / KITE | **nouveau** — formule à valider (§8, D-14) | note par spot selon vent, orientation, rafales, niveau |
+| WING | **nouveau** — formule validée v1.0 (§8, D-14, D-16) | note par spot selon vent corrigé, orientation, rafales, niveau |
 
 ### ③ Remise en question (Verification & Learning)
 
@@ -148,4 +148,5 @@ Les apps actuelles restent en ligne jusqu'à ce que leur remplaçante soit véri
 | D-12 | Moteur VENT : rester sur Apps Script en M2, porter le calcul dans `ocean` en M3+ après preuve d'équivalence ; Winds-Up reste sur Apps Script. Migrer Apps Script vers le compte Google perso | **Validée (10/11)** |
 | D-13 | Stack : TypeScript strict + Vite + Preact + uPlot + Leaflet, statique sur GitHub Pages | **Validée (10/11)** |
 | D-14 | Note WING / KITE : formule rédigée et validée par Tom avant le code ; spots = les 6 de la super prévision (La Franqui → Almanarre) | **Validée (10/11)** |
+| D-16 | **Wing seul**, pas de kite (plages de vent différentes) ; plages de vent recalées sur des guides wing ; formule v1.0 (`docs/product/WING_SCORE.md`) | **Validée (10/11)** |
 | D-15 | Notes comparables entre disciplines : même échelle 0-10 mais **pas de classement croisé** tant que les retours terrain ne l'ont pas calibré (l'accueil affiche la meilleure option par discipline) | **Validée (10/11)** |

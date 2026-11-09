@@ -39,7 +39,7 @@ jobs:
           name: collect-bundle
           path: data/v1/collect/bundle.json
           retention-days: 7
-      - name: Analyse (moteurs surf + downwind, test golden)
+      - name: Analyse (moteurs surf + downwind, test golden ; note wing)
         env:
           SUPER_PREVISION_URL: ${{ secrets.SUPER_PREVISION_URL }}   # seulement pour vérifier qu'il ne fuit pas
         run: npm run engines
@@ -51,6 +51,7 @@ jobs:
           path: |
             data/v1/engines/surf.json
             data/v1/engines/downwind.json
+            data/v1/engines/wing.json
           if-no-files-found: ignore
           retention-days: 7
       - name: Supprimer les fichiers privés

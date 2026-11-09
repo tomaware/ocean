@@ -6,6 +6,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import type { Check, CollectBundle } from '../../src/types/contracts.ts';
 import { loadRegistry } from '../collect/points.ts';
 import { compareOutputs, inputsFromBundle, inputsLegacy, runEngines } from './engines.ts';
+import { label, wingForecast } from './wing.ts';
 
 const ROOT = new URL('../../', import.meta.url);
 const OUT = new URL('data/v1/engines/', ROOT);
@@ -53,16 +54,22 @@ async function main(): Promise<void> {
 
   checks.push(...(await vsProduction(ocean, now)));
 
-  const surfText = JSON.stringify(ocean.surfJSON), dwText = JSON.stringify(ocean.downwindJSON);
+  const wing = wingForecast(sp, registry, now);
+  const nSess = wing.spots.reduce((a, x) => a + x.sessions.intermediaire.length, 0);
+  checks.push({ id: 'sorties-wing', ok: wing.available && wing.spots.length === 6 && wing.spots.every((x) => x.hours.length > 0),
+    detail: wing.available ? `${wing.spots.length} spots notés (wing v${wing.version}) ; ${nSess} session(s) 2H en intermédiaire sur les heures prévues` : String((wing as { reason?: string }).reason) });
+
+  const surfText = JSON.stringify(ocean.surfJSON), dwText = JSON.stringify(ocean.downwindJSON) + JSON.stringify(wing);
   checks.push(privacyEngines(surfText + dwText, live, [(process.env.SUPER_PREVISION_URL ?? '').trim()]));
 
   mkdirSync(OUT, { recursive: true });
   const prov = { generatedAt: now, collect: 'data/v1/collect/bundle.json', engines: { surf: 'super-previ-surf surf-engine.js (legacy, non modifié)', downwind: 'downwind-foil downwind-engine.js v1.1 (legacy, non modifié)' }, note: 'Prévisions calculées ; Copernicus non inclus à ce stade (M2).' };
   writeFileSync(new URL('surf.json', OUT), JSON.stringify({ provenance: prov, ...ocean.surfJSON }));
   writeFileSync(new URL('downwind.json', OUT), JSON.stringify({ provenance: prov, ...ocean.downwindJSON }));
+  writeFileSync(new URL('wing.json', OUT), JSON.stringify(wing));
   writeFileSync(new URL('status.json', OUT), JSON.stringify({ generatedAt: now, checks }, null, 1));
   mkdirSync(new URL('./', REPORT), { recursive: true });
-  writeFileSync(REPORT, report(now, checks, ocean));
+  writeFileSync(REPORT, report(now, checks, ocean, wing));
 
   for (const c of checks) console.log(`[analyse] ${c.ok ? 'OK ' : 'KO '} ${c.id} : ${c.detail}`);
   if (checks.some((c) => c.id === 'confidentialite-moteurs' && !c.ok)) process.exit(2);
@@ -102,7 +109,7 @@ async function vsProduction(o: ReturnType<typeof runEngines>, now: number): Prom
   return out;
 }
 
-function report(now: number, checks: Check[], o: ReturnType<typeof runEngines>): string {
+function report(now: number, checks: Check[], o: ReturnType<typeof runEngines>, wing: ReturnType<typeof wingForecast>): string {
   const d = (t: number) => new Date(t).toLocaleString('fr-FR', { timeZone: 'Europe/Paris', weekday: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
   let s = `# Rapport d'analyse (② ANALYSE)\n\nGénéré le ${new Date(now).toISOString().replace('T', ' ').slice(0, 16)} UTC par \`pipeline/engines/run.ts\`, juste après la collecte.\n\n`;
   s += `Les moteurs des apps actuelles (copies non modifiées dans \`legacy/\`) sont alimentés par la collecte commune. Le test golden refait le calcul comme les apps actuelles, avec leurs propres parseurs sur les mêmes réponses brutes, et exige les mêmes notes à ±${TOL}.\n\n`;
@@ -113,7 +120,9 @@ function report(now: number, checks: Check[], o: ReturnType<typeof runEngines>):
   for (const w of o.surfJSON.windows.slice(0, 5)) s += `| ${d(w.start)} → ${d(w.end)} | ${name[w.spot] ?? w.spot} | ${w.mean} | ${w.peak} |\n`;
   s += `\n## Meilleurs créneaux downwind (4 jours)\n\n| Quand | Parcours | Note moyenne | Pic |\n|---|---|---|---|\n`;
   for (const w of o.downwindJSON.best.slice(0, 5)) s += `| ${d(w.start)} → ${d(w.end)} | ${w.from} → ${w.to} | ${w.mean} | ${w.peak} |\n`;
-  s += `\nÀ ce stade (M2) : Copernicus n'est pas inclus (les apps actuelles l'utilisent quand il est frais) ; le vent wing/kite reste celui de la super prévision (Apps Script), en attendant la formule de note validée (D-14).\n`;
+  s += `\n## Wing foil — sessions 2H (niveau intermédiaire, vent corrigé de la super prévision)\n\n| Spot | Créneaux |\n|---|---|\n`;
+  for (const x of wing.spots) s += `| ${x.name} | ${x.sessions.intermediaire.map((w) => `${d(w.start)} → ${d(w.end)} : ${label(w.peak)} (moy. ${w.mean}, pic ${w.peak})`).join(' ; ') || 'aucun'} |\n`;
+  s += `\nÀ ce stade (M2) : Copernicus n'est pas inclus (les apps actuelles l'utilisent quand il est frais) ; la note wing (v1.0, validée le 10/11) part du vent corrigé de la super prévision ; pas de note kite (décision de Tom).\n`;
   return s;
 }
 

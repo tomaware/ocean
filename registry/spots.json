@@ -16,7 +16,11 @@
         "kite"
       ],
       "waterBody": "sea",
-      "orientation": null,
+      "orientation": {
+        "seaward": 100,
+        "confidence": "medium",
+        "source": "plage orientée ESE ; vents NE à S côté mer, tramontane = vent de terre (ultimatefrance.com, guide des spots Leucate)"
+      },
       "windStations": {
         "windsUp": "1554-la-franqui-poste-des-coussoules",
         "metar": "LFMP"
@@ -28,7 +32,7 @@
       "sources": [
         "super-prevision-vent.gs v3.4 (SPOTS)"
       ],
-      "notes": "Orientation de la plage à renseigner pour la note wing / kite (D-14)."
+      "notes": "Orientation proposée à partir de guides de spots (10/11) ; à confirmer par Tom."
     },
     {
       "id": "la-grande-motte",
@@ -43,7 +47,11 @@
         "kite"
       ],
       "waterBody": "sea",
-      "orientation": null,
+      "orientation": {
+        "seaward": 160,
+        "confidence": "medium",
+        "source": "plage orientée SSE ; meilleurs vents S et SE (ultimatefrance.com, srokacompany.com)"
+      },
       "windStations": {
         "windsUp": "135-la-grande-motte",
         "metar": "LFMT"
@@ -55,7 +63,7 @@
       "sources": [
         "super-prevision-vent.gs v3.4 (SPOTS)"
       ],
-      "notes": "Orientation de la plage à renseigner pour la note wing / kite (D-14)."
+      "notes": "Orientation proposée à partir de guides de spots (10/11) ; à confirmer par Tom."
     },
     {
       "id": "le-ponant",
@@ -70,7 +78,17 @@
         "kite"
       ],
       "waterBody": "lagoon",
-      "orientation": null,
+      "orientation": {
+        "seaward": null,
+        "avoid": [
+          [
+            340,
+            30
+          ]
+        ],
+        "confidence": "medium",
+        "source": "étang : SE, SO, NO favorables, vent du nord déconseillé (srokacompany.com)"
+      },
       "windStations": {
         "windsUp": "81-le-ponant",
         "metar": "LFMT"
@@ -82,7 +100,7 @@
       "sources": [
         "super-prevision-vent.gs v3.4 (SPOTS)"
       ],
-      "notes": "Orientation de la plage à renseigner pour la note wing / kite (D-14)."
+      "notes": "Orientation proposée à partir de guides de spots (10/11) ; à confirmer par Tom."
     },
     {
       "id": "port-camargue",
@@ -97,7 +115,11 @@
         "kite"
       ],
       "waterBody": "sea",
-      "orientation": null,
+      "orientation": {
+        "seaward": 200,
+        "confidence": "medium",
+        "source": "Espiguette orientée SSO ; SE à NO, attention au vent qui tourne au large (ultimatefrance.com, srokacompany.com)"
+      },
       "windStations": {
         "windsUp": "22-port-camargue",
         "metar": "LFMT"
@@ -109,7 +131,7 @@
       "sources": [
         "super-prevision-vent.gs v3.4 (SPOTS)"
       ],
-      "notes": "Orientation de la plage à renseigner pour la note wing / kite (D-14)."
+      "notes": "Orientation proposée à partir de guides de spots (10/11) ; à confirmer par Tom."
     },
     {
       "id": "beauduc",
@@ -124,7 +146,11 @@
         "kite"
       ],
       "waterBody": "sea",
-      "orientation": null,
+      "orientation": {
+        "seaward": 250,
+        "confidence": "low",
+        "source": "golfe de Beauduc ouvert à l’OSO ; spot donné « tous vents » (ultimatefrance.com) : orientation à confirmer"
+      },
       "windStations": {
         "windsUp": "61-beauduc",
         "metar": null
@@ -136,7 +162,7 @@
       "sources": [
         "super-prevision-vent.gs v3.4 (SPOTS)"
       ],
-      "notes": "Orientation de la plage à renseigner pour la note wing / kite (D-14)."
+      "notes": "Orientation proposée à partir de guides de spots (10/11) ; à confirmer par Tom."
     },
     {
       "id": "almanarre",
@@ -151,7 +177,11 @@
         "kite"
       ],
       "waterBody": "sea",
-      "orientation": null,
+      "orientation": {
+        "seaward": 245,
+        "confidence": "low",
+        "source": "plage ouest du tombolo, orientée OSO ; O et SO favorables, vent d’est listé mais de terre ici : à confirmer"
+      },
       "windStations": {
         "windsUp": "2-almanarre-salin-des-pesquiers",
         "metar": "LFTH"
@@ -163,7 +193,7 @@
       "sources": [
         "super-prevision-vent.gs v3.4 (SPOTS)"
       ],
-      "notes": "Orientation de la plage à renseigner pour la note wing / kite (D-14)."
+      "notes": "Orientation proposée à partir de guides de spots (10/11) ; à confirmer par Tom."
     },
     {
       "id": "carnon",

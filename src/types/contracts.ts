@@ -26,7 +26,8 @@ export interface Spot {
   geometry: SpotGeometryPoint | SpotGeometryPath;
   disciplines: Discipline[];
   waterBody: 'sea' | 'lagoon';
-  orientation: { seaward: number } | null;      // direction du large vue de la plage (°)
+  // direction du large vue de la plage (°) ; avoid = secteurs de vent déconseillés (plan d'eau fermé), [de, à] en °
+  orientation: { seaward: number | null; avoid?: [number, number][]; confidence?: 'low' | 'medium' | 'high'; source?: string } | null;
   swellWindow?: { min: number; max: number; ideal?: number };
   buoys?: string[];
   windStations?: { windsUp?: string; metar?: string | null };

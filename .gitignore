@@ -4,3 +4,4 @@ data/private/
 .DS_Store
 data/v1/engines/surf.json
 data/v1/engines/downwind.json
+data/v1/engines/wing.json

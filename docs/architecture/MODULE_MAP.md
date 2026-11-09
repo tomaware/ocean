@@ -63,7 +63,7 @@ Règles : pas de dépendance circulaire ; `src` ne calcule pas de note (il affic
 | engines/wind | Apps Script v3.4 | enveloppé (lu via JSON) en M2 |
 | engines/surf | `surf-engine.js` | enveloppé puis typé |
 | engines/downwind | `downwind-engine.js` | enveloppé puis typé |
-| engines/wing | — | à concevoir (D-14) |
+| engines/wing | pipeline/engines/wing.ts | v1.0 : note 0-10 × 3 niveaux, sessions 2H, à partir du vent corrigé (D-14, D-16) |
 | verify | `verifyAgainstBuoy`, `modelCalibration`, bancs Apps Script | à unifier (M3) |
 | sessions | `findWindows`, `session-core.js`, `windows` (downwind) | moteur générique + notes par discipline (M4) |
 | src | pages surf / session / downwind | remplacées en M5 |

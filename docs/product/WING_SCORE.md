@@ -1,0 +1,101 @@
+# Note wing foil — v1.0
+
+> **Statut : validée par Tom le 10/11 (D-14, D-16).** Wing seulement, pas de kite (plages de vent différentes). Code : `pipeline/engines/wing.ts`, cas de référence : `tests/wing.test.ts`. Toute modification = décision documentée + cas de référence mis à jour.
+
+## 1. Ce que la note dit
+
+Une note de 0 à 10 par spot, par heure et par niveau (débutant, intermédiaire, confirmé), qui répond à « est-ce que je sors, et c'est bien ? ». Elle ne se compare pas aux notes surf ou downwind (D-15).
+
+Lecture en trois niveaux :
+1. **Coup d'œil** : « Ça envoie » (≥ 7) · « Ça se tente » (5 à 7) · « Non » (< 5), plus le meilleur créneau du jour.
+2. **Détail** : vent moyen et rafales en nœuds, direction, secteur par rapport à la plage, note heure par heure, ce qui limite la note.
+3. **Expert** : modèles, correction appliquée, confiance, écart prévu / mesuré des jours passés.
+
+## 2. Données
+
+| Donnée | Source |
+|---|---|
+| Vent moyen, rafales, direction, heure par heure (6 h–21 h) | Super prévision v3.4 : vent **corrigé** (modèles pondérés par leur erreur aux balises, système champion par spot) |
+| Confiance | Super prévision (`conf`), **affichée à côté** de la note, pas mélangée dedans |
+| Jour / nuit | élévation du soleil > −2° (comme le moteur downwind) |
+| Orientation de la plage | registre, `orientation.seaward` (§ 5) |
+
+Sans super prévision, pas de note : pas de repli silencieux sur un vent brut. Les relevés Winds-Up ne servent qu'à corriger la prévision ; ils ne sont jamais affichés dans l'app publique.
+
+## 3. Formule
+
+```
+note = 10 × V(vent, niveau) × R(rafales / moyenne) × D(angle vent / plage, niveau)
+```
+
+arrondie à 0,1, mise à 0 la nuit. Chaque facteur est entre 0 et 1, et le plus bas est donné comme explication (« pas assez de vent », « vent rafaleux », « vent de terre »…).
+
+### V — force du vent (nœuds)
+
+Trapèze : 0 au minimum, monte jusqu'à l'idéal, 1 dans l'idéal, redescend jusqu'à 0 au maximum. Quand les rafales dépassent 1,3 × la moyenne, V est calculé sur `(moyenne + rafale) / 2`.
+
+| Niveau | Minimum (0) | Idéal (1) | Trop fort (0) |
+|---|---|---|---|
+| Débutant | 12 | 15 – 20 | 26 |
+| Intermédiaire | 11 | 14 – 24 | 30 |
+| Confirmé | 9 | 14 – 28 | 35 |
+
+D'où viennent ces chiffres :
+- Débutant 15–20 nd idéal : [Poole Harbour](https://pooleharbour.co.uk/blogs/foiling-blogs/how-much-wind-for-wing-foiling) (« 15-20 knots », matériel débutant 15–24 nd) et [Windance](https://www.windance.com/blogs/wing-foiling/wing-size-by-wind-chart) (12–20 nd, la plage où les débutants progressent le mieux ; 25 nd et + déconseillé aux débutants).
+- Intermédiaire jusqu'à 24–25 nd : Windance, la tranche 20–25 nd est « mieux une fois qu'on vole dans les deux sens ».
+- Confirmé dès 9 nd : Windance classe 8–12 nd « avancé » (grande aile, pumping) ; 25 nd et + = petites ailes, réservé aux riders à l'aise.
+- Repère maison : le seuil « navigable » de la super prévision est 15 nd (`SEUIL_NAV`), pile dans l'idéal débutant.
+
+### R — vent rafaleux
+
+| Rafale / moyenne | R |
+|---|---|
+| ≤ 1,30 | 1 |
+| 1,30 → 1,60 | de 1 à 0,6 |
+| 1,60 → 1,90 | de 0,6 à 0,4 |
+| > 1,90 | 0,4 |
+
+### D — direction par rapport à la plage
+
+Angle entre la direction d'où vient le vent et la direction du large (0° = plein onshore, 180° = plein offshore) :
+
+| Secteur | Angle | Débutant | Intermédiaire | Confirmé |
+|---|---|---|---|---|
+| Vent de mer (onshore) | 0 – 30° | 0,7 | 0,8 | 0,8 |
+| Side-on | 30 – 70° | 1 | 1 | 1 |
+| Side-shore | 70 – 100° | 1 | 1 | 1 |
+| Side-off | 100 – 135° | 0 | 0,3 | 0,6 |
+| Vent de terre (offshore) | > 135° | 0 | 0 | 0 |
+
+Changements depuis la proposition, d'après [Gong](https://www.gong-galaxy.com/en/blogs/how-to/find-the-right-spot) : le side-shore est la meilleure orientation (D = 1 à tous les niveaux) ; l'onshore gêne les départs et pousse vers le bord (0,7–0,8) ; le vent de terre est dangereux (au-delà d'environ 20 nd, impossible de revenir) : 0 même pour un confirmé, au lieu de 0,3. Le side-off reste noté pour les confirmés (0,6), avec l'avertissement affiché.
+
+Plan d'eau fermé (Le Ponant) : D = 1, sauf secteurs déconseillés (× 0,6).
+
+### Session 2H
+
+Un créneau = au moins **2 h d'affilée** à 5/10 ou plus, de jour (même durée que `SESSION_HEURES` de la super prévision). Une heure manquante coupe le créneau.
+
+## 4. Ce que la note ne fait pas (volontairement)
+
+- Elle ne baisse pas avec la confiance : une prévision incertaine affiche « incertain » à côté.
+- Pas d'état de mer (clapot, shore-break) pour l'instant.
+- Pas de marée, de courant ni de règles locales (zones interdites l'été, écoles) : dans la fiche spot.
+
+## 5. Orientation des 6 spots
+
+Proposées à partir de guides de spots, **à confirmer par Tom** (surtout Beauduc et Almanarre).
+
+| Spot | Large vers | Ce que disent les guides | Confiance |
+|---|---|---|---|
+| La Franqui | 100° (ESE) | Bons vents NE, E, SE, S ; tramontane = vent de terre, réservée aux très bons kiters ([Ultimate France](https://www.ultimatefrance.com/kitesurfing/south-france)) | moyenne |
+| La Grande-Motte | 160° (SSE) | S, SE (le SE donne des vagues) ([Sroka](https://srokacompany.com/en/blogs/actualites/spots-de-wing-foil-autour-de-montpellier), Ultimate France) | moyenne |
+| Le Ponant | étang | SE, SO, NO ; vent du nord déconseillé (secteur 340°–30°, × 0,6) (Sroka) | moyenne |
+| Port Camargue / Espiguette | 200° (SSO) | S, SO, NO ; attention au vent qui tourne au large (Sroka, Ultimate France) | moyenne |
+| Beauduc | 250° (OSO) | Guide : « tous vents, toute l'année », sans orientation ; 250° = golfe de Beauduc, à confirmer | faible |
+| Almanarre | 245° (OSO) | E, SE, SO, O cités ; plage ouest du tombolo, donc l'E y serait un vent de terre : à confirmer | faible |
+
+## 6. Vérification
+
+1. Cas de référence écrits à la main (`tests/wing.test.ts`), passés à chaque exécution.
+2. À faire : rejeu sur 30 jours d'archive de la super prévision (mode perso, relevés Winds-Up jamais publiés). Objectif : les jours notés ≥ 5 la veille sont réellement navigables (≥ 15 nd pendant 2 h) au moins 8 fois sur 10.
+3. À faire : ton avis sur 5 à 10 journées dont tu te souviens.
