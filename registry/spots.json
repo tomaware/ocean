@@ -1,0 +1,750 @@
+{
+  "version": 1,
+  "updated": "2026-11-10",
+  "_doc": "Spot Registry unique d'OCEAN : spots (vent, surf), parcours downwind, bouées Candhis, stations METAR. Identifiants stables (jamais le nom). Champs legacy = identifiants dans les apps actuelles. Coordonnées et orientations à vérifier sur le terrain (confidence).",
+  "spots": [
+    {
+      "id": "la-franqui",
+      "name": "La Franqui",
+      "kind": "spot",
+      "geometry": {
+        "lat": 42.945,
+        "lon": 3.065
+      },
+      "disciplines": [
+        "wing",
+        "kite"
+      ],
+      "waterBody": "sea",
+      "orientation": null,
+      "windStations": {
+        "windsUp": "1554-la-franqui-poste-des-coussoules",
+        "metar": "LFMP"
+      },
+      "legacy": {
+        "superPrevisionVent": "1554-la-franqui-poste-des-coussoules"
+      },
+      "confidence": "medium",
+      "sources": [
+        "super-prevision-vent.gs v3.4 (SPOTS)"
+      ],
+      "notes": "Orientation de la plage à renseigner pour la note wing / kite (D-14)."
+    },
+    {
+      "id": "la-grande-motte",
+      "name": "La Grande-Motte",
+      "kind": "spot",
+      "geometry": {
+        "lat": 43.545,
+        "lon": 4.085
+      },
+      "disciplines": [
+        "wing",
+        "kite"
+      ],
+      "waterBody": "sea",
+      "orientation": null,
+      "windStations": {
+        "windsUp": "135-la-grande-motte",
+        "metar": "LFMT"
+      },
+      "legacy": {
+        "superPrevisionVent": "135-la-grande-motte"
+      },
+      "confidence": "medium",
+      "sources": [
+        "super-prevision-vent.gs v3.4 (SPOTS)"
+      ],
+      "notes": "Orientation de la plage à renseigner pour la note wing / kite (D-14)."
+    },
+    {
+      "id": "le-ponant",
+      "name": "Le Ponant",
+      "kind": "spot",
+      "geometry": {
+        "lat": 43.567,
+        "lon": 4.115
+      },
+      "disciplines": [
+        "wing",
+        "kite"
+      ],
+      "waterBody": "lagoon",
+      "orientation": null,
+      "windStations": {
+        "windsUp": "81-le-ponant",
+        "metar": "LFMT"
+      },
+      "legacy": {
+        "superPrevisionVent": "81-le-ponant"
+      },
+      "confidence": "medium",
+      "sources": [
+        "super-prevision-vent.gs v3.4 (SPOTS)"
+      ],
+      "notes": "Orientation de la plage à renseigner pour la note wing / kite (D-14)."
+    },
+    {
+      "id": "port-camargue",
+      "name": "Port Camargue / Espiguette",
+      "kind": "spot",
+      "geometry": {
+        "lat": 43.48,
+        "lon": 4.13
+      },
+      "disciplines": [
+        "wing",
+        "kite"
+      ],
+      "waterBody": "sea",
+      "orientation": null,
+      "windStations": {
+        "windsUp": "22-port-camargue",
+        "metar": "LFMT"
+      },
+      "legacy": {
+        "superPrevisionVent": "22-port-camargue"
+      },
+      "confidence": "medium",
+      "sources": [
+        "super-prevision-vent.gs v3.4 (SPOTS)"
+      ],
+      "notes": "Orientation de la plage à renseigner pour la note wing / kite (D-14)."
+    },
+    {
+      "id": "beauduc",
+      "name": "Beauduc",
+      "kind": "spot",
+      "geometry": {
+        "lat": 43.37,
+        "lon": 4.585
+      },
+      "disciplines": [
+        "wing",
+        "kite"
+      ],
+      "waterBody": "sea",
+      "orientation": null,
+      "windStations": {
+        "windsUp": "61-beauduc",
+        "metar": null
+      },
+      "legacy": {
+        "superPrevisionVent": "61-beauduc"
+      },
+      "confidence": "medium",
+      "sources": [
+        "super-prevision-vent.gs v3.4 (SPOTS)"
+      ],
+      "notes": "Orientation de la plage à renseigner pour la note wing / kite (D-14)."
+    },
+    {
+      "id": "almanarre",
+      "name": "Almanarre (Hyères)",
+      "kind": "spot",
+      "geometry": {
+        "lat": 43.065,
+        "lon": 6.115
+      },
+      "disciplines": [
+        "wing",
+        "kite"
+      ],
+      "waterBody": "sea",
+      "orientation": null,
+      "windStations": {
+        "windsUp": "2-almanarre-salin-des-pesquiers",
+        "metar": "LFTH"
+      },
+      "legacy": {
+        "superPrevisionVent": "2-almanarre-salin-des-pesquiers"
+      },
+      "confidence": "medium",
+      "sources": [
+        "super-prevision-vent.gs v3.4 (SPOTS)"
+      ],
+      "notes": "Orientation de la plage à renseigner pour la note wing / kite (D-14)."
+    },
+    {
+      "id": "carnon",
+      "name": "Carnon",
+      "kind": "spot",
+      "geometry": {
+        "lat": 43.548,
+        "lon": 3.985
+      },
+      "disciplines": [
+        "surf"
+      ],
+      "waterBody": "sea",
+      "orientation": {
+        "seaward": 155
+      },
+      "swellWindow": {
+        "min": 110,
+        "max": 225,
+        "ideal": 170
+      },
+      "surf": {
+        "size": {
+          "min": 0.4,
+          "ideal": 1.0,
+          "max": 1.6
+        },
+        "periodMin": 5,
+        "level": "tous niveaux",
+        "shelter": 1.0
+      },
+      "buoys": [
+        "03001",
+        "03404"
+      ],
+      "legacy": {
+        "superPreviSurf": "carnon"
+      },
+      "confidence": "medium",
+      "sources": [
+        "super-previ-surf engine/spots.json",
+        "Surfnerd: houle SW→SE idéal S, offshore NW, 0,3–1,2 m"
+      ]
+    },
+    {
+      "id": "palavas",
+      "name": "Palavas-les-Flots",
+      "kind": "spot",
+      "geometry": {
+        "lat": 43.527,
+        "lon": 3.93
+      },
+      "disciplines": [
+        "surf"
+      ],
+      "waterBody": "sea",
+      "orientation": {
+        "seaward": 150
+      },
+      "swellWindow": {
+        "min": 105,
+        "max": 215,
+        "ideal": 155
+      },
+      "surf": {
+        "size": {
+          "min": 0.4,
+          "ideal": 1.1,
+          "max": 1.8
+        },
+        "periodMin": 5,
+        "level": "débutant → intermédiaire",
+        "shelter": 1.0
+      },
+      "buoys": [
+        "03404",
+        "03001"
+      ],
+      "legacy": {
+        "superPreviSurf": "palavas"
+      },
+      "confidence": "medium",
+      "sources": [
+        "super-previ-surf engine/spots.json",
+        "Surfnerd: offshore NW",
+        "fenêtre houle = hypothèse cohérente avec l'orientation"
+      ]
+    },
+    {
+      "id": "sete",
+      "name": "Sète (Lazaret / Fontaine)",
+      "kind": "spot",
+      "geometry": {
+        "lat": 43.384,
+        "lon": 3.656
+      },
+      "disciplines": [
+        "surf"
+      ],
+      "waterBody": "sea",
+      "orientation": {
+        "seaward": 145
+      },
+      "swellWindow": {
+        "min": 100,
+        "max": 200,
+        "ideal": 135
+      },
+      "surf": {
+        "size": {
+          "min": 0.4,
+          "ideal": 1.1,
+          "max": 1.8
+        },
+        "periodMin": 5,
+        "level": "tous niveaux",
+        "shelter": 1.0
+      },
+      "buoys": [
+        "03404"
+      ],
+      "legacy": {
+        "superPreviSurf": "sete"
+      },
+      "confidence": "medium",
+      "sources": [
+        "super-previ-surf engine/spots.json",
+        "Plages.tv: houle SE, offshore NW, onshore SE"
+      ]
+    },
+    {
+      "id": "vias",
+      "name": "La Guillotine",
+      "kind": "spot",
+      "geometry": {
+        "lat": 43.29,
+        "lon": 3.41
+      },
+      "disciplines": [
+        "surf"
+      ],
+      "waterBody": "sea",
+      "orientation": {
+        "seaward": 160
+      },
+      "swellWindow": {
+        "min": 115,
+        "max": 225,
+        "ideal": 160
+      },
+      "surf": {
+        "size": {
+          "min": 0.4,
+          "ideal": 1.0,
+          "max": 1.6
+        },
+        "periodMin": 5,
+        "level": "à valider",
+        "shelter": 1.0
+      },
+      "buoys": [
+        "03404"
+      ],
+      "legacy": {
+        "superPreviSurf": "vias"
+      },
+      "confidence": "low",
+      "sources": [
+        "super-previ-surf engine/spots.json",
+        "hypothèse d'orientation — à valider par Tom"
+      ]
+    },
+    {
+      "id": "gruissan",
+      "name": "Gruissan",
+      "kind": "spot",
+      "geometry": {
+        "lat": 43.09,
+        "lon": 3.12
+      },
+      "disciplines": [
+        "surf"
+      ],
+      "waterBody": "sea",
+      "orientation": {
+        "seaward": 110
+      },
+      "swellWindow": {
+        "min": 75,
+        "max": 185,
+        "ideal": 130
+      },
+      "surf": {
+        "size": {
+          "min": 0.4,
+          "ideal": 1.1,
+          "max": 1.8
+        },
+        "periodMin": 5,
+        "level": "intermédiaire",
+        "shelter": 1.0
+      },
+      "buoys": [
+        "01101",
+        "01102"
+      ],
+      "legacy": {
+        "superPreviSurf": "gruissan"
+      },
+      "confidence": "medium",
+      "sources": [
+        "super-previ-surf engine/spots.json",
+        "Surfnerd: houle E→S idéal SE, offshore W, 0,3–1,5 m"
+      ]
+    },
+    {
+      "id": "canet",
+      "name": "Canet Plage",
+      "kind": "spot",
+      "geometry": {
+        "lat": 42.7,
+        "lon": 3.04
+      },
+      "disciplines": [
+        "surf"
+      ],
+      "waterBody": "sea",
+      "orientation": {
+        "seaward": 90
+      },
+      "swellWindow": {
+        "min": 45,
+        "max": 170,
+        "ideal": 95
+      },
+      "surf": {
+        "size": {
+          "min": 0.4,
+          "ideal": 1.0,
+          "max": 1.6
+        },
+        "periodMin": 5,
+        "level": "intermédiaire",
+        "shelter": 1.0
+      },
+      "buoys": [
+        "01101"
+      ],
+      "legacy": {
+        "superPreviSurf": "canet"
+      },
+      "confidence": "high",
+      "sources": [
+        "super-previ-surf engine/spots.json",
+        "Surfnerd: houle E→S idéal E, offshore W",
+        "Wannasurf: houle SE/E/NE",
+        "Surf-Forecast: meilleur vent W"
+      ]
+    },
+    {
+      "id": "paulilles",
+      "name": "Paulilles",
+      "kind": "spot",
+      "geometry": {
+        "lat": 42.5,
+        "lon": 3.12
+      },
+      "disciplines": [
+        "surf"
+      ],
+      "waterBody": "sea",
+      "orientation": {
+        "seaward": 55
+      },
+      "swellWindow": {
+        "min": 20,
+        "max": 120,
+        "ideal": 70
+      },
+      "surf": {
+        "size": {
+          "min": 0.4,
+          "ideal": 1.0,
+          "max": 1.8
+        },
+        "periodMin": 5,
+        "level": "à valider",
+        "shelter": 0.9
+      },
+      "buoys": [
+        "06601",
+        "01101"
+      ],
+      "legacy": {
+        "superPreviSurf": "paulilles"
+      },
+      "confidence": "low",
+      "sources": [
+        "super-previ-surf engine/spots.json",
+        "hypothèse d'orientation (baie ouverte NE) — à valider par Tom"
+      ]
+    },
+    {
+      "id": "perafita",
+      "name": "Platja de Perafita",
+      "kind": "spot",
+      "geometry": {
+        "lat": 42.43,
+        "lon": 3.17
+      },
+      "disciplines": [
+        "surf"
+      ],
+      "waterBody": "sea",
+      "orientation": {
+        "seaward": 80
+      },
+      "swellWindow": {
+        "min": 35,
+        "max": 145,
+        "ideal": 85
+      },
+      "surf": {
+        "size": {
+          "min": 0.4,
+          "ideal": 1.0,
+          "max": 1.8
+        },
+        "periodMin": 5,
+        "level": "à valider",
+        "shelter": 0.9
+      },
+      "buoys": [
+        "06601",
+        "01101"
+      ],
+      "legacy": {
+        "superPreviSurf": "perafita"
+      },
+      "confidence": "low",
+      "sources": [
+        "super-previ-surf engine/spots.json",
+        "hypothèse d'orientation — à valider par Tom"
+      ]
+    },
+    {
+      "id": "frontignan-palavas",
+      "name": "Frontignan ↔ Palavas",
+      "kind": "run",
+      "geometry": {
+        "path": [
+          [
+            43.4248,
+            3.7687
+          ],
+          [
+            43.4503,
+            3.8157
+          ],
+          [
+            43.4743,
+            3.8507
+          ],
+          [
+            43.4998,
+            3.8797
+          ],
+          [
+            43.5193,
+            3.9357
+          ]
+        ]
+      },
+      "disciplines": [
+        "downwind"
+      ],
+      "waterBody": "sea",
+      "orientation": {
+        "seaward": 144
+      },
+      "run": {
+        "from": "Frontignan plage",
+        "to": "Palavas",
+        "oneWay": false,
+        "crossing": false
+      },
+      "buoys": [
+        "03404"
+      ],
+      "access": [
+        "Frontignan plage",
+        "Les Aresquiers",
+        "Villeneuve-lès-Maguelone",
+        "Maguelone",
+        "Palavas"
+      ],
+      "legacy": {
+        "downwindFoil": "frontignan-palavas"
+      },
+      "confidence": "medium",
+      "sources": [
+        "downwind-foil engine/runs.json"
+      ],
+      "notes": "Par SO de Frontignan vers Palavas, par NE / ENE dans l'autre sens. Plages sauvages entre les Aresquiers et Maguelone : peu de sorties."
+    },
+    {
+      "id": "palavas-grandemotte",
+      "name": "Palavas ↔ La Grande-Motte",
+      "kind": "run",
+      "geometry": {
+        "path": [
+          [
+            43.5179,
+            3.9321
+          ],
+          [
+            43.5349,
+            3.9801
+          ],
+          [
+            43.5459,
+            4.0151
+          ],
+          [
+            43.5499,
+            4.0501
+          ]
+        ]
+      },
+      "disciplines": [
+        "downwind"
+      ],
+      "waterBody": "sea",
+      "orientation": {
+        "seaward": 160
+      },
+      "run": {
+        "from": "Palavas",
+        "to": "La Grande-Motte (Grand Travers)",
+        "oneWay": false,
+        "crossing": false
+      },
+      "buoys": [
+        "03001"
+      ],
+      "access": [
+        "Palavas",
+        "Carnon",
+        "Petit Travers",
+        "Grand Travers"
+      ],
+      "legacy": {
+        "downwindFoil": "palavas-grandemotte"
+      },
+      "confidence": "medium",
+      "sources": [
+        "downwind-foil engine/runs.json"
+      ],
+      "notes": "Par SO de Palavas vers la Grande-Motte, par E / ENE dans l'autre sens. Digues du port de Carnon à contourner au large."
+    },
+    {
+      "id": "plagesud-grandemotte",
+      "name": "Plage Sud → La Grande-Motte",
+      "kind": "run",
+      "geometry": {
+        "path": [
+          [
+            43.506,
+            4.1095
+          ],
+          [
+            43.524,
+            4.11
+          ],
+          [
+            43.542,
+            4.096
+          ],
+          [
+            43.55,
+            4.085
+          ]
+        ]
+      },
+      "disciplines": [
+        "downwind"
+      ],
+      "waterBody": "sea",
+      "orientation": {
+        "seaward": 205
+      },
+      "run": {
+        "from": "Plage Sud (Port Camargue)",
+        "to": "La Grande-Motte",
+        "oneWay": true,
+        "crossing": true
+      },
+      "buoys": [
+        "03001"
+      ],
+      "access": [
+        "Plage Sud (interdite au kite et au wing l'été)",
+        "Le Grau-du-Roi rive gauche / rive droite",
+        "Le Boucanet",
+        "La Grande-Motte"
+      ],
+      "legacy": {
+        "downwindFoil": "plagesud-grandemotte"
+      },
+      "confidence": "low",
+      "sources": [
+        "downwind-foil engine/runs.json"
+      ],
+      "notes": "Sens unique, par SE / ESE : de la plage Sud vers la Grande-Motte en traversant la baie d'Aigues-Mortes, au large des passes de Port Camargue et du Grau-du-Roi. Sortie possible au Boucanet."
+    }
+  ],
+  "buoys": [
+    {
+      "code": "03001",
+      "name": "Espiguette",
+      "lat": 43.411,
+      "lon": 4.1625,
+      "depthM": 32,
+      "nearshore": false,
+      "status": "en service"
+    },
+    {
+      "code": "03404",
+      "name": "Sète",
+      "lat": 43.3713,
+      "lon": 3.7771,
+      "depthM": 30,
+      "nearshore": false,
+      "status": "en service"
+    },
+    {
+      "code": "01102",
+      "name": "Port-la-Nouvelle (SEMOP)",
+      "lat": 43.0097,
+      "lon": 3.0861,
+      "depthM": 13,
+      "nearshore": true,
+      "status": "en service"
+    },
+    {
+      "code": "01101",
+      "name": "Leucate",
+      "lat": 42.9167,
+      "lon": 3.125,
+      "depthM": 40,
+      "nearshore": false,
+      "status": "en service"
+    },
+    {
+      "code": "06601",
+      "name": "Banyuls",
+      "lat": 42.4895,
+      "lon": 3.1677,
+      "depthM": 50,
+      "nearshore": false,
+      "status": "hors service temps réel"
+    }
+  ],
+  "stations": [
+    {
+      "icao": "LFMT",
+      "name": "Montpellier-Méditerranée",
+      "lat": 43.5762,
+      "lon": 3.963
+    },
+    {
+      "icao": "LFMP",
+      "name": "Perpignan-Rivesaltes",
+      "lat": 42.7404,
+      "lon": 2.8707
+    },
+    {
+      "icao": "LFTH",
+      "name": "Toulon-Hyères",
+      "lat": 43.0973,
+      "lon": 6.146
+    }
+  ]
+}

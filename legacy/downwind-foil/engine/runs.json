@@ -1,0 +1,166 @@
+{
+  "_doc": "Parcours de downwind. a / b = départ et arrivée (sur l'eau) ; path = tracé au large (≈ 1,2 km du bord) ; normal = direction du large vue de la plage (°) ; oneWay = seulement de a vers b. Le sens (a→b ou b→a) est sinon choisi heure par heure selon le vent. buoy = bouée Candhis qui vérifie les modèles de vagues ; access = mises à l'eau / sorties. Coordonnées approximatives : à corriger avec ta connaissance du terrain. crossing = traversée de baie : normal y désigne la direction du large (là où l'on dériverait), pas la perpendiculaire au tracé.",
+  "runs": [
+    {
+      "id": "frontignan-palavas",
+      "name": "Frontignan ↔ Palavas",
+      "a": {
+        "name": "Frontignan plage",
+        "lat": 43.4248,
+        "lon": 3.7687
+      },
+      "b": {
+        "name": "Palavas",
+        "lat": 43.5193,
+        "lon": 3.9357
+      },
+      "path": [
+        [
+          43.4248,
+          3.7687
+        ],
+        [
+          43.4503,
+          3.8157
+        ],
+        [
+          43.4743,
+          3.8507
+        ],
+        [
+          43.4998,
+          3.8797
+        ],
+        [
+          43.5193,
+          3.9357
+        ]
+      ],
+      "normal": 144,
+      "buoy": "03404",
+      "access": [
+        "Frontignan plage",
+        "Les Aresquiers",
+        "Villeneuve-lès-Maguelone",
+        "Maguelone",
+        "Palavas"
+      ],
+      "confidence": "medium",
+      "notes": "Par SO de Frontignan vers Palavas, par NE / ENE dans l'autre sens. Plages sauvages entre les Aresquiers et Maguelone : peu de sorties.",
+      "label": {
+        "bearing": 144,
+        "km": 2.5
+      }
+    },
+    {
+      "id": "palavas-grandemotte",
+      "name": "Palavas ↔ La Grande-Motte",
+      "a": {
+        "name": "Palavas",
+        "lat": 43.5179,
+        "lon": 3.9321
+      },
+      "b": {
+        "name": "La Grande-Motte (Grand Travers)",
+        "lat": 43.5499,
+        "lon": 4.0501
+      },
+      "path": [
+        [
+          43.5179,
+          3.9321
+        ],
+        [
+          43.5349,
+          3.9801
+        ],
+        [
+          43.5459,
+          4.0151
+        ],
+        [
+          43.5499,
+          4.0501
+        ]
+      ],
+      "normal": 160,
+      "buoy": "03001",
+      "access": [
+        "Palavas",
+        "Carnon",
+        "Petit Travers",
+        "Grand Travers"
+      ],
+      "confidence": "medium",
+      "notes": "Par SO de Palavas vers la Grande-Motte, par E / ENE dans l'autre sens. Digues du port de Carnon à contourner au large.",
+      "label": {
+        "bearing": 160,
+        "km": 2.5
+      }
+    },
+    {
+      "id": "plagesud-grandemotte",
+      "name": "Plage Sud → La Grande-Motte",
+      "a": {
+        "name": "Plage Sud (Port Camargue)",
+        "lat": 43.506,
+        "lon": 4.1095
+      },
+      "b": {
+        "name": "La Grande-Motte",
+        "lat": 43.55,
+        "lon": 4.085
+      },
+      "path": [
+        [
+          43.506,
+          4.1095
+        ],
+        [
+          43.524,
+          4.11
+        ],
+        [
+          43.542,
+          4.096
+        ],
+        [
+          43.55,
+          4.085
+        ]
+      ],
+      "normal": 205,
+      "oneWay": true,
+      "buoy": "03001",
+      "access": [
+        "Plage Sud (interdite au kite et au wing l'été)",
+        "Le Grau-du-Roi rive gauche / rive droite",
+        "Le Boucanet",
+        "La Grande-Motte"
+      ],
+      "confidence": "low",
+      "notes": "Sens unique, par SE / ESE : de la plage Sud vers la Grande-Motte en traversant la baie d'Aigues-Mortes, au large des passes de Port Camargue et du Grau-du-Roi. Sortie possible au Boucanet.",
+      "label": {
+        "bearing": 248,
+        "km": 2.5
+      },
+      "crossing": true
+    }
+  ],
+  "buoys": [
+    {
+      "code": "03404",
+      "name": "Sète",
+      "lat": 43.3713,
+      "lon": 3.7771
+    },
+    {
+      "code": "03001",
+      "name": "Espiguette",
+      "lat": 43.411,
+      "lon": 4.1625
+    }
+  ],
+  "_doc_buoys": "Bouées au large (Candhis) qui servent à vérifier les modèles de vagues. Les mesures viennent de l'historique de Super Prévi Surf (dépôt public), pour ne pas consommer le quota Candhis une seconde fois.",
+  "_doc_label": "label = position de la pastille sur la carte (cap et distance depuis le milieu du parcours), pour que les parcours voisins ne se chevauchent pas."
+}
