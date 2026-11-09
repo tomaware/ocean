@@ -26,7 +26,7 @@ export function privacyEngines(text: string, live: { spots?: Record<string, { t?
   return { id: 'confidentialite-moteurs', ok: leaks.length === 0, detail: leaks.length ? 'FUITE : ' + leaks.join(', ') : 'aucun relevé Winds-Up ni clé dans les sorties (seuls les facteurs de correction dérivés y figurent, comme dans l’app downwind actuelle)' };
 }
 
-function main(): void {
+async function main(): Promise<void> {
   const bundle = JSON.parse(readFileSync(new URL('data/v1/collect/bundle.json', ROOT), 'utf8')) as CollectBundle;
   const registry = loadRegistry();
   const now = bundle.generatedAt;
@@ -43,13 +43,15 @@ function main(): void {
   } else checks.push({ id: 'golden', ok: false, detail: 'réponses brutes absentes (data/private) : lancer la collecte dans le même job' });
 
   const sp = bundle.forecasts.find((f) => f.id === 'super-prevision');
-  const corr = ocean.downwindJSON.correction as { name: string; hours: number; live: boolean }[];
+  const corr = ocean.downwindJSON.correction as { spot: string; hours: number; live: boolean; ratioMoy: number | null }[];
   checks.push({ id: 'correction-vent-downwind', ok: !sp || corr.length > 0,
-    detail: sp ? `${corr.length} spot(s) de recalage : ` + corr.map((c) => `${c.name} ${c.hours} h${c.live ? ' + relevé' : ''}`).join(', ') : 'super prévision absente → vent AROME / ECMWF brut' });
+    detail: sp ? `${corr.length} spot(s) de recalage : ` + corr.map((c) => `${c.spot} ${c.hours} h (× ${c.ratioMoy} en moyenne)${c.live ? ' + relevé récent' : ''}`).join(', ') : 'super prévision absente → vent AROME / ECMWF brut' });
   const surfN = ocean.surfJSON.spots.filter((s: any) => s.h.score.some((x: number | null) => x !== null)).length;
   checks.push({ id: 'sorties-surf', ok: surfN === ocean.surfJSON.spots.length, detail: `${surfN}/${ocean.surfJSON.spots.length} spots notés ; ${ocean.surfJSON.windows.length} créneaux` });
   const dwN = ocean.downwindJSON.runs.filter((r: any) => r.hours.length > 0).length;
   checks.push({ id: 'sorties-downwind', ok: dwN === ocean.downwindJSON.runs.length, detail: `${dwN}/${ocean.downwindJSON.runs.length} parcours notés ; ${ocean.downwindJSON.best.length} meilleurs créneaux` });
+
+  checks.push(...(await vsProduction(ocean, now)));
 
   const surfText = JSON.stringify(ocean.surfJSON), dwText = JSON.stringify(ocean.downwindJSON);
   checks.push(privacyEngines(surfText + dwText, live, [(process.env.SUPER_PREVISION_URL ?? '').trim()]));
@@ -67,6 +69,39 @@ function main(): void {
   if (checks.some((c) => c.id.startsWith('golden') && !c.ok)) process.exit(3);
 }
 
+// Production actuelle (information) : les apps en service tournent à d'autres minutes, avec d'autres horizons
+// (downwind : 5 jours) et Copernicus pour le surf. Les écarts attendus sont faibles mais pas nuls.
+export const PROD = { surf: 'https://tomaware.github.io/super-previ-surf/data/forecast.json', downwind: 'https://raw.githubusercontent.com/tomaware/downwind-foil/main/data/downwind.json' };
+async function vsProduction(o: ReturnType<typeof runEngines>, now: number): Promise<Check[]> {
+  const get = async (u: string) => { try { const r = await fetch(u, { headers: { 'User-Agent': 'ocean-pipeline' } }); return r.ok ? await r.json() : null; } catch { return null; } };
+  const [ps, pd] = await Promise.all([get(PROD.surf), get(PROD.downwind)]);
+  const stats = (pairs: [number, number][]) => {
+    const d = pairs.map(([a, b]) => Math.abs(a - b)).sort((x, y) => x - y);
+    return d.length ? `médiane ${d[Math.floor(d.length / 2)].toFixed(2)}, 90 % ≤ ${d[Math.floor(d.length * 0.9)].toFixed(2)}, max ${d[d.length - 1].toFixed(2)} sur ${d.length} heures` : 'aucune heure commune';
+  };
+  const age = (g: string | number | undefined) => (g ? `calcul prod. ${Math.round((now - (typeof g === 'number' ? g : Date.parse(g))) / 60000)} min avant` : 'date inconnue');
+  const out: Check[] = [];
+  if (ps?.spots) {
+    const pairs: [number, number][] = [];
+    for (const s of o.surfJSON.spots) {
+      const p = ps.spots.find((x: any) => x.id === s.id); if (!p) continue;
+      const idx = new Map<number, number>(p.h.t.map((t: number, i: number) => [t, i]));
+      s.h.t.forEach((t: number, i: number) => { const j = idx.get(t); if (t >= now && j !== undefined && s.h.score[i] !== null && p.h.score[j] !== null) pairs.push([s.h.score[i], p.h.score[j]]); });
+    }
+    out.push({ id: 'ecart-prod-surf', ok: true, detail: `notes surf OCEAN vs app en service (${age(ps.generated)}${ps.sources?.copernicus?.points ? ', prod avec Copernicus' : ''}) : ` + stats(pairs) });
+  } else out.push({ id: 'ecart-prod-surf', ok: true, detail: 'prévision de l’app surf en service illisible' });
+  if (pd?.runs) {
+    const pairs: [number, number][] = [];
+    for (const r of o.downwindJSON.runs) {
+      const p = pd.runs.find((x: any) => x.id === r.id); if (!p) continue;
+      const idx = new Map<number, number[]>(p.hours.map((h: number[]) => [h[0], h]));
+      r.hours.forEach((h: number[]) => { const q = idx.get(h[0]); if (h[0] >= now && q && h[13]) pairs.push([h[11], q[11]]); });
+    }
+    out.push({ id: 'ecart-prod-downwind', ok: true, detail: `notes downwind (intermédiaire, de jour) OCEAN vs app en service (${age(pd.generated)}) : ` + stats(pairs) });
+  } else out.push({ id: 'ecart-prod-downwind', ok: true, detail: 'prévision de l’app downwind en service illisible' });
+  return out;
+}
+
 function report(now: number, checks: Check[], o: ReturnType<typeof runEngines>): string {
   const d = (t: number) => new Date(t).toLocaleString('fr-FR', { timeZone: 'Europe/Paris', weekday: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
   let s = `# Rapport d'analyse (② ANALYSE)\n\nGénéré le ${new Date(now).toISOString().replace('T', ' ').slice(0, 16)} UTC par \`pipeline/engines/run.ts\`, juste après la collecte.\n\n`;
@@ -82,4 +117,4 @@ function report(now: number, checks: Check[], o: ReturnType<typeof runEngines>):
   return s;
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) main();
+if (import.meta.url === `file://${process.argv[1]}`) main().catch((e) => { console.error('[analyse] échec :', e); process.exit(1); });
