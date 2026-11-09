@@ -1,6 +1,6 @@
 # Rapport d'analyse (② ANALYSE)
 
-Généré le 2026-11-09 23:49 UTC par `pipeline/engines/run.ts`, juste après la collecte.
+Généré le 2026-11-09 23:50 UTC par `pipeline/engines/run.ts`, juste après la collecte.
 
 Les moteurs des apps actuelles (copies non modifiées dans `legacy/`) sont alimentés par la collecte commune. Le test golden refait le calcul comme les apps actuelles, avec leurs propres parseurs sur les mêmes réponses brutes, et exige les mêmes notes à ±0.1.
 
@@ -10,9 +10,11 @@ Les moteurs des apps actuelles (copies non modifiées dans `legacy/`) sont alime
 |---|---|---|
 | golden-surf | ✅ | 4152 valeurs (note, hauteur, vent × 8 spots), écart max 0 ; créneaux identiques (tolérance 0.1) |
 | golden-downwind | ✅ | 1440 valeurs (vent, houle, 3 notes × 3 parcours), écart max 0 ; créneaux identiques ; correction du vent identique (tolérance 0.1) |
-| correction-vent-downwind | ✅ | 2 spot(s) de recalage : undefined 53 h, undefined 55 h |
+| correction-vent-downwind | ✅ | 2 spot(s) de recalage : La Grande-Motte 53 h (× 1.17 en moyenne), Port Camargue 55 h (× 1.08 en moyenne) |
 | sorties-surf | ✅ | 8/8 spots notés ; 12 créneaux |
 | sorties-downwind | ✅ | 3/3 parcours notés ; 0 meilleurs créneaux |
+| ecart-prod-surf | ✅ | notes surf OCEAN vs app en service (calcul prod. 11 min avant, prod avec Copernicus) : médiane 0.20, 90 % ≤ 1.00, max 3.00 sur 1336 heures |
+| ecart-prod-downwind | ✅ | notes downwind (intermédiaire, de jour) OCEAN vs app en service (calcul prod. 50 min avant) : médiane 0.00, 90 % ≤ 0.00, max 0.30 sur 120 heures |
 | confidentialite-moteurs | ✅ | aucun relevé Winds-Up ni clé dans les sorties (seuls les facteurs de correction dérivés y figurent, comme dans l’app downwind actuelle) |
 
 ## Meilleurs créneaux surf (7 jours)
