@@ -106,3 +106,24 @@ export function privacy(bundle: CollectBundle, secrets: string[]): Check {
   for (const x of secrets) if (x && x.length > 8 && s.includes(x)) leaks.push('un secret');
   return { id: 'confidentialite', ok: leaks.length === 0, detail: leaks.length ? 'FUITE : ' + leaks.join(', ') : 'aucun relevé Winds-Up, aucune clé, aucune URL privée dans les données publiées' };
 }
+
+/** Information : part des 48 prochaines heures fournie par chaque modèle (un modèle s'arrête à son horizon). */
+export function modelAvailability(block: ForecastBlock, key: string, now: number): Check {
+  const idx = block.times.map((t, i) => [t, i] as const).filter(([t]) => t >= now && t < now + 48 * 3600e3).map(([, i]) => i);
+  const parts = block.models.map((m) => {
+    let have = 0, tot = 0;
+    for (const byModel of Object.values(block.values)) {
+      const a = byModel[m]?.[key];
+      for (const i of idx) { tot++; if (a && a[i] !== null && a[i] !== undefined) have++; }
+    }
+    return `${m} ${tot ? Math.round((have / tot) * 100) : 0} %`;
+  });
+  return { id: 'modeles-' + block.id, ok: true, detail: `${key} sur 48 h : ` + parts.join(' · ') };
+}
+
+/** Super prévision : les 6 spots présents, de 6 h à 21 h, sur les 2 prochains jours. */
+export function coverageSuper(block: ForecastBlock, now: number): Check {
+  const pts = Object.keys(block.values);
+  const fut = block.times.filter((t) => t >= now && t < now + 48 * 3600e3).length;
+  return { id: 'couverture-super-prevision', ok: pts.length === 6 && fut >= 20, detail: `${pts.length} spots sur 6 ; ${fut} heures de jour dans les 48 h à venir` };
+}

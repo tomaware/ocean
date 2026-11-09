@@ -8,7 +8,7 @@ import { collectOpenMeteo, ENGINE_WIND_MODELS, MARINE_VARS, marineUrl, SPOT_WIND
 import { collectCandhis } from './candhis.ts';
 import { collectSuperPrevision } from './superprevision.ts';
 import { collectMetar } from './metar.ts';
-import { coverage, fidelityMarine, fidelityWind, freshness, hourlyGrid, privacy } from './checks.ts';
+import { coverage, coverageSuper, fidelityMarine, fidelityWind, freshness, hourlyGrid, modelAvailability, privacy } from './checks.ts';
 
 const OUT = new URL('../../data/v1/collect/', import.meta.url);
 const REPORT = new URL('../../docs/quality/COLLECT_REPORT.md', import.meta.url);
@@ -41,19 +41,19 @@ async function main(): Promise<void> {
   const marine = await step('open-meteo-marine', () => collectOpenMeteo('open-meteo-marine', marineUrl(plan.marine), plan.marine, MARINE_VARS, WAVE_MODELS), status, (r) => span(r.block));
   if (marine) {
     forecasts.push(marine.block);
-    checks.push(fidelityMarine(marine.json, plan.marine, marine.block), hourlyGrid(marine.block, now), coverage(marine.block, 'wave_height', now));
+    checks.push(fidelityMarine(marine.json, plan.marine, marine.block), hourlyGrid(marine.block, now), coverage(marine.block, 'wave_height', now), modelAvailability(marine.block, 'wave_height', now));
   }
   const wind = await step('open-meteo-vent-moteurs', () => collectOpenMeteo('open-meteo-vent-moteurs', windUrl(plan.engineWind, ENGINE_WIND_MODELS), plan.engineWind, WIND_VARS, ENGINE_WIND_MODELS), status, (r) => span(r.block));
   if (wind) {
     forecasts.push(wind.block);
-    checks.push(fidelityWind(wind.json, plan.engineWind, wind.block), hourlyGrid(wind.block, now), coverage(wind.block, 'wind_speed_10m', now));
+    checks.push(fidelityWind(wind.json, plan.engineWind, wind.block), hourlyGrid(wind.block, now), coverage(wind.block, 'wind_speed_10m', now), modelAvailability(wind.block, 'wind_speed_10m', now));
   }
   const spots = await step('open-meteo-vent-spots', () => collectOpenMeteo('open-meteo-vent-spots', windUrl(plan.windSpots, SPOT_WIND_MODELS), plan.windSpots, WIND_VARS, SPOT_WIND_MODELS), status, (r) => span(r.block));
-  if (spots) { forecasts.push(spots.block); checks.push(hourlyGrid(spots.block, now), coverage(spots.block, 'wind_speed_10m', now)); }
+  if (spots) { forecasts.push(spots.block); checks.push(hourlyGrid(spots.block, now), coverage(spots.block, 'wind_speed_10m', now), modelAvailability(spots.block, 'wind_speed_10m', now)); }
 
   if (secretUrl) {
     const sp = await step('super-prevision', () => collectSuperPrevision(secretUrl, registry), status, (r) => ({ ...span(r.block), points: r.stats.points }));
-    if (sp) forecasts.push(sp.block);
+    if (sp) { forecasts.push(sp.block); checks.push(coverageSuper(sp.block, now)); }
   } else {
     status.push({ id: 'super-prevision', ok: false, message: 'secret SUPER_PREVISION_URL absent', durationMs: 0, points: 0, models: [], values: 0, missing: 0, rejected: 0 });
   }
