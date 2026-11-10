@@ -14,7 +14,13 @@ test('wing : cas de référence', () => {
   // Almanarre (large 245°), 22 nd d'ONO (290° : side-on), rafales 28 (×1,27, pas rafaleux)
   assert.equal(sc('almanarre', 22, 28, 290, 'intermediaire').score, 10);
   assert.equal(sc('almanarre', 22, 28, 290, 'confirme').score, 10);
-  assert.equal(sc('almanarre', 22, 28, 290, 'debutant').score, 6.7);             // au-dessus de 20 nd : (26-22)/6
+  // v1.1 (D-18) : plus de pénalité « trop de vent » avant 35 nd (v1.0 donnait 6,7 en débutant)
+  assert.equal(sc('almanarre', 22, 28, 290, 'debutant').score, 10);
+  assert.equal(sc('almanarre', 35, 40, 290, 'debutant').score, 10);
+  assert.equal(sc('almanarre', 36, 40, 290, 'confirme').score, 0);
+  assert.equal(sc('almanarre', 36, 40, 290, 'confirme').limit, 'trop de vent (plus de 35 nd)');
+  // rafales fortes : vent effectif (30 + 45) / 2 = 37,5 > 35 → 0
+  assert.equal(sc('almanarre', 30, 45, 290, 'confirme').score, 0);
   // La Franqui (large 100°) en tramontane (315°) : vent de terre → 0 pour tous
   for (const L of ['debutant', 'intermediaire', 'confirme'] as const) {
     const r = sc('la-franqui', 20, 26, 315, L);
@@ -38,7 +44,8 @@ test('wing : cas de référence', () => {
 });
 
 test('wing : facteurs et libellés', () => {
-  assert.equal(windFactor(12, 'debutant'), 0); assert.equal(windFactor(15, 'debutant'), 1); assert.equal(windFactor(26, 'debutant'), 0);
+  assert.equal(windFactor(12, 'debutant'), 0); assert.equal(windFactor(15, 'debutant'), 1); assert.equal(windFactor(26, 'debutant'), 1);
+  assert.equal(windFactor(35, 'intermediaire'), 1); assert.equal(windFactor(35.1, 'intermediaire'), 0);
   assert.equal(gustFactor(1.3), 1); assert.equal(gustFactor(1.6), 0.6); assert.equal(gustFactor(2.2), 0.4);
   assert.deepEqual([label(7), label(6.9), label(5), label(4.9), label(null)], ['Ça envoie', 'Ça se tente', 'Ça se tente', 'Non', '—']);
 });

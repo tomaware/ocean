@@ -25,7 +25,7 @@ export function seriesFor(d: AllData, spot: PublicSpot, disc: Discipline, level:
         { key: 'dir', label: 'De', fmt: (h) => compass(h.dir) },
         { key: 'sector', label: 'Plage', fmt: (h) => (h.sector ? SECTOR[h.sector] ?? h.sector : spot.waterBody === 'lagoon' ? 'plan d’eau' : '—'), warn: (h) => h.sector === 'offshore' || h.sector === 'side-off' },
         { key: 'score', label: 'Note', num: true, fmt: (h) => n1(h.scores[level]) },
-        { key: 'limit', label: 'Ce qui limite', fmt: (h) => h.limit[level] ?? '—' },
+        { key: 'limit', label: 'Commentaire', fmt: (h) => h.limit[level] ?? '—' },
       ],
       lines: [
         { label: 'Vent', values: hours.map((h: any) => h.kn), color: '#256D70', unit: 'nd' },

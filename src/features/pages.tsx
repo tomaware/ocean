@@ -11,17 +11,17 @@ import { Chart } from '../components/Chart';
 import { SpotMap } from '../components/SpotMap';
 import { seriesFor } from './series';
 
-const levelFor = (prefs: ReturnType<typeof usePrefs>, d: Discipline): Level => prefs.levels[d];
-const matches = (s: Session, prefs: ReturnType<typeof usePrefs>) => s.level === 'tous' || s.level === levelFor(prefs, s.discipline);
-const upcoming = (d: AllData, now: number) => d.sessions.sessions.filter((s) => s.end > now);
+export const levelFor = (prefs: ReturnType<typeof usePrefs>, d: Discipline): Level => prefs.levels[d];
+export const matches = (s: Session, prefs: ReturnType<typeof usePrefs>) => s.level === 'tous' || s.level === levelFor(prefs, s.discipline);
+export const upcoming = (d: AllData, now: number) => d.sessions.sessions.filter((s) => s.end > now);
 
-function bestScoreBySpot(d: AllData, prefs: ReturnType<typeof usePrefs>, now: number): Record<string, number | null> {
+export function bestScoreBySpot(d: AllData, prefs: ReturnType<typeof usePrefs>, now: number): Record<string, number | null> {
   const out: Record<string, number | null> = {};
   for (const s of upcoming(d, now)) if (matches(s, prefs)) out[s.spot] = Math.max(out[s.spot] ?? 0, s.peak);
   return out;
 }
 
-function Freshness({ d, now }: { d: AllData; now: number }) {
+export function Freshness({ d, now }: { d: AllData; now: number }) {
   const age = (now - d.meta.generatedAt) / 3600e3;
   const failed = d.meta.sources.filter((s) => !s.ok);
   return (
@@ -32,7 +32,7 @@ function Freshness({ d, now }: { d: AllData; now: number }) {
   );
 }
 
-function LiveBox({ live, spot }: { live: Live[] | null; spot?: string }) {
+export function LiveBox({ live, spot }: { live: Live[] | null; spot?: string }) {
   const rows = (live ?? []).filter((l) => !spot || l.spot === spot);
   if (!rows.length) return null;
   return (
@@ -57,68 +57,6 @@ export const MODULES: { slug: string; disc: Discipline; tab: string; title: stri
   { slug: 'houle', disc: 'downwind', tab: 'HOULE', title: 'Quel downwind ?', sub: 'Downwind wing foil · vent + houle au large, Frontignan → Espiguette' },
 ];
 export const moduleOf = (disc: Discipline) => MODULES.find((m) => m.disc === disc)!;
-
-export function Module({ d, now, disc }: { d: AllData; now: number; disc: Discipline }) {
-  const prefs = usePrefs();
-  const m = moduleOf(disc);
-  const L = levelFor(prefs, disc);
-  const [onlyFav, setOnlyFav] = useState(false);
-  const spots = d.spots.filter((s) => spotDiscipline(s) === disc);
-  const live = useLive(disc === 'wing' ? spots.map((s) => s.id) : []);
-  const best = useMemo(() => bestScoreBySpot(d, prefs, now), [d, prefs, now]);
-  const top = d.sessions.best[L]?.[disc] ?? null;
-  const list = upcoming(d, now).filter((s) => s.discipline === disc && matches(s, prefs) && (!onlyFav || prefs.favorites.includes(s.spot)));
-  const byDay = new Map<string, Session[]>();
-  list.forEach((s) => { const k = dayKey(s.start); if (!byDay.has(k)) byDay.set(k, []); byDay.get(k)!.push(s); });
-  const meta = d.meta.disciplines[disc];
-  return (
-    <>
-      <header class="page-head">
-        <span class="eyebrow">{m.tab} · {DISC_LABEL[disc]}</span>
-        <h1>{m.title}</h1>
-        <span class="muted">{m.sub}</span>
-        <div class="row between"><Freshness d={d} now={now} />
-          {disc !== 'surf' && <Seg<Level> label={`Niveau ${DISC_LABEL[disc]}`} value={L} onChange={(v) => setPrefs((p) => ({ ...p, levels: { ...p.levels, [disc]: v } }))} options={LEVELS.map((l) => [l, LEVEL_LABEL[l]] as [Level, string])} />}
-        </div>
-      </header>
-      {!meta.available && <div class="notice warn">Prévision indisponible pour cette mise à jour : {meta.note || meta.source}</div>}
-      <LiveBox live={live.live} />
-      <a class="card link" href={top ? `#/spot/${top.spot}` : '#'}>
-        <span class="eyebrow">Meilleure session à venir{disc === 'surf' ? '' : ` · ${LEVEL_LABEL[L].toLowerCase()}`}</span>
-        {top ? (
-          <>
-            <div class="row between"><span class="big">{top.spotName}</span><Badge score={top.peak} size="lg" /></div>
-            <span class="muted">{span(top.start, top.end, now)}</span>
-            <span class="small">{top.text}</span>
-            {top.why && <span class="faint">Limite : {top.why}</span>}
-          </>
-        ) : <span class="muted">Pas de session 2H dans les prochains jours.</span>}
-      </a>
-      <Section title="Sessions 2H" aside={<Seg label="Spots" value={onlyFav ? 'fav' : 'all'} onChange={(v) => setOnlyFav(v === 'fav')} options={[['all', 'Tous'], ['fav', 'Favoris']]} />}>
-        {byDay.size === 0 && <div class="card empty">Aucune session en vue{onlyFav ? ' sur tes favoris' : ''}.</div>}
-        {[...byDay.values()].map((arr) => (
-          <div key={arr[0].id} class="stack">
-            <h3>{dayLabel(arr[0].start, now)}</h3>
-            <div class="card"><div class="list">{arr.map((s) => <SessionRow key={s.id} s={s} now={now} compact />)}</div></div>
-          </div>
-        ))}
-      </Section>
-      <Section title="Spots">
-        <SpotMap spots={spots} best={best} />
-        <div class="card"><div class="list">
-          {spots.map((s) => (
-            <a key={s.id} class="session" href={`#/spot/${s.id}`}>
-              <DiscIcon d={disc} />
-              <div class="stack" style={{ gap: '2px' }}><strong>{s.name}</strong><span class="faint">{s.waterBody === 'lagoon' ? 'étang' : DISC_LABEL[disc]}</span></div>
-              <div class="row"><Badge score={best[s.id] ?? null} /><Fav id={s.id} name={s.name} /></div>
-            </a>
-          ))}
-        </div></div>
-      </Section>
-      <p class="faint">Session 2H = au moins 2 h d’affilée à 5/10 ou plus, de jour. Source : {meta.source}.</p>
-    </>
-  );
-}
 
 // ------------------------------------------------------------------ Prévisions (un spot)
 export function SpotPage({ d, id, now }: { d: AllData; id: string; now: number }) {

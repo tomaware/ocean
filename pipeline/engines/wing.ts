@@ -4,16 +4,16 @@
 import type { ForecastBlock, Registry, Spot } from '../../src/types/contracts.ts';
 import { SurfEngine as E } from '../collect/points.ts';
 
-export const WING_VERSION = '1.0.0';
+export const WING_VERSION = '1.1.0';   // 1.1 (10/11, D-18, Tom) : « trop de vent » seulement au-delà de 35 nd, tous niveaux
 export const MS_TO_KN = 1.94384;
 export type WingLevel = 'debutant' | 'intermediaire' | 'confirme';
 export const WING_LEVELS: WingLevel[] = ['debutant', 'intermediaire', 'confirme'];
 
 /** Vent (nœuds) : 0 sous `min`, 1 entre `lo` et `hi`, 0 à partir de `max`. */
 export const WIND: Record<WingLevel, { min: number; lo: number; hi: number; max: number }> = {
-  debutant: { min: 12, lo: 15, hi: 20, max: 26 },
-  intermediaire: { min: 11, lo: 14, hi: 24, max: 30 },
-  confirme: { min: 9, lo: 14, hi: 28, max: 35 },
+  debutant: { min: 12, lo: 15, hi: 35, max: 35 },
+  intermediaire: { min: 11, lo: 14, hi: 35, max: 35 },
+  confirme: { min: 9, lo: 14, hi: 35, max: 35 },
 };
 /** Direction : facteur par secteur (angle entre le vent et la direction du large). */
 export const SECTORS = [
@@ -33,10 +33,10 @@ const lerp = (x: number, x0: number, x1: number, y0: number, y1: number) => y0 +
 
 export function windFactor(kn: number, L: WingLevel): number {
   const w = WIND[L];
-  if (kn <= w.min || kn >= w.max) return 0;
+  if (kn <= w.min || kn > w.max) return 0;   // 35 nd encore OK, au-delà : trop de vent
   if (kn < w.lo) return (kn - w.min) / (w.lo - w.min);
   if (kn <= w.hi) return 1;
-  return (w.max - kn) / (w.max - w.hi);
+  return w.max > w.hi ? (w.max - kn) / (w.max - w.hi) : 0;
 }
 export function gustFactor(g: number): number {
   if (!(g > 1.3)) return 1;
@@ -77,7 +77,7 @@ export function scoreHour(kn: number, gust: number | null, dir: number | null, d
   // à égalité, la direction passe en premier : « vent de terre » est plus important à lire que « trop de vent »
   const why = [
     [D.f, D.label],
-    [V, eff <= w.lo ? 'pas assez de vent' : 'trop de vent'],
+    [V, eff <= w.lo ? 'pas assez de vent' : 'trop de vent (plus de 35 nd)'],
     [R, 'vent rafaleux'],
   ] as [number, string][];
   const worst = why.reduce((a, b) => (b[0] < a[0] ? b : a));

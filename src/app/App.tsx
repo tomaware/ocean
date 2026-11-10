@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'preact/hooks';
 import { Route as RouteIcon, User, Waves, Wind } from 'lucide-preact';
 import { spotDiscipline, useData } from '../services/data';
-import { Module, MODULES, moduleOf, Profile, Reliability, SpotPage } from '../features/pages';
+import { MODULES, moduleOf, Profile, Reliability, SpotPage } from '../features/pages';
+import { Module, SUBS, type Sub } from '../features/modules';
 
 type Route = { name: string; id?: string };
 function parse(): Route {
@@ -34,7 +35,10 @@ export function App() {
   else if (route.name === 'spot' && route.id) page = <SpotPage d={data} id={route.id} now={now} />;
   else if (route.name === 'profil') page = <Profile d={data} />;
   else if (route.name === 'fiabilite') page = <Reliability d={data} now={now} />;
-  else page = <Module key={(mod ?? MODULES[0]).disc} d={data} now={now} disc={(mod ?? MODULES[0]).disc} />;
+  else {
+    const sub: Sub = (SUBS.find((x) => x.id === route.id)?.id ?? 'meilleure') as Sub;
+    page = <Module key={(mod ?? MODULES[0]).disc} d={data} now={now} disc={(mod ?? MODULES[0]).disc} sub={sub} />;
+  }
   return (
     <div class="shell">
       <header class="topbar">

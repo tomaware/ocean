@@ -1,6 +1,6 @@
-# Note wing foil — v1.0
+# Note wing foil — v1.1
 
-> **Statut : validée par Tom le 10/11 (D-14, D-16).** Wing seulement, pas de kite (plages de vent différentes). Code : `pipeline/engines/wing.ts`, cas de référence : `tests/wing.test.ts`. Toute modification = décision documentée + cas de référence mis à jour.
+> **Statut : validée par Tom le 10/11 (D-14, D-16) ; v1.1 le 10/11 à 12 h 41 (D-18 : « trop de vent c'est plus de 35 nœuds, sinon c'est OK »).** Wing seulement, pas de kite (plages de vent différentes). Code : `pipeline/engines/wing.ts`, cas de référence : `tests/wing.test.ts`. Toute modification = décision documentée + cas de référence mis à jour.
 
 ## 1. Ce que la note dit
 
@@ -36,9 +36,11 @@ Trapèze : 0 au minimum, monte jusqu'à l'idéal, 1 dans l'idéal, redescend jus
 
 | Niveau | Minimum (0) | Idéal (1) | Trop fort (0) |
 |---|---|---|---|
-| Débutant | 12 | 15 – 20 | 26 |
-| Intermédiaire | 11 | 14 – 24 | 30 |
-| Confirmé | 9 | 14 – 28 | 35 |
+| Débutant | 12 | 15 – 35 | au-delà de 35 |
+| Intermédiaire | 11 | 14 – 35 | au-delà de 35 |
+| Confirmé | 9 | 14 – 35 | au-delà de 35 |
+
+**v1.1 (D-18, Tom)** : plus de pénalité pour vent fort jusqu'à 35 nœuds inclus, à tous les niveaux ; au-delà, note 0 et commentaire « trop de vent (plus de 35 nd) ». En v1.0, la note baissait dès 20 nd (débutant), 24 nd (intermédiaire) ou 28 nd (confirmé). Cas de référence avant / après : Almanarre, 22 nd d'ONO, débutant : 6,7 → 10.
 
 D'où viennent ces chiffres :
 - Débutant 15–20 nd idéal : [Poole Harbour](https://pooleharbour.co.uk/blogs/foiling-blogs/how-much-wind-for-wing-foiling) (« 15-20 knots », matériel débutant 15–24 nd) et [Windance](https://www.windance.com/blogs/wing-foiling/wing-size-by-wind-chart) (12–20 nd, la plage où les débutants progressent le mieux ; 25 nd et + déconseillé aux débutants).

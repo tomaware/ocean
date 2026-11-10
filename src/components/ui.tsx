@@ -49,7 +49,7 @@ export function SessionRow({ s, now, showSpot = true, compact = false }: { s: Se
           <span class="faint">{compact ? `${hh(s.start)} – ${hh(s.end)} · ${s.hours} h` : span(s.start, s.end, now)}</span>
         </div>
         <span class="small muted">{s.text}{!compact && s.level !== 'tous' ? ` · ${LEVEL_LABEL[s.level].toLowerCase()}` : ''}</span>
-        {s.why && <span class="faint">Limite : {s.why}</span>}
+        {s.why && <span class="faint">Commentaire : {s.why}</span>}
       </div>
       <Badge score={s.peak} />
     </a>

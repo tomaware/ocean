@@ -3,7 +3,18 @@
 ## Pour qui
 Tout le monde (app publique), plus un **mode perso** pour Tom (relevés Winds-Up en direct, lus depuis son appareil seulement).
 
-## Navigation : 3 onglets en haut, un par module (demande de Tom, 10/11)
+## Navigation : 3 onglets en haut, modules à droite (demandes de Tom, 10/11)
+
+Dans chaque onglet, menu des modules à droite (ordinateur) ou en pastilles sous le titre (mobile) :
+1. **Meilleure session** : la meilleure session 2H à venir + 3 autres bonnes, chacune avec son graphique horaire.
+2. **Sessions 2H** : toutes les sessions par jour, graphique horaire sous chaque nom (créneau surligné), commentaire.
+3. **Prévision** : grille spots × 5 jours (case colorée = session, nombre d'heures, couleur = note ; sinon vent max ou hauteur max), détail horaire au clic.
+4. **Spots** : carte + liste, favoris.
+
+Graphique horaire (7 h – 20 h) : WIND = vent en nœuds + flèche ; VAGUE = hauteur (m) + flèche de houle + période (s) ; HOULE = vent + flèche + houle (m). Couleur = note.
+Adresses : `#/wind/meilleure`, `#/wind/sessions`, `#/wind/prevision`, `#/wind/spots` (idem `vague`, `houle`).
+
+### Onglets
 | Onglet | Module | Contenu |
 |---|---|---|
 | **WIND** | Wing foil (vent corrigé par la super prévision) | niveau, meilleure session à venir, sessions 2H par jour, carte + liste des 6 spots, relevés en direct (mode perso) |

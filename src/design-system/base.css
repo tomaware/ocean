@@ -115,3 +115,37 @@ table.data th, .table-wrap th { font-weight: 600; color: var(--c-ink-2); font-si
 .kv { display: grid; gap: 2px; }
 @media (min-width: 600px) { .kv { grid-template-columns: 180px 1fr; gap: var(--s-4); align-items: baseline; } }
 .u-legend th { text-transform: none; font-weight: 500; }
+
+/* modules d'un onglet : menu à droite (ordinateur), en haut et défilant (mobile) */
+.module { display: grid; gap: var(--s-5); align-items: start; }
+.module-body { display: grid; gap: var(--s-6); min-width: 0; }
+.subnav { display: flex; gap: var(--s-1); overflow-x: auto; scrollbar-width: none; margin: 0 calc(-1 * var(--s-4)); padding: 0 var(--s-4); }
+.subnav a { flex: none; padding: 8px 14px; border-radius: var(--r-pill); background: var(--c-surface-2); color: var(--c-ink-2); text-decoration: none; font-weight: 600; font-size: var(--fs-sm); white-space: nowrap; }
+.subnav a[aria-current="page"] { background: var(--c-accent); color: #fff; }
+@media (min-width: 900px) {
+  .module { grid-template-columns: 1fr 210px; }
+  .subnav { order: 2; position: sticky; top: 76px; flex-direction: column; margin: 0; padding: var(--s-3); background: var(--c-surface); border: 1px solid var(--c-line); border-radius: var(--r-lg); }
+  .subnav a { background: transparent; border-radius: var(--r-md); padding: 10px 12px; font-size: var(--fs-md); }
+  .subnav a[aria-current="page"] { background: var(--c-accent-soft); color: var(--c-accent); }
+}
+
+/* graphique d'une journée (pastilles horaires) */
+.daychart { display: grid; gap: var(--s-2); }
+.chips { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 3px; }
+.chip-legend { font-size: 10px; color: var(--c-ink-3); }
+@media (max-width: 560px) { .chips { gap: 2px; } .chip-v { font-size: 11px; padding: 3px 0; border-radius: 4px; } .chip-s, .chip-h { font-size: 9px; } .arrow { width: 10px; height: 10px; } }
+.chipcol { display: grid; justify-items: center; gap: 2px; padding: 2px 0; border-radius: 6px; }
+.chipcol.on { background: var(--c-accent-soft); }
+.chip-v { width: 100%; text-align: center; border-radius: 5px; padding: 3px 0; font-weight: 700; font-size: var(--fs-sm); font-variant-numeric: tabular-nums; }
+.chip-s { font-size: 10px; color: var(--c-ink-2); min-height: 12px; white-space: nowrap; }
+.chip-h { font-size: 10px; color: var(--c-ink-3); }
+.arrow { width: 12px; height: 12px; color: var(--c-ink-2); display: block; }
+
+/* grille prévision 5 jours */
+table.grid5 { border-collapse: separate; border-spacing: 4px; width: 100%; }
+table.grid5 th, table.grid5 td { border: 0; padding: 0; text-align: center; white-space: normal; position: static; background: none; }
+table.grid5 thead th { font-size: 11px; text-transform: none; letter-spacing: 0; color: var(--c-ink-2); font-weight: 600; padding-bottom: 4px; vertical-align: bottom; }
+table.grid5 tbody th { text-align: left; font-size: var(--fs-sm); color: var(--c-ink); white-space: nowrap; padding-right: 6px; text-transform: none; letter-spacing: 0; }
+.cell { width: 100%; min-width: 44px; min-height: 40px; border: 0; border-radius: 8px; background: var(--c-surface-2); color: var(--c-ink-2); font-weight: 600; cursor: pointer; font-variant-numeric: tabular-nums; }
+.cell.s { font-weight: 800; }
+.cell.sel { outline: 3px solid var(--c-ink); outline-offset: 1px; }
