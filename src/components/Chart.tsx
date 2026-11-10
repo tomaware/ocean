@@ -1,14 +1,22 @@
 // Graphique uPlot : note (barres) + une ou deux grandeurs physiques (lignes), heure de Paris.
-import { useEffect, useRef } from 'preact/hooks';
-import uPlot from 'uplot';
+import { useEffect, useRef, useState } from 'preact/hooks';
+import type uPlot from 'uplot';
+
+// uPlot est chargé à la demande : s'il échoue (ex. langue du navigateur invalide), seul le graphique manque.
+let lib: Promise<typeof uPlot> | null = null;
+const loadUPlot = () => (lib ??= import('uplot').then((m) => m.default));
 
 export type Line = { label: string; values: (number | null)[]; color: string; unit: string; scale?: string; dash?: number[] };
 const css = (v: string) => getComputedStyle(document.documentElement).getPropertyValue(v).trim() || '#888';
 
 export function Chart({ times, score, lines, height = 240, title }: { times: number[]; score?: (number | null)[]; lines: Line[]; height?: number; title: string }) {
   const el = useRef<HTMLDivElement>(null);
+  const [U, setU] = useState<typeof uPlot | null>(null);
+  const [failed, setFailed] = useState(false);
+  useEffect(() => { loadUPlot().then((m) => setU(() => m), () => setFailed(true)); }, []);
   useEffect(() => {
-    if (!el.current || !times.length) return;
+    if (!U || !el.current || !times.length) return;
+    const uPlot = U;
     // trou de plus d'une heure (nuit, série coupée) : point vide pour ne pas relier les courbes
     const gapAt = times.map((t, i) => i > 0 && t - times[i - 1] > 3600e3);
     const withGaps = <T,>(a: T[], fill: T | null) => a.flatMap((x, i) => (gapAt[i] ? [fill as T, x] : [x]));
@@ -48,6 +56,7 @@ export function Chart({ times, score, lines, height = 240, title }: { times: num
     const ro = new ResizeObserver(() => el.current && u.setSize({ width: el.current.clientWidth, height }));
     ro.observe(el.current);
     return () => { ro.disconnect(); u.destroy(); };
-  }, [times, score, lines, height]);
+  }, [U, times, score, lines, height]);
+  if (failed) return <div class="notice">Graphique indisponible sur ce navigateur ; le tableau ci-dessous donne les mêmes valeurs.</div>;
   return <div class="chart" ref={el} role="img" aria-label={title} />;
 }

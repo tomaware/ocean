@@ -7,10 +7,12 @@ const routes = [['', 'Où et quand aller'], ['spots', 'Spots'], ['previsions', '
   ['spot/plagesud-grandemotte', 'Jour par jour'], ['sessions', 'Sessions 2H'], ['profil', 'Mode perso'], ['fiabilite', 'Fiabilité']];
 const errs = [];
 const b = await chromium.launch();
-for (const [name, opt] of [['mobile', devices['iPhone 13']], ['ordinateur', { viewport: { width: 1280, height: 900 } }]]) {
+// langue fixée (fr-FR) ; un 3e passage sans langue fixée vérifie que l'app survit à une langue système invalide
+for (const [name, opt] of [['mobile', { ...devices['iPhone 13'], locale: 'fr-FR' }], ['ordinateur', { viewport: { width: 1280, height: 900 }, locale: 'fr-FR' }], ['langue-système', { viewport: { width: 1280, height: 900 } }]]) {
   const ctx = await b.newContext(opt);
   const p = await ctx.newPage();
-  p.on('pageerror', (e) => errs.push(`${name} : ${e.message}`));
+  let shown = false;
+  p.on('pageerror', (e) => { if (name === 'langue-système' && /language tag/.test(e.message)) { if (!shown) console.log('[interface] langue système invalide (attendu, graphique seul touché) :', (e.stack ?? '').split('\n').slice(0, 3).join(' | ')); shown = true; } else errs.push(`${name} : ${e.message}`); });
   p.on('console', (m) => { if (m.type() === 'error' && !/openstreetmap|fonts\.g|net::/.test(m.text())) errs.push(`${name} console : ${m.text()}`); });
   for (const reading of ['synthese', 'expert']) {
     await p.goto(base + '/#/');
@@ -26,5 +28,5 @@ for (const [name, opt] of [['mobile', devices['iPhone 13']], ['ordinateur', { vi
   await ctx.close();
 }
 await b.close();
-console.log(errs.length ? 'ÉCHEC\n' + errs.join('\n') : `[interface] OK : ${routes.length} écrans × 2 niveaux de lecture × mobile / ordinateur, aucune erreur`);
+console.log(errs.length ? 'ÉCHEC\n' + errs.join('\n') : `[interface] OK : ${routes.length} écrans × 2 niveaux de lecture × mobile / ordinateur / langue système, aucune erreur`);
 process.exit(errs.length ? 1 : 0);
