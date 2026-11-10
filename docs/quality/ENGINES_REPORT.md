@@ -1,6 +1,6 @@
 # Rapport d'analyse (② ANALYSE)
 
-Généré le 2026-11-10 17:28 UTC par `pipeline/engines/run.ts`, juste après la collecte.
+Généré le 2026-11-10 17:33 UTC par `pipeline/engines/run.ts`, juste après la collecte.
 
 Les moteurs des apps actuelles (copies non modifiées dans `legacy/`) sont alimentés par la collecte commune. Le test golden refait le calcul comme les apps actuelles, avec leurs propres parseurs sur les mêmes réponses brutes, et exige les mêmes notes à ±0.1.
 
@@ -8,15 +8,16 @@ Les moteurs des apps actuelles (copies non modifiées dans `legacy/`) sont alime
 
 | Contrôle | Résultat | Détail |
 |---|---|---|
-| golden-surf | ✅ | 4152 valeurs (note, hauteur, vent × 8 spots), écart max 0 ; créneaux identiques (tolérance 0.1) |
+| golden-surf | ✅ | 3114 valeurs (note, hauteur, vent × 6 spots), écart max 0 ; créneaux identiques (tolérance 0.1) |
 | golden-downwind | ✅ | 1440 valeurs (vent, houle, 3 notes × 3 parcours), écart max 0 ; créneaux identiques ; correction du vent identique (tolérance 0.1) |
 | correction-vent-downwind | ✅ | 2 spot(s) de recalage : La Grande-Motte 53 h (× 0.97 en moyenne) + relevé récent, Port Camargue 52 h (× 0.93 en moyenne) + relevé récent |
-| sorties-surf | ✅ | 8/8 spots notés ; 12 créneaux |
+| sorties-surf | ✅ | 6/6 spots notés ; 12 créneaux |
 | houle-direction-downwind | ✅ | direction de la houle (affichage, carte) : 288/288 heures |
 | sorties-downwind | ✅ | 3/3 parcours notés ; 1 meilleurs créneaux |
-| ecart-prod-surf | ✅ | notes surf OCEAN vs app en service (calcul prod. 36 min avant, même extrait Copernicus) : médiane 0.00, 90 % ≤ 0.50, max 1.10 sur 1328 heures (max : carnon lun. 19:00, OCEAN 5.1 / prod 6.2) |
-| ecart-prod-downwind | ✅ | notes downwind (intermédiaire, de jour) OCEAN vs app en service (calcul prod. 17 min avant) : médiane 0.00, 90 % ≤ 0.00, max 0.50 sur 120 heures |
-| sorties-wing | ✅ | 6 spots notés (wing v2.0.0) ; 4 session(s) 2H en mode Sécu first sur les heures prévues |
+| ecart-prod-surf | ✅ | notes surf OCEAN vs app en service (calcul prod. 41 min avant, même extrait Copernicus) : médiane 0.10, 90 % ≤ 0.70, max 1.10 sur 664 heures (max : carnon lun. 19:00, OCEAN 5.1 / prod 6.2) |
+| ecart-prod-downwind | ✅ | notes downwind (intermédiaire, de jour) OCEAN vs app en service (calcul prod. 22 min avant) : médiane 0.00, 90 % ≤ 0.00, max 0.50 sur 120 heures |
+| vent-berre-jai | ✅ | Étang de Berre (Le Jaï) : meteofrance_arome_france_hd, le plus juste à LFML (erreur 1.13 m/s sur 100 mesures) ; 49 heures ; vent non corrigé |
+| sorties-wing | ✅ | 7 spots notés (wing v2.0.0) ; 5 session(s) 2H en mode Sécu first sur les heures prévues |
 | confidentialite-moteurs | ✅ | aucun relevé Winds-Up ni clé dans les sorties (seuls les facteurs de correction dérivés y figurent, comme dans l’app downwind actuelle) |
 | copernicus-surf | ✅ | Copernicus Med-WAV inclus dans le moteur surf (comme l’app en service) |
 
@@ -25,10 +26,10 @@ Les moteurs des apps actuelles (copies non modifiées dans `legacy/`) sont alime
 | Quand | Spot | Note moyenne | Pic |
 |---|---|---|---|
 | ven. 13 08:00 → ven. 13 18:00 | Carnon | 9.32 | 9.69 |
-| ven. 13 08:00 → ven. 13 18:00 | Palavas-les-Flots | 8.41 | 9.69 |
+| ven. 13 08:00 → ven. 13 18:00 | Palavas-les-Flots | 8.4 | 9.69 |
+| ven. 13 08:00 → ven. 13 18:00 | Saintes-Maries-de-la-Mer | 8.44 | 9.26 |
+| dim. 15 08:00 → dim. 15 18:00 | La Couronne (Martigues) | 7.65 | 8.72 |
 | dim. 15 08:00 → dim. 15 18:00 | La Guillotine | 7.38 | 8.38 |
-| mar. 17 08:00 → mar. 17 18:00 | Carnon | 7.24 | 8.09 |
-| lun. 16 08:00 → lun. 16 18:00 | Carnon | 7.26 | 7.88 |
 
 ## Meilleurs créneaux downwind (4 jours)
 
@@ -46,6 +47,7 @@ Les moteurs des apps actuelles (copies non modifiées dans `legacy/`) sont alime
 | Port Camargue / Espiguette | jeu. 12 08:00 → jeu. 12 10:00 : Ça se tente (moy. 6.3, pic 6.8) |
 | Beauduc | ven. 13 10:00 → ven. 13 18:00 : Ça envoie (moy. 8.2, pic 8.9) |
 | Almanarre (Hyères) | aucun |
+| Étang de Berre (Le Jaï) | jeu. 12 09:00 → jeu. 12 12:00 : Ça se tente (moy. 5.3, pic 5.6) |
 
 ### Détail (toutes les 2 h de jour, Sécu first)
 
@@ -62,6 +64,8 @@ Vent en nœuds (rafales) · d'où il vient · secteur · note · ce qui limite.
 **Beauduc** — mer. 11 09:00 4 (5) SSO side-on **0** pas assez de vent · mer. 11 11:00 4 (4) SE side-off **0** side-off (dérive vers le large) · mer. 11 13:00 5 (6) O onshore **0** pas assez de vent · mer. 11 15:00 5 (6) ONO side-on **0** pas assez de vent · mer. 11 17:00 4 (7) OSO onshore **0** pas assez de vent · jeu. 12 09:00 25 (33) SE side-off **0** side-off (dérive vers le large) · jeu. 12 11:00 27 (36) SE side-off **0** side-off (dérive vers le large) · jeu. 12 13:00 21 (30) SE side-off **0** side-off (dérive vers le large) · jeu. 12 15:00 8 (20) OSO onshore **2.1** vent rafaleux · jeu. 12 17:00 10 (14) O onshore **0** pas assez de vent · ven. 13 09:00 18 (26) N side-off **0** side-off (dérive vers le large) · ven. 13 11:00 18 (26) NNO side **8.1** vent rafaleux · ven. 13 13:00 21 (29) NNO side **8.9** vent rafaleux · ven. 13 15:00 21 (29) NNO side **8.9** vent rafaleux · ven. 13 17:00 19 (29) NNO side **7** vent rafaleux · sam. 14 09:00 14 (22) NNE side-off **0** side-off (dérive vers le large) · sam. 14 11:00 11 (19) NNE side-off **0** side-off (dérive vers le large) · sam. 14 13:00 12 (18) NNE side-off **0** side-off (dérive vers le large) · sam. 14 15:00 11 (16) NNE side-off **0** side-off (dérive vers le large) · sam. 14 17:00 10 (15) ESE offshore **0** vent de terre : dérive au large
 
 **Almanarre (Hyères)** — mer. 11 09:00 6 (8) SSO side-on **0** pas assez de vent · mer. 11 11:00 9 (12) SSO side-on **0** pas assez de vent · mer. 11 13:00 5 (8) OSO onshore **0** pas assez de vent · mer. 11 15:00 3 (6) SO onshore **0** pas assez de vent · mer. 11 17:00 1 (3) SO onshore **0** pas assez de vent · jeu. 12 09:00 11 (14) E offshore **0** vent de terre : dérive au large · jeu. 12 11:00 11 (15) E offshore **0** vent de terre : dérive au large · jeu. 12 13:00 12 (17) E offshore **0** vent de terre : dérive au large · jeu. 12 15:00 6 (8) ESE side-off **0** side-off (dérive vers le large) · jeu. 12 17:00 3 (6) ENE offshore **0** vent de terre : dérive au large · ven. 13 09:00 7 (10) O onshore **0** pas assez de vent · ven. 13 11:00 8 (12) O onshore **0** pas assez de vent · ven. 13 13:00 6 (10) O onshore **0** pas assez de vent · ven. 13 15:00 5 (7) OSO onshore **0** pas assez de vent · ven. 13 17:00 4 (7) O onshore **0** pas assez de vent · sam. 14 09:00 4 (6) SE side-off **0** side-off (dérive vers le large) · sam. 14 11:00 9 (14) E offshore **0** vent de terre : dérive au large · sam. 14 13:00 10 (15) E offshore **0** vent de terre : dérive au large
+
+**Étang de Berre (Le Jaï)** — mer. 11 09:00 6 (8) S  **0** pas assez de vent · mer. 11 11:00 8 (10) SE  **0** pas assez de vent · mer. 11 13:00 3 (11) SE  **0** pas assez de vent · mer. 11 15:00 3 (6) SSE  **0** pas assez de vent · mer. 11 17:00 3 (6) S  **0** pas assez de vent · jeu. 12 09:00 19 (26) SE  **5.1** direction déconseillée sur ce plan d’eau · jeu. 12 11:00 21 (29) SE  **5.1** direction déconseillée sur ce plan d’eau · jeu. 12 13:00 20 (26) SE  **5.9** direction déconseillée sur ce plan d’eau · jeu. 12 15:00 12 (22) SSE  **2.6** vent rafaleux
 
 
 Copernicus Med-WAV est inclus pour le surf quand l'extrait a moins de 30 h (même règle que l'app en service) ; la note wing (v2.0, modes Sécu first / Offshore) part du vent corrigé de la super prévision ; pas de note kite (décision de Tom).
