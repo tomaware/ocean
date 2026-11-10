@@ -1,11 +1,11 @@
 {
- "generatedAt": 1794270041275,
+ "generatedAt": 1794270090722,
  "status": [
   {
    "id": "open-meteo-marine",
    "ok": true,
    "message": "ok",
-   "durationMs": 1432,
+   "durationMs": 865,
    "points": 19,
    "models": [
     "meteofrance_wave",
@@ -24,7 +24,7 @@
    "id": "open-meteo-vent-moteurs",
    "ok": true,
    "message": "ok",
-   "durationMs": 561,
+   "durationMs": 338,
    "points": 79,
    "models": [
     "meteofrance_seamless",
@@ -40,7 +40,7 @@
    "id": "open-meteo-vent-spots",
    "ok": true,
    "message": "ok",
-   "durationMs": 109,
+   "durationMs": 44,
    "points": 9,
    "models": [
     "meteofrance_arome_france_hd",
@@ -61,7 +61,7 @@
    "id": "super-prevision",
    "ok": true,
    "message": "ok",
-   "durationMs": 1535,
+   "durationMs": 1353,
    "points": 6,
    "models": [
     "super-prevision"
@@ -76,34 +76,34 @@
    "id": "candhis",
    "ok": true,
    "message": "ok",
-   "durationMs": 116,
+   "durationMs": 75,
    "points": 5,
    "models": [],
    "values": 34326,
    "missing": 3662,
    "rejected": 0,
    "lastObservationAgeMin": {
-    "03001": 51,
-    "03404": 51,
-    "01102": 621,
-    "01101": 51,
-    "06601": 28431
+    "03001": 52,
+    "03404": 52,
+    "01102": 622,
+    "01101": 52,
+    "06601": 28432
    }
   },
   {
    "id": "metar",
    "ok": true,
    "message": "ok",
-   "durationMs": 507,
+   "durationMs": 143,
    "points": 3,
    "models": [],
    "values": 1200,
    "missing": 457,
    "rejected": 0,
    "lastObservationAgeMin": {
-    "LFMT": 21,
-    "LFMP": 21,
-    "LFTH": 21
+    "LFMT": 22,
+    "LFMP": 22,
+    "LFTH": 22
    }
   }
  ],
@@ -171,12 +171,12 @@
   {
    "id": "fraicheur-candhis",
    "ok": true,
-   "detail": "03001 51 min · 03404 51 min · 01101 51 min (seuil 180 min)"
+   "detail": "03001 52 min · 03404 52 min · 01101 52 min (seuil 180 min)"
   },
   {
    "id": "fraicheur-metar",
    "ok": true,
-   "detail": "LFMT 21 min · LFMP 21 min · LFTH 21 min (seuil 120 min)"
+   "detail": "LFMT 22 min · LFMP 22 min · LFTH 22 min (seuil 120 min)"
   },
   {
    "id": "confidentialite",
