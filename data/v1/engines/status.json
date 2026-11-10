@@ -1,5 +1,5 @@
 {
- "generatedAt": 1794332294856,
+ "generatedAt": 1794333141323,
  "checks": [
   {
    "id": "golden-surf",
@@ -34,12 +34,12 @@
   {
    "id": "ecart-prod-surf",
    "ok": true,
-   "detail": "notes surf OCEAN vs app en service (calcul prod. 1 min avant, même extrait Copernicus) : médiane 0.00, 90 % ≤ 0.00, max 0.00 sur 668 heures (max : carnon mar. 19:00, OCEAN 5.2 / prod 5.2)"
+   "detail": "notes surf OCEAN vs app en service (calcul prod. 4 min avant, même extrait Copernicus) : médiane 0.00, 90 % ≤ 0.00, max 0.10 sur 668 heures (max : carnon ven. 16:00, OCEAN 8.7 / prod 8.8)"
   },
   {
    "id": "ecart-prod-downwind",
    "ok": true,
-   "detail": "notes downwind (intermédiaire, de jour) OCEAN vs app en service (calcul prod. 27 min avant) : médiane 0.00, 90 % ≤ 0.00, max 0.50 sur 120 heures"
+   "detail": "notes downwind (intermédiaire, de jour) OCEAN vs app en service (calcul prod. 41 min avant) : médiane 0.00, 90 % ≤ 0.00, max 0.50 sur 120 heures"
   },
   {
    "id": "vent-berre-jai",
