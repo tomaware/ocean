@@ -1,11 +1,11 @@
 {
- "generatedAt": 1794310179175,
+ "generatedAt": 1794311190885,
  "status": [
   {
    "id": "open-meteo-marine",
    "ok": true,
    "message": "ok",
-   "durationMs": 878,
+   "durationMs": 1146,
    "points": 19,
    "models": [
     "meteofrance_wave",
@@ -24,7 +24,7 @@
    "id": "copernicus-medwav",
    "ok": true,
    "message": "ok",
-   "durationMs": 112,
+   "durationMs": 186,
    "points": 13,
    "models": [
     "copernicus"
@@ -39,7 +39,7 @@
    "id": "open-meteo-vent-moteurs",
    "ok": true,
    "message": "ok",
-   "durationMs": 454,
+   "durationMs": 487,
    "points": 79,
    "models": [
     "meteofrance_seamless",
@@ -55,7 +55,7 @@
    "id": "open-meteo-vent-spots",
    "ok": true,
    "message": "ok",
-   "durationMs": 67,
+   "durationMs": 96,
    "points": 9,
    "models": [
     "meteofrance_arome_france_hd",
@@ -76,7 +76,7 @@
    "id": "super-prevision",
    "ok": true,
    "message": "ok",
-   "durationMs": 1476,
+   "durationMs": 1805,
    "points": 6,
    "models": [
     "super-prevision"
@@ -91,34 +91,34 @@
    "id": "candhis",
    "ok": true,
    "message": "ok",
-   "durationMs": 65,
+   "durationMs": 297,
    "points": 5,
    "models": [],
-   "values": 34332,
-   "missing": 3647,
+   "values": 34314,
+   "missing": 3645,
    "rejected": 0,
    "lastObservationAgeMin": {
-    "03001": 60,
-    "03404": 60,
-    "01102": 1290,
-    "01101": 60,
-    "06601": 29100
+    "03001": 77,
+    "03404": 77,
+    "01102": 1307,
+    "01101": 77,
+    "06601": 29117
    }
   },
   {
    "id": "metar",
    "ok": true,
    "message": "ok",
-   "durationMs": 180,
+   "durationMs": 328,
    "points": 3,
    "models": [],
    "values": 1200,
    "missing": 454,
    "rejected": 0,
    "lastObservationAgeMin": {
-    "LFMT": 30,
-    "LFMP": 30,
-    "LFTH": 30
+    "LFMT": 17,
+    "LFMP": 17,
+    "LFTH": 17
    }
   }
  ],
@@ -146,7 +146,7 @@
   {
    "id": "fraicheur-copernicus",
    "ok": true,
-   "detail": "extrait de 1.6 h (13 points, 267 h) (seuil 30 h)"
+   "detail": "extrait de 1.8 h (13 points, 267 h) (seuil 30 h)"
   },
   {
    "id": "points-copernicus",
@@ -196,12 +196,12 @@
   {
    "id": "fraicheur-candhis",
    "ok": true,
-   "detail": "03001 60 min · 03404 60 min · 01101 60 min (seuil 180 min)"
+   "detail": "03001 77 min · 03404 77 min · 01101 77 min (seuil 180 min)"
   },
   {
    "id": "fraicheur-metar",
    "ok": true,
-   "detail": "LFMT 30 min · LFMP 30 min · LFTH 30 min (seuil 120 min)"
+   "detail": "LFMT 17 min · LFMP 17 min · LFTH 17 min (seuil 120 min)"
   },
   {
    "id": "confidentialite",
