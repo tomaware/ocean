@@ -34,7 +34,9 @@ export function Freshness({ d, now }: { d: AllData; now: number }) {
 }
 
 export function LiveBox({ live, spot }: { live: Live[] | null; spot?: string }) {
-  const rows = (live ?? []).filter((l) => !spot || l.spot === spot);
+  // la balise Winds-Up (mode perso) passe avant la mesure publique du même spot (Le Jaï : METAR de Marignane)
+  const all = (live ?? []).filter((l) => !spot || l.spot === spot);
+  const rows = all.filter((l) => !l.src || !all.some((x) => !x.src && x.spot === l.spot));
   if (!rows.length) return null;
   const perso = rows.some((l) => !l.src);
   return (
@@ -42,7 +44,7 @@ export function LiveBox({ live, spot }: { live: Live[] | null; spot?: string }) 
       <div class="row"><Radio size={16} color="var(--c-accent)" /><strong>En direct</strong>{perso && <span class="chip accent">mode perso · visible sur cet appareil seulement</span>}</div>
       <div class="list">
         {rows.map((l) => (
-          <div key={l.spot} class="row between">
+          <div key={l.spot + (l.src ?? '')} class="row between">
             <span class="stack" style={{ gap: 0 }}><span>{l.name}</span>{l.src && <span class="faint">{l.src}</span>}</span>
             <span class="small">{l.panne ? 'anémomètre en panne' : `${n0(l.kn)} nd ${l.dir ?? ''}${l.gust != null ? ` · raf. ${n0(l.gust)}` : ''}${l.t ? ' · ' + ago(l.t) : ''}`}</span>
           </div>

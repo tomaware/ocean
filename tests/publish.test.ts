@@ -72,8 +72,8 @@ test('mesure publique en direct : METAR de Marignane pour l’étang de Berre (s
     LFML: { t: [now - 80 * 60e3, now - 20 * 60e3], wind_speed_10m: [5, 7.2], wind_gusts_10m: [null, 9.3], wind_direction_10m: [300, 310] },
     LFMT: { t: [now - 20 * 60e3], wind_speed_10m: [4], wind_gusts_10m: [null], wind_direction_10m: [20] } } }] } as any;
   const o = liveObsPublic(bundle, reg, now);
-  assert.deepEqual(Object.keys(o), ['berre-jai']);
-  assert.equal(o['berre-jai'].kn, 14); assert.equal(o['berre-jai'].gust, 18); assert.equal(o['berre-jai'].dir, 310); assert.equal(o['berre-jai'].t, now - 20 * 60e3);
+  assert.deepEqual(Object.keys(o), ['le-jai']);
+  assert.equal(o['le-jai'].kn, 14); assert.equal(o['le-jai'].gust, 18); assert.equal(o['le-jai'].dir, 310); assert.equal(o['le-jai'].t, now - 20 * 60e3);
   // mesure trop vieille (> 3 h) : rien
   assert.deepEqual(liveObsPublic(bundle, reg, now + 4 * 3600e3), {});
 });

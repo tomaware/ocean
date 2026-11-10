@@ -141,7 +141,9 @@ type Series = { wind_speed_10m: (number | null)[]; wind_gusts_10m: (number | nul
  */
 export function wingForecast(block: ForecastBlock | undefined, registry: Registry, now: number, alt?: { block: ForecastBlock | undefined; ranking?: ModelRanking }) {
   const all = registry.spots.filter((s) => s.disciplines.includes('wing'));
-  const isAlt = (s: Spot) => (s.windSource as { kind?: string } | undefined)?.kind === 'best-model';
+  // repli « meilleur modèle » seulement si la super prévision ne couvre pas (encore) ce spot (Le Jaï, D-22) : dès qu'elle le couvre, on la prend
+  const inSuper = (s: Spot) => !!block?.values['spot_' + s.id]?.['super-prevision']?.wind_speed_10m?.some((x) => x !== null);
+  const isAlt = (s: Spot) => (s.windSource as { kind?: string } | undefined)?.kind === 'best-model' && !inSuper(s);
   const spots = all.filter((s) => (isAlt(s) ? !!alt?.block : !!block));
   if (!spots.length) return { version: WING_VERSION, generatedAt: now, available: false, reason: 'super prévision absente : pas de note wing (pas de repli sur un vent brut)', spots: [] };
   const res = spots.map((s) => {

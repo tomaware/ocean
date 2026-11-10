@@ -1,5 +1,5 @@
 // Contrôles de la collecte : fidélité aux moteurs actuels, couverture, fraîcheur, confidentialité.
-import type { Check, CollectBundle, CollectPoint, ForecastBlock, ObservationBlock } from '../../src/types/contracts.ts';
+import type { Check, CollectBundle, CollectPoint, ForecastBlock, ObservationBlock, Registry } from '../../src/types/contracts.ts';
 import { SurfEngine } from './points.ts';
 
 type Legacy = Record<string, { time: number[]; models: Record<string, Record<string, unknown>> }>;
@@ -122,8 +122,14 @@ export function modelAvailability(block: ForecastBlock, key: string, now: number
 }
 
 /** Super prévision : les 6 spots présents, de 6 h à 21 h, sur les 2 prochains jours. */
-export function coverageSuper(block: ForecastBlock, now: number): Check {
+export function coverageSuper(block: ForecastBlock, now: number, registry?: Registry): Check {
   const pts = Object.keys(block.values);
   const fut = block.times.filter((t) => t >= now && t < now + 48 * 3600e3).length;
-  return { id: 'couverture-super-prevision', ok: pts.length === 6 && fut >= 20, detail: `${pts.length} spots sur 6 ; ${fut} heures de jour dans les 48 h à venir` };
+  // spots du registre rattachés à la super prévision ; ceux qui ont un repli (Le Jaï : meilleur modèle à Marignane) peuvent manquer
+  const want = (registry?.spots ?? []).filter((s) => s.legacy.superPrevisionVent);
+  const miss = want.filter((s) => !block.values['spot_' + s.id]);
+  const blocking = miss.filter((s) => !s.windSource);
+  const n = want.length || 6;
+  return { id: 'couverture-super-prevision', ok: (registry ? blocking.length === 0 : pts.length === 6) && fut >= 20,
+    detail: `${pts.length} spots sur ${n} ; ${fut} heures de jour dans les 48 h à venir${miss.length ? ` ; absents : ${miss.map((s) => s.name).join(', ')}${blocking.length ? '' : ' (vent de repli : meilleur modèle aux METAR)'}` : ''}` };
 }

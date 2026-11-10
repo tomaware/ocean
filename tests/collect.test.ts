@@ -47,7 +47,7 @@ test('registre : reprend exactement les spots, parcours et bouées des apps actu
   }
   assert.deepEqual(registry.buoys.map((b) => b.code).sort(), surf.buoys.map((b: { code: string }) => b.code).sort());
   const wind = registry.spots.filter((s) => s.disciplines.includes('wing') && s.legacy.superPrevisionVent).map((s) => s.legacy.superPrevisionVent);
-  assert.deepEqual(wind, ['1554-la-franqui-poste-des-coussoules', '135-la-grande-motte', '81-le-ponant', '22-port-camargue', '61-beauduc', '2-almanarre-salin-des-pesquiers']);
+  assert.deepEqual(wind, ['1554-la-franqui-poste-des-coussoules', '135-la-grande-motte', '81-le-ponant', '22-port-camargue', '61-beauduc', '26-le-jai', '2-almanarre-salin-des-pesquiers']);   // 26-le-jai : à ajouter dans la super prévision (Tom)
 });
 
 // --------------------------------------------------------------- points de collecte

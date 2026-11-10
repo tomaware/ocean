@@ -59,13 +59,14 @@ test('wing : sessions 2H = au moins 2 h d’affilée à 5/10', () => {
   assert.deepEqual(sessions(gap, 'secu').map((x) => x.hours), [2]);
 });
 
-test('wing : à partir de la super prévision collectée, 6 spots, provenance gardée, pas de repli', () => {
+test('wing : à partir de la super prévision collectée, 7 spots (Le Jaï compris), provenance gardée, pas de repli', () => {
   const t0 = Date.UTC(2026, 10, 10, 11);
   const spots: Record<string, { t: number; v: number; o: string; r: number }[]> = {};
   for (const s of registry.spots.filter((x) => x.legacy.superPrevisionVent)) spots[s.legacy.superPrevisionVent!] = [0, 1, 2].map((k) => ({ t: t0 + k * 3600e3, v: 18, o: 'ONO', r: 22 }));
   const { block } = parseSuperPrevision({ spots }, registry, t0);
   const w = wingForecast(block, registry, t0);
-  assert.equal(w.spots.length, 6);
+  assert.equal(w.spots.length, 7);
+  assert.equal((w.spots.find((x) => x.id === 'le-jai')!.source as any).kind, 'corrected');
   const alm = w.spots.find((x) => x.id === 'almanarre')!;
   assert.deepEqual(alm.hours.map((h) => h.scores.secu), [10, 10, 10]);
   assert.equal(alm.sessions.secu.length, 1);
@@ -93,16 +94,16 @@ test('wing : étang de Berre hors super prévision → modèle le plus juste à 
   const times = [0, 1, 2].map((k) => t0 + k * 3600e3);
   const ser = (ms: number) => ({ wind_speed_10m: [ms, ms, ms], wind_gusts_10m: [ms * 1.2, ms * 1.2, ms * 1.2], wind_direction_10m: [315, 315, 315] });
   const alt = { id: 'open-meteo-vent-spots', kind: 'forecast', times, models: ['meteofrance_arome_france_hd', 'icon_d2'],
-    values: { 'spot_berre-jai': { meteofrance_arome_france_hd: ser(5), icon_d2: ser(10) } }, provenance: { source: 'open-meteo', fetchedAt: t0 } } as any;
+    values: { 'spot_le-jai': { meteofrance_arome_france_hd: ser(5), icon_d2: ser(10) } }, provenance: { source: 'open-meteo', fetchedAt: t0 } } as any;
   // ICON-D2 plus juste à LFML → 10 m/s = 19,4 nd retenus
   const w = wingForecast(undefined, registry, t0, { block: alt, ranking: { LFML: { meteofrance_arome_france_hd: { n: 40, mae: 2.1 }, icon_d2: { n: 40, mae: 1.2 } } } });
-  assert.deepEqual(w.spots.map((x) => x.id), ['berre-jai']);
+  assert.deepEqual(w.spots.map((x) => x.id), ['le-jai']);
   const b = w.spots[0];
   assert.equal((b.source as any).kind, 'forecast'); assert.equal((b.source as any).model, 'icon_d2'); assert.equal((b.source as any).ranked, true);
   assert.deepEqual(b.hours.map((h) => h.kn), [19.4, 19.4, 19.4]);
   assert.ok(b.hours.every((h) => h.scores.secu! > 0), 'mistral sur l’étang : naviguable');
   // relais : ICON-D2 s'arrête après 2 h → AROME HD prend le relais (même spot, jamais la super prévision)
-  const alt3 = { ...alt, values: { 'spot_berre-jai': { meteofrance_arome_france_hd: ser(5), icon_d2: { ...ser(10), wind_speed_10m: [10, 10, null] } } } };
+  const alt3 = { ...alt, values: { 'spot_le-jai': { meteofrance_arome_france_hd: ser(5), icon_d2: { ...ser(10), wind_speed_10m: [10, 10, null] } } } };
   const w3 = wingForecast(undefined, registry, t0, { block: alt3, ranking: { LFML: { meteofrance_arome_france_hd: { n: 40, mae: 2.1 }, icon_d2: { n: 40, mae: 1.2 } } } });
   assert.deepEqual(w3.spots[0].hours.map((h) => h.kn), [19.4, 19.4, 9.7]);
   assert.deepEqual((w3.spots[0].source as any).relays.map((r: any) => r.model), ['icon_d2', 'meteofrance_arome_france_hd']);
@@ -110,6 +111,11 @@ test('wing : étang de Berre hors super prévision → modèle le plus juste à 
   const w2 = wingForecast(undefined, registry, t0, { block: alt });
   assert.equal((w2.spots[0].source as any).model, 'meteofrance_arome_france_hd'); assert.equal((w2.spots[0].source as any).ranked, false);
   // vent de SE (pousse vers le large de l'étang) : secteur déconseillé
-  const se = scoreHour(18, 20, 150, true, registry.spots.find((s) => s.id === 'berre-jai')!, 'secu');
+  // dès que la super prévision couvre Le Jaï, elle remplace le repli (jamais de mélange)
+  const sp = { id: 'super-prevision', kind: 'corrected', times, models: ['super-prevision'], values: { 'spot_le-jai': { 'super-prevision': ser(8) } }, provenance: { source: 'super-prevision', fetchedAt: t0 } } as any;
+  const w4 = wingForecast(sp, registry, t0, { block: alt, ranking: { LFML: { icon_d2: { n: 40, mae: 1.2 } } } });
+  const j = w4.spots.find((x) => x.id === 'le-jai')!;
+  assert.equal((j.source as any).kind, 'corrected'); assert.deepEqual(j.hours.map((h) => h.kn), [15.6, 15.6, 15.6]);
+  const se = scoreHour(18, 20, 150, true, registry.spots.find((s) => s.id === 'le-jai')!, 'secu');
   assert.equal(se.score, 6); assert.match(String(se.limit), /déconseillée/);
 });

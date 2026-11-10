@@ -160,8 +160,8 @@
       "notes": "Orientation proposée à partir de guides de spots (10/11) ; à confirmer par Tom."
     },
     {
-      "id": "berre-jai",
-      "name": "Étang de Berre (Le Jaï)",
+      "id": "le-jai",
+      "name": "Le Jaï",
       "kind": "spot",
       "geometry": {
         "lat": 43.42,
@@ -183,19 +183,24 @@
         "source": "étang, plage du Jaï orientée NO : mistral (NO) de face, O side, N bon ; SE à S = vent de terre qui pousse vers le large de l'étang (ultimatefrance.com)"
       },
       "windStations": {
+        "windsUp": "26-le-jai",
         "metar": "LFML"
       },
       "windSource": {
         "kind": "best-model",
-        "station": "LFML"
+        "station": "LFML",
+        "onlyIfAbsentFromSuperPrevision": true
       },
-      "legacy": {},
+      "legacy": {
+        "superPrevisionVent": "26-le-jai"
+      },
       "confidence": "low",
       "sources": [
         "ultimatefrance.com/kitesurfing/south-france/le-jai : meilleurs vents O, NO, N ; SE offshore ; rafales fortes",
-        "vvanat.fr : plage du Jaï, wingfoil"
+        "vvanat.fr : plage du Jaï, wingfoil",
+        "winds-up.com/spot/26-le-jai : balise Winds-Up du Jaï (Tom, 10/11)"
       ],
-      "notes": "Ajouté le 10/11 à la demande de Tom. Pas dans la super prévision : vent = meilleur modèle aux mesures de Marignane (LFML) sur 3 jours, non corrigé. Orientation à confirmer."
+      "notes": "Ajouté le 10/11 à la demande de Tom (étang de Berre), nommé « Le Jaï ». Tant que la super prévision ne couvre pas ce spot : vent = meilleur modèle aux mesures de Marignane (LFML) sur 3 jours, non corrigé ; dès qu'elle le couvre, vent corrigé de la super prévision. Orientation à confirmer."
     },
     {
       "id": "almanarre",

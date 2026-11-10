@@ -79,7 +79,7 @@ async function main(): Promise<void> {
 
   if (secretUrl) {
     const sp = await step('super-prevision', () => collectSuperPrevision(secretUrl, registry), status, (r) => ({ ...span(r.block), points: r.stats.points }));
-    if (sp) { forecasts.push(sp.block); checks.push(coverageSuper(sp.block, now)); keepPrivate('super-prevision-live.json', sp.live); keepPrivate('raw-super-prevision-spots.json', { spots: sp.raw.spots ?? {} }); }
+    if (sp) { forecasts.push(sp.block); checks.push(coverageSuper(sp.block, now, registry)); keepPrivate('super-prevision-live.json', sp.live); keepPrivate('raw-super-prevision-spots.json', { spots: sp.raw.spots ?? {} }); }
   } else {
     status.push({ id: 'super-prevision', ok: false, message: 'secret SUPER_PREVISION_URL absent', durationMs: 0, points: 0, models: [], values: 0, missing: 0, rejected: 0 });
   }
