@@ -1,17 +1,17 @@
 # Rapport de collecte (① COLLECTE)
 
-Généré le 2026-11-10 00:28 UTC par `pipeline/collect/run.ts` (GitHub Actions, toutes les heures).
+Généré le 2026-11-10 01:44 UTC par `pipeline/collect/run.ts` (GitHub Actions, toutes les heures).
 
 ## Sources
 
 | Source | État | Points | Modèles | Valeurs | Manquantes | Rejetées | Période | Durée |
 |---|---|---|---|---|---|---|---|---|
-| open-meteo-marine | ✅ | 19 | meteofrance_wave, ecmwf_wam025, ewam, gwam, ncep_gfswave025 | 426360 | 207670 | 0 | 2026-11-07 00:00 UTC → 2026-11-17 23:00 UTC | 0.9 s |
-| open-meteo-vent-moteurs | ✅ | 79 | meteofrance_seamless, ecmwf_ifs025 | 125136 | 22515 | 0 | 2026-11-07 00:00 UTC → 2026-11-17 23:00 UTC | 0.7 s |
-| open-meteo-vent-spots | ✅ | 9 | meteofrance_arome_france_hd, meteofrance_arome_france, icon_d2, ecmwf_ifs025, icon_eu, meteofrance_arpege_europe, gfs_seamless | 45936 | 14280 | 0 | 2026-11-07 00:00 UTC → 2026-11-17 23:00 UTC | 0.1 s |
-| super-prevision | ✅ | 6 | super-prevision | 672 | 0 | 0 | 2026-11-10 05:00 UTC → 2026-11-16 20:00 UTC | 1.8 s |
-| candhis | ✅ | 5 | — | 34326 | 3662 | 0 | — | 0.1 s |
-| metar | ✅ | 3 | — | 1200 | 457 | 0 | — | 0.4 s |
+| open-meteo-marine | ✅ | 19 | meteofrance_wave, ecmwf_wam025, ewam, gwam, ncep_gfswave025 | 426360 | 207670 | 0 | 2026-11-07 00:00 UTC → 2026-11-17 23:00 UTC | 1.3 s |
+| open-meteo-vent-moteurs | ✅ | 79 | meteofrance_seamless, ecmwf_ifs025 | 125136 | 22515 | 0 | 2026-11-07 00:00 UTC → 2026-11-17 23:00 UTC | 1.2 s |
+| open-meteo-vent-spots | ✅ | 9 | meteofrance_arome_france_hd, meteofrance_arome_france, icon_d2, ecmwf_ifs025, icon_eu, meteofrance_arpege_europe, gfs_seamless | 45936 | 14082 | 0 | 2026-11-07 00:00 UTC → 2026-11-17 23:00 UTC | 0.2 s |
+| super-prevision | ✅ | 6 | super-prevision | 672 | 0 | 0 | 2026-11-10 05:00 UTC → 2026-11-16 20:00 UTC | 1.4 s |
+| candhis | ✅ | 5 | — | 34308 | 3659 | 0 | — | 0.2 s |
+| metar | ✅ | 3 | — | 1200 | 457 | 0 | — | 2.1 s |
 
 ## Contrôles
 
@@ -27,10 +27,10 @@ Généré le 2026-11-10 00:28 UTC par `pipeline/collect/run.ts` (GitHub Actions,
 | modeles-open-meteo-vent-moteurs | ✅ | wind_speed_10m sur 48 h : meteofrance_seamless 100 % · ecmwf_ifs025 100 % |
 | grille-open-meteo-vent-spots | ✅ | 264 heures, 2026-11-07T00h → 2026-11-17T23h UTC |
 | couverture-open-meteo-vent-spots | ✅ | 9 points, 48 h à venir dans la grille ; tous complets (≥ 90 % sur 48 h) |
-| modeles-open-meteo-vent-spots | ✅ | wind_speed_10m sur 48 h : meteofrance_arome_france_hd 94 % · meteofrance_arome_france 94 % · icon_d2 42 % · ecmwf_ifs025 100 % · icon_eu 100 % · meteofrance_arpege_europe 100 % · gfs_seamless 100 % |
+| modeles-open-meteo-vent-spots | ✅ | wind_speed_10m sur 48 h : meteofrance_arome_france_hd 98 % · meteofrance_arome_france 98 % · icon_d2 44 % · ecmwf_ifs025 100 % · icon_eu 100 % · meteofrance_arpege_europe 100 % · gfs_seamless 100 % |
 | couverture-super-prevision | ✅ | 6 spots sur 6 ; 32 heures de jour dans les 48 h à venir |
-| fraicheur-candhis | ✅ | 03001 59 min · 03404 59 min · 01101 59 min (seuil 180 min) |
-| fraicheur-metar | ✅ | LFMT 29 min · LFMP 29 min · LFTH 29 min (seuil 120 min) |
+| fraicheur-candhis | ✅ | 03001 75 min · 03404 75 min · 01101 75 min (seuil 180 min) |
+| fraicheur-metar | ✅ | LFMT 15 min · LFMP 15 min · LFTH 15 min (seuil 120 min) |
 | confidentialite | ✅ | aucun relevé Winds-Up, aucune clé, aucune URL privée dans les données publiées |
 
 Unités stockées : m/s, m, s, degrés, °C ; heures UTC. Les relevés Winds-Up ne sont jamais collectés ici (mode perso uniquement).
