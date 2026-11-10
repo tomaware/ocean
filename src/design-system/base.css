@@ -85,10 +85,10 @@ p { margin: 0; }
 
 /* tableau */
 .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-table { border-collapse: collapse; width: 100%; font-size: var(--fs-sm); font-variant-numeric: tabular-nums; }
-th, td { padding: 6px 8px; text-align: left; border-bottom: 1px solid var(--c-line); white-space: nowrap; }
-th { font-weight: 600; color: var(--c-ink-2); font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: .04em; position: sticky; top: 0; background: var(--c-surface); }
-td.num, th.num { text-align: right; }
+table.data, .table-wrap table { border-collapse: collapse; width: 100%; font-size: var(--fs-sm); font-variant-numeric: tabular-nums; }
+table.data th, table.data td, .table-wrap th, .table-wrap td { padding: 6px 8px; text-align: left; border-bottom: 1px solid var(--c-line); white-space: nowrap; }
+table.data th, .table-wrap th { font-weight: 600; color: var(--c-ink-2); font-size: var(--fs-xs); text-transform: uppercase; letter-spacing: .04em; position: sticky; top: 0; background: var(--c-surface); }
+.table-wrap td.num, .table-wrap th.num { text-align: right; }
 
 /* carte */
 .map { height: 340px; border-radius: var(--r-lg); overflow: hidden; border: 1px solid var(--c-line); z-index: 0; }
@@ -107,3 +107,7 @@ td.num, th.num { text-align: right; }
 .skeleton { height: 120px; border-radius: var(--r-lg); background: linear-gradient(90deg, var(--c-surface-2), var(--c-surface), var(--c-surface-2)); background-size: 200% 100%; animation: sk 1.4s infinite; }
 @keyframes sk { to { background-position: -200% 0; } }
 @media (prefers-reduced-motion: reduce) { .skeleton { animation: none; } }
+
+.kv { display: grid; gap: 2px; }
+@media (min-width: 600px) { .kv { grid-template-columns: 180px 1fr; gap: var(--s-4); align-items: baseline; } }
+.u-legend th { text-transform: none; font-weight: 500; }

@@ -54,6 +54,11 @@ jobs:
         run: |
           npm run build
           mkdir -p dist/data && cp data/v1/public/*.json dist/data/
+      - name: Test de l'interface sur les données réelles (mobile + ordinateur)
+        run: |
+          npm i --no-save playwright@1.55.0 >/dev/null && npx playwright install --with-deps chromium >/dev/null
+          (npx vite preview --port 4173 --strictPort >/dev/null 2>&1 &) && sleep 4
+          node tests/ui/smoke.mjs http://localhost:4173
       - name: Publier les données (branche data, un seul commit)
         env:
           GH_TOKEN: ${{ github.token }}

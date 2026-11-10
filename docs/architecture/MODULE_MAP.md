@@ -16,8 +16,7 @@
   /collect         ① collecteurs par source
   /engines         ② vent · vague · houle · wing
   /verify          ③ calibration, recalage, bancs
-  /sessions        ④ créneaux + notes par discipline + explications
-  /publish         écrit data/v1/*.json
+  /publish         ④ sessions 2H, textes simples, écrit data/v1/public/*.json (+ contrôle de confidentialité)
 /src               ⑤ application (PWA)
   /app             shell, navigation, contexte partagé
   /features        wind · surf · downwind · sessions · spots · reliability · perso

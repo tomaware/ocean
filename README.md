@@ -14,3 +14,11 @@ Applications actuelles (restent en service jusqu'à la bascule) :
 - Vent — super prévision (Apps Script, privé)
 - SurfVague — https://tomaware.github.io/super-previ-surf/ · Session 2H — https://tomaware.github.io/super-previ-surf/session/
 - SurfHoule (downwind) — https://tomaware.github.io/downwind-foil/
+
+
+## État (10/11)
+Chaîne complète en service chaque heure : ① collecte → ② analyse (moteurs surf / downwind identiques aux apps actuelles, note wing v1.0) → ③ remise en question → ④ sessions 2H → ⑤ interface.
+- Site : https://tomaware.github.io/ocean/ (après activation de GitHub Pages)
+- Données publiques : branche `data` (`public/*.json`)
+- Rapports : `docs/quality/` ; journaux : `docs/migration/`
+- Développement : `npm run dev` (copier les données de la branche `data` dans `public/data/`)

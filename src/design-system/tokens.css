@@ -5,10 +5,10 @@
   --c-surface: #FFFFFF;
   --c-surface-2: #EEF2F0;
   --c-ink: #192E37;
-  --c-ink-2: #4A5D65;         /* texte secondaire, 7,0:1 sur blanc */
-  --c-ink-3: #66767C;         /* légendes, 4,7:1 sur blanc */
+  --c-ink-2: #4A5D65;         /* texte secondaire, 6,9:1 sur blanc */
+  --c-ink-3: #5F6F75;         /* légendes, 5,2:1 sur blanc, 4,9:1 sur le fond */
   --c-line: #DCE3E0;
-  --c-accent: #256D70;        /* 5,9:1 sur blanc */
+  --c-accent: #256D70;        /* 6,0:1 sur blanc */
   --c-accent-soft: #E3F0EF;
   --c-top: #1D6B46;  --c-top-soft: #E2F2E8;     /* « Ça envoie » */
   --c-ok: #8A5A00;   --c-ok-soft: #FBF0D9;      /* « Ça se tente » */

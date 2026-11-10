@@ -9,6 +9,12 @@ export function Chart({ times, score, lines, height = 240, title }: { times: num
   const el = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!el.current || !times.length) return;
+    // trou de plus d'une heure (nuit, série coupée) : point vide pour ne pas relier les courbes
+    const gapAt = times.map((t, i) => i > 0 && t - times[i - 1] > 3600e3);
+    const withGaps = <T,>(a: T[], fill: T | null) => a.flatMap((x, i) => (gapAt[i] ? [fill as T, x] : [x]));
+    times = withGaps(times, null).map((t, i, arr) => (t === null ? (arr[i - 1] as number) + 3600e3 : t)) as number[];
+    if (score) score = withGaps(score, null);
+    lines = lines.map((l) => ({ ...l, values: withGaps(l.values, null) }));
     const ink = css('--c-ink-3'), grid = css('--c-line');
     const axis = { stroke: ink, grid: { stroke: grid, width: 1 }, ticks: { stroke: grid }, font: '11px Inter, system-ui' };
     const bars = uPlot.paths.bars!({ size: [0.9, 40] });

@@ -101,7 +101,7 @@ export function Spots({ d, now }: { d: AllData; now: number }) {
   const list = d.spots.filter((s) => disc === 'all' || spotDiscipline(s) === disc);
   return (
     <>
-      <header class="page-head"><h1>Spots</h1><span class="muted">{d.spots.length} spots et parcours, du Barcarès à Hyères.</span></header>
+      <header class="page-head"><h1>Spots</h1><span class="muted">{d.spots.length} spots et parcours, de la Côte Vermeille à Hyères.</span></header>
       <Seg label="Discipline" value={disc} onChange={setDisc} options={[['all', 'Tous'], ['wing', 'Wing'], ['surf', 'Surf'], ['downwind', 'Downwind']]} />
       <SpotMap spots={list} best={best} />
       <div class="card"><div class="list">
@@ -181,9 +181,9 @@ function SpotView({ d, spot, now }: { d: AllData; spot: PublicSpot; now: number 
                   <table>
                     <thead><tr><th>Heure</th>{s.cols.map((c) => <th key={c.key} class={c.num ? 'num' : ''}>{c.label}</th>)}</tr></thead>
                     <tbody>
-                      {future.filter(({ i }) => s.day[i]).map(({ r, i }) => (
-                        <tr key={i}>
-                          <td>{hourOf(s.times[i]) === 6 || i === future[0].i ? <strong>{dayLabel(s.times[i], now).split(' ').slice(0, 2).join(' ')} </strong> : null}{hh(s.times[i])}</td>
+                      {future.filter(({ i }) => s.day[i]).map(({ r, i }, k, arr) => (
+                        <tr key={i} style={k > 0 && dayKey(s.times[arr[k - 1].i]) !== dayKey(s.times[i]) ? { borderTop: '2px solid var(--c-line)' } : undefined}>
+                          <td>{k === 0 || dayKey(s.times[arr[k - 1].i]) !== dayKey(s.times[i]) ? <strong>{dayLabel(s.times[i], now).split(' ').slice(0, 2).join(' ')} · </strong> : null}{hh(s.times[i])}</td>
                           {s.cols.map((c) => <td key={c.key} class={c.num ? 'num' : ''} style={c.warn?.(r) ? { color: 'var(--c-warn)', fontWeight: 600 } : undefined}>{c.key === 'score' ? <span style={{ fontWeight: 700 }}>{c.fmt(r)}</span> : c.fmt(r)}</td>)}
                         </tr>
                       ))}
@@ -197,9 +197,9 @@ function SpotView({ d, spot, now }: { d: AllData; spot: PublicSpot; now: number 
             <Section title="Expert">
               <div class="card">
                 <div class="list">
-                  <div class="row between"><span class="muted">Source</span><span class="small" style={{ textAlign: 'right', maxWidth: '70%' }}>{s.source}</span></div>
-                  {s.extra.map((x) => <div key={x.label} class="row between"><span class="muted">{x.label}</span><span class="small" style={{ textAlign: 'right', maxWidth: '70%' }}>{x.value}</span></div>)}
-                  <div class="row between"><span class="muted">Mise à jour</span><span class="small">{new Date(d.meta.generatedAt).toLocaleString('fr-FR', { timeZone: 'Europe/Paris' })}</span></div>
+                  <div class="kv"><span class="muted">Source</span><span class="small">{s.source}</span></div>
+                  {s.extra.map((x) => <div key={x.label} class="kv"><span class="muted">{x.label}</span><span class="small">{x.value}</span></div>)}
+                  <div class="kv"><span class="muted">Mise à jour</span><span class="small">{new Date(d.meta.generatedAt).toLocaleString('fr-FR', { timeZone: 'Europe/Paris' })}</span></div>
                 </div>
                 <a href="#/fiabilite" class="small">Fiabilité des modèles →</a>
               </div>
@@ -331,8 +331,12 @@ export function Reliability({ d, now }: { d: AllData; now: number }) {
         <div class="card stack">
           <p class="small">Surf et downwind : chaque modèle de vagues reçoit un poids et une correction apprise aux bouées Candhis, puis la dernière mesure recale les premières heures.</p>
           <div class="table-wrap"><table>
-            <thead><tr><th>Bouée</th><th>Modèle</th><th class="num">Poids</th><th class="num">Correction</th><th class="num">Erreur (m)</th><th class="num">Mesures</th></tr></thead>
-            <tbody>{Object.entries<any>(cal).flatMap(([b, ms]) => Object.entries<any>(ms).map(([m, x]) => <tr key={b + m}><td>{b}</td><td>{m.replace(/_/g, ' ')}</td><td class="num">{n1(x.w)}</td><td class="num">× {x.k ?? '—'}</td><td class="num">{x.mae ?? '—'}</td><td class="num">{x.n}</td></tr>))}</tbody>
+            <thead><tr><th>Bouée</th><th>Modèle</th><th class="num">Part dans la prévision</th><th class="num">Correction</th><th class="num">Erreur (m)</th><th class="num">Mesures</th></tr></thead>
+            <tbody>{Object.entries<any>(cal).flatMap(([b, ms]) => {
+              const tot = Object.values<any>(ms).reduce((a, x) => a + (x.w ?? 0), 0);
+              return Object.entries<any>(ms).map(([m, x]) => <tr key={b + m}><td>{b}</td><td>{m.replace(/_/g, ' ')}</td>
+                <td class="num">{x.w === null || !tot ? 'bouée côtière : contrôle seul' : `${Math.round((x.w / tot) * 100)} %`}</td><td class="num">{x.k === null ? '—' : `× ${n1(x.k)}`}</td><td class="num">{n1(x.mae)}</td><td class="num">{x.n}</td></tr>);
+            })}</tbody>
           </table></div>
           <p class="small">Vent wing : la super prévision pondère 7 modèles par leur erreur aux balises et choisit chaque jour le meilleur système par spot. Downwind : {(v?.calibration?.windCorrection ?? []).map((c: any) => `${c.spot} × ${n1(c.ratioMoy)}`).join(', ') || 'pas de correction en ce moment'}.</p>
         </div>

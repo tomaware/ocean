@@ -7,6 +7,7 @@ import { toggleFavorite, usePrefs } from '../services/prefs';
 
 export function Badge({ score, size }: { score: number | null | undefined; size?: 'lg' }) {
   const t = toneOf(score);
+  if (score === null || score === undefined) return <span class="badge no">pas de session</span>;
   return (
     <span class={`badge ${t}`} style={size === 'lg' ? { fontSize: 'var(--fs-md)', padding: '5px 12px' } : undefined}>
       {labelOf(score)}{score !== null && score !== undefined && <span class="n" aria-label={`note ${n1(score)} sur 10`}>{n1(score)}</span>}
