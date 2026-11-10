@@ -1,22 +1,31 @@
-/* OCEAN — tokens de design (docs/design/DESIGN_TOKENS.md). Direction « Ocean Studio + Forecast Lab » : sobre, précis. */
+/* OCEAN — tokens de design (docs/design/DESIGN_TOKENS.md). Direction validée par Tom le 10/11 :
+   style « note horaire + cartes + boussole » de sa référence, clair et sombre. Couleurs des maquettes « OCEAN Flow Light ». */
 :root {
-  /* couleurs */
-  --c-bg: #F8F9F7;
+  /* surfaces et texte */
+  --c-bg: #F2F3F0;
   --c-surface: #FFFFFF;
-  --c-surface-2: #EEF2F0;
-  --c-ink: #192E37;
-  --c-ink-2: #4A5D65;         /* texte secondaire, 6,9:1 sur blanc */
-  --c-ink-3: #5F6F75;         /* légendes, 5,2:1 sur blanc, 4,9:1 sur le fond */
-  --c-line: #DCE3E0;
+  --c-surface-2: #ECEFEA;
+  --c-ink: #152B33;
+  --c-ink-2: #3E5157;         /* 8,6:1 sur blanc */
+  --c-ink-3: #5C6E74;         /* 5,4:1 sur blanc, 4,9:1 sur le fond */
+  --c-line: #E4E8E4;
   --c-accent: #256D70;        /* 6,0:1 sur blanc */
-  --c-accent-soft: #E3F0EF;
-  --c-top: #1D6B46;  --c-top-soft: #E2F2E8;     /* « Ça envoie » */
-  --c-ok: #8A5A00;   --c-ok-soft: #FBF0D9;      /* « Ça se tente » */
-  --c-no: #5F6D72;   --c-no-soft: #ECEFEE;      /* « Non » */
-  --c-warn: #A3392B; --c-warn-soft: #FBE7E3;    /* danger : vent de terre */
+  --c-accent-soft: #E3F2F0;
+  --c-chip: #E3F2F0; --c-chip-ink: #164C4C;
+  --c-bar: #FFFFFF;           /* barre du haut */
+  /* « Ça envoie » et commentaires : corail */
+  --c-top: #7A3216;  --c-top-soft: #FDEDE6;
+  --c-ok: #7A5600;   --c-ok-soft: #FBF0D9;
+  --c-no: #5F6D72;   --c-no-soft: #ECEFEE;
+  --c-warn: #A3392B; --c-warn-soft: #FBE7E3;   /* danger : vent de terre */
   --c-focus: #256D70;
-  /* échelle de notes (graphiques) */
-  --c-score-0: #C9D1CE; --c-score-5: #E3B65A; --c-score-7: #3E9A6B; --c-score-9: #1D6B46;
+  /* note : barres horaires (rouge < 5, jaune 5 à 6,9, vert ≥ 7), nuit, étoiles */
+  --c-bad: #E5655B; --c-mid: #F2C94C; --c-good: #3FBF7F; --c-best: #17804F;
+  --c-night: #F2F3F0; --c-night-bar: #D6DCD6;
+  --c-star: #E0A100; --c-star-off: #D6DCD6;
+  --c-wave: #7CC3D6;
+  /* anciens noms (graphiques uPlot, carte) */
+  --c-score-0: #D6DCD6; --c-score-5: #F2C94C; --c-score-7: #3FBF7F; --c-score-9: #17804F;
 
   /* typographie */
   --font: 'Inter', 'Geist', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
@@ -27,24 +36,34 @@
   --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px; --s-5: 20px; --s-6: 24px; --s-8: 32px; --s-10: 40px; --s-12: 48px;
 
   /* formes */
-  --r-sm: 6px; --r-md: 10px; --r-lg: 14px; --r-pill: 999px;
-  --shadow: 0 1px 2px rgba(25, 46, 55, .06), 0 2px 8px rgba(25, 46, 55, .05);
+  --r-sm: 6px; --r-md: 10px; --r-lg: 16px; --r-pill: 999px;
+  --shadow: 0 1px 2px rgba(21, 43, 51, .05);
   --nav-h: 64px;
+  --map-filter: none;
+  color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --c-bg: #0F1D23; --c-surface: #152830; --c-surface-2: #1C333C; --c-ink: #E8EFEC; --c-ink-2: #B5C3C1; --c-ink-3: #93A4A3;
-    --c-line: #28414A; --c-accent: #6FC1BE; --c-accent-soft: #1B3B3D;
-    --c-top: #7FD3A5; --c-top-soft: #173A2A; --c-ok: #F0C46A; --c-ok-soft: #3A2E14; --c-no: #A9B6B5; --c-no-soft: #22343A;
-    --c-warn: #F29B8C; --c-warn-soft: #3D2320; --c-focus: #6FC1BE;
-    --c-score-0: #2E454D; --shadow: none;
+    --c-bg: #0D191E; --c-surface: #16262C; --c-surface-2: #1E3138; --c-ink: #EAF1EF; --c-ink-2: #B7C8C6; --c-ink-3: #8EA4A3;
+    --c-line: #25393F; --c-accent: #75CDC5; --c-accent-soft: #1D3A3C; --c-chip: #1D3A3C; --c-chip-ink: #9FE0D9; --c-bar: #0D191E;
+    --c-top: #F6B49C; --c-top-soft: #3A2219; --c-ok: #F0C46A; --c-ok-soft: #3A2E14; --c-no: #A9B6B5; --c-no-soft: #22343A;
+    --c-warn: #F29B8C; --c-warn-soft: #3D2320; --c-focus: #75CDC5;
+    --c-bad: #E26A5E; --c-mid: #E9C14E; --c-good: #4CC38A; --c-best: #2FA36B; --c-night: #1A2D33; --c-night-bar: #33494F;
+    --c-star: #FFC94D; --c-star-off: #33494F; --c-wave: #3E8FB0;
+    --c-score-0: #33494F; --c-score-5: #E9C14E; --c-score-7: #4CC38A; --c-score-9: #2FA36B;
+    --shadow: none; --map-filter: brightness(.8) invert(1) hue-rotate(180deg) contrast(.85) saturate(.6);
+    color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --c-bg: #0F1D23; --c-surface: #152830; --c-surface-2: #1C333C; --c-ink: #E8EFEC; --c-ink-2: #B5C3C1; --c-ink-3: #93A4A3;
-  --c-line: #28414A; --c-accent: #6FC1BE; --c-accent-soft: #1B3B3D;
-  --c-top: #7FD3A5; --c-top-soft: #173A2A; --c-ok: #F0C46A; --c-ok-soft: #3A2E14; --c-no: #A9B6B5; --c-no-soft: #22343A;
-  --c-warn: #F29B8C; --c-warn-soft: #3D2320; --c-focus: #6FC1BE;
-  --c-score-0: #2E454D; --shadow: none;
+  --c-bg: #0D191E; --c-surface: #16262C; --c-surface-2: #1E3138; --c-ink: #EAF1EF; --c-ink-2: #B7C8C6; --c-ink-3: #8EA4A3;
+  --c-line: #25393F; --c-accent: #75CDC5; --c-accent-soft: #1D3A3C; --c-chip: #1D3A3C; --c-chip-ink: #9FE0D9; --c-bar: #0D191E;
+  --c-top: #F6B49C; --c-top-soft: #3A2219; --c-ok: #F0C46A; --c-ok-soft: #3A2E14; --c-no: #A9B6B5; --c-no-soft: #22343A;
+  --c-warn: #F29B8C; --c-warn-soft: #3D2320; --c-focus: #75CDC5;
+  --c-bad: #E26A5E; --c-mid: #E9C14E; --c-good: #4CC38A; --c-best: #2FA36B; --c-night: #1A2D33; --c-night-bar: #33494F;
+  --c-star: #FFC94D; --c-star-off: #33494F; --c-wave: #3E8FB0;
+  --c-score-0: #33494F; --c-score-5: #E9C14E; --c-score-7: #4CC38A; --c-score-9: #2FA36B;
+  --shadow: none; --map-filter: brightness(.8) invert(1) hue-rotate(180deg) contrast(.85) saturate(.6);
+  color-scheme: dark;
 }

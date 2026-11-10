@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'preact/hooks';
-import { Route as RouteIcon, ShieldCheck, User, Waves, Wind } from 'lucide-preact';
+import { ShieldCheck, User } from 'lucide-preact';
 import { spotDiscipline, useData } from '../services/data';
 import { MODULES, moduleOf, Profile, Reliability, SpotPage } from '../features/pages';
 import { Module, SUBS, type Sub } from '../features/modules';
@@ -13,7 +13,6 @@ function parse(): Route {
   // anciennes adresses (accueil, spots, prévisions, sessions) → WIND
   return { name: ['accueil', 'spots', 'previsions', 'sessions'].includes(name) ? 'wind' : name, id: parts[1], query: new URLSearchParams(q ?? '') };
 }
-const ICONS = { wind: Wind, vague: Waves, houle: RouteIcon } as const;
 
 export function App() {
   const [route, setRoute] = useState(parse());
@@ -44,10 +43,9 @@ export function App() {
     <div class="shell">
       <header class="topbar">
         <a class="brand" href="#/wind" aria-label="OCEAN, accueil"><img src="./icon.svg" width="26" height="26" alt="" /><span>OCEAN</span></a>
-        <nav class="tabs" aria-label="Modules">
+        <nav class="tabs" aria-label="Disciplines">
           {MODULES.map((m) => {
-            const I = ICONS[m.slug as keyof typeof ICONS];
-            return <a key={m.slug} href={`#/${m.slug}/${lastSub(m.slug) ?? 'meilleure'}`} aria-current={tab === m.slug ? 'page' : undefined}><I size={18} aria-hidden="true" /><span>{m.tab}</span></a>;
+            return <a key={m.slug} href={`#/${m.slug}/${lastSub(m.slug) ?? 'meilleure'}`} aria-current={tab === m.slug ? 'page' : undefined}>{m.tab}</a>;
           })}
         </nav>
         <a class="me" href="#/profil" aria-label="Profil et réglages" aria-current={tab === 'profil' || tab === 'fiabilite' ? 'page' : undefined}><User size={20} /></a>

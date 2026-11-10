@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'preact/hooks';
-import { Info, Radio, ShieldCheck, TriangleAlert } from 'lucide-preact';
+import { ChevronLeft, Info, Radio, ShieldCheck, TriangleAlert } from 'lucide-preact';
 import type { AllData, Discipline, Level, PublicSpot, Session } from '../services/data';
 import { DISC_LABEL, LEVEL_LABEL, LEVELS_FOR, spotDiscipline } from '../services/data';
 import { ago, compass, dayKey, dayLabel, hh, hourOf, labelOf, msToKn, n0, n1, span } from '../services/format';
@@ -7,9 +7,8 @@ import { setPrefs, usePrefs, type Reading } from '../services/prefs';
 import { useLive, type Live } from '../services/perso';
 import { goBack } from '../services/nav';
 import { Badge, DiscIcon, Fav, Section, Seg, SessionRow } from '../components/ui';
-import { Strip } from '../components/Strip';
 import { Chart } from '../components/Chart';
-import { SpotMap } from '../components/SpotMap';
+import { CondCards, Criteria, DayTabs, daysOf, MapCompass, NoteCard } from '../components/Today';
 import { seriesFor } from './series';
 import { headFor, ModelsTable, ModuleView, pickHours } from '../components/Views';
 
@@ -77,28 +76,46 @@ function SpotView({ d, spot, now }: { d: AllData; spot: PublicSpot; now: number 
   const sessions = upcoming(d, now).filter((x) => x.spot === id && (x.level === 'tous' || x.level === level));
   const reading = prefs.reading;
   const future = s ? s.rows.map((r, i) => ({ r, i })).filter(({ i }) => s.times[i] >= now - 3600e3) : [];
-  const days = useMemo(() => {
-    const m = new Map<string, number[]>();
-    future.forEach(({ i }) => { const k = dayKey(s!.times[i]); if (!m.has(k)) m.set(k, []); m.get(k)!.push(i); });
-    return [...m.values()].slice(0, 7);
-  }, [s, now]);
+  const days = useMemo(() => (s ? daysOf(s, now) : []), [s, Math.floor(now / 3600e3)]);
+  const [dayT, setDay] = useState<number | null>(null);
+  const day = dayT !== null && days.some((t) => dayKey(t) === dayKey(dayT)) ? dayT : days[0] ?? now;
+  const best = sessions.length ? Math.max(...sessions.map((x) => x.peak)) : null;
   return (
     <>
       <header class="page-head">
-        <button type="button" class="back" onClick={() => goBack(`#/${moduleOf(disc).slug}`)}>← Retour</button>
+        <button type="button" class="back" onClick={() => goBack(`#/${moduleOf(disc).slug}`)}><ChevronLeft size={22} strokeWidth={2.8} aria-hidden="true" />Retour</button>
         <div class="row between">
-          <div class="row"><DiscIcon d={disc} size={20} /><h1>{spot.name}</h1><Fav id={spot.id} name={spot.name} /></div>
+          <div class="row"><h1>{spot.name}</h1><Fav id={spot.id} name={spot.name} /></div>
           <Freshness d={d} now={now} />
         </div>
         <span class="muted">{DISC_LABEL[disc]}{spot.waterBody === 'lagoon' ? ' · étang' : ''}</span>
       </header>
       <div class="row between">
+        {s?.levels && <Seg<Level> label={disc === 'wing' ? 'Mode' : 'Niveau de pratique'} value={level} onChange={(v) => setPrefs((p) => ({ ...p, levels: { ...p.levels, [disc]: v } }))} options={LEVELS_FOR[disc].map((l) => [l, LEVEL_LABEL[l]] as [Level, string])} />}
         <Seg<Reading> label="Niveau de lecture" value={reading} onChange={(v) => setPrefs((p) => ({ ...p, reading: v }))} options={[['synthese', 'Synthèse'], ['detail', 'Détail'], ['expert', 'Expert']]} />
-        {s?.levels && <Seg<Level> label="Niveau de pratique" value={level} onChange={(v) => setPrefs((p) => ({ ...p, levels: { ...p.levels, [disc]: v } }))} options={LEVELS_FOR[disc].map((l) => [l, LEVEL_LABEL[l]] as [Level, string])} />}
       </div>
       {disc === 'wing' && <LiveBox live={live.live} spot={spot.id} />}
       {!s ? <div class="notice warn">Pas de prévision disponible pour ce spot dans la dernière mise à jour.</div> : (
         <>
+          {days.length > 0 && <DayTabs s={s} days={days} value={day} now={now} onChange={setDay} />}
+          <div class="today">
+            <NoteCard s={s} dayT={day} now={now} sessions={sessions} level={level} />
+            <CondCards d={d} spot={spot} s={s} dayT={day} now={now} />
+            <MapCompass d={d} spot={spot} s={s} dayT={day} now={now} best={best} />
+            <Criteria d={d} spot={spot} s={s} dayT={day} now={now} level={level} sessions={sessions} />
+          </div>
+          <Section title={disc === 'surf' ? 'Vagues heure par heure' : disc === 'wing' ? 'Vent heure par heure' : 'Vent et houle heure par heure'}>
+            <div class="card stack">
+              {(() => {
+                const picks = disc === 'surf' ? pickHours(s, { day, hours: [7, 19], step: 2 }) : pickHours(s, { day });
+                const ss = sessions.find((x) => dayKey(x.start) === dayKey(day));
+                return <>
+                  <span class="faint">{dayLabel(day, now)} : {headFor(s, picks)}</span>
+                  <ModuleView d={d} spot={spot} s={s} picks={picks} window={ss ? [ss.start, ss.end] : undefined} />
+                </>;
+              })()}
+            </div>
+          </Section>
           <Section title="Sessions 2H">
             <div class="card">{sessions.length ? <div class="list">{sessions.map((x) => <SessionRow key={x.id} s={x} now={now} showSpot={false} />)}</div> : <div class="empty">Pas de session 2H en vue{s.levels ? ` en ${LEVEL_LABEL[level]}` : ''}.</div>}</div>
           </Section>
@@ -107,11 +124,7 @@ function SpotView({ d, spot, now }: { d: AllData; spot: PublicSpot; now: number 
               {(() => {
                 // WIND / HOULE : toutes les 3 h sur 5 jours (façon Windguru) ; VAGUE : 8 h, 13 h, 18 h sur 7 jours (façon surf-forecast)
                 const picks = disc === 'surf' ? pickHours(s, { from: now, days: 7, hours: [8, 18], step: 5 }) : pickHours(s, { from: now, days: 5, hours: [7, 19], step: 3 });
-                const today = pickHours(s, { day: now });
-                return <>
-                  <span class="faint">{disc === 'surf' ? 'Aujourd’hui : ' : 'Aujourd’hui : '}{headFor(s, today.length ? today : picks.slice(0, 3))}</span>
-                  <ModuleView d={d} spot={spot} s={s} picks={picks} showDays compact={disc === 'surf'} />
-                </>;
+                return <ModuleView d={d} spot={spot} s={s} picks={picks} showDays compact={disc === 'surf'} />;
               })()}
             </div>
           </Section>
@@ -152,7 +165,6 @@ function SpotView({ d, spot, now }: { d: AllData; spot: PublicSpot; now: number 
               </div>
             </Section>
           )}
-          <SpotMap spots={[spot]} best={{ [spot.id]: sessions.length ? Math.max(...sessions.map((x) => x.peak)) : null }} focus={spot.id} height={260} />
         </>
       )}
     </>
@@ -214,7 +226,7 @@ export function Reliability({ d, now }: { d: AllData; now: number }) {
   const cal = v?.calibration?.surf ?? {};
   return (
     <>
-      <header class="page-head"><button type="button" class="back" onClick={() => goBack('#/profil')}>← Retour</button><h1>Fiabilité</h1>
+      <header class="page-head"><button type="button" class="back" onClick={() => goBack('#/profil')}><ChevronLeft size={22} strokeWidth={2.8} aria-hidden="true" />Retour</button><h1>Fiabilité</h1>
         <span class="muted">Chaque heure, les prévisions sont comparées aux mesures. Les modèles qui se trompent le moins pèsent le plus.</span><Freshness d={d} now={now} /></header>
       <div class="notice"><Info size={14} /> « 3 derniers jours » compare les modèles aux mesures récentes (très courte échéance). Les prévisions réellement émises 6 h, 24 h ou 48 h avant sont archivées et comparées au fil des jours ({v?.archive?.runs ?? 0} prévisions archivées).</div>
       <Section title="Vent : erreur moyenne par modèle (3 derniers jours)">

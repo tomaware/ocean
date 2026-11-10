@@ -11,7 +11,7 @@ import type { Series } from '../features/series';
 // ------------------------------------------------------------------ étoiles
 /** 0 à 3 étoiles : ≥ 5 → ★, ≥ 7 → ★★, ≥ 8,5 → ★★★ (mêmes seuils que les couleurs). */
 export const starsOf = (s: number | null | undefined) => (s === null || s === undefined ? 0 : s >= 8.5 ? 3 : s >= 7 ? 2 : s >= 5 ? 1 : 0);
-export function Stars({ score, size = 'md' }: { score: number | null | undefined; size?: 'sm' | 'md' | 'lg' }) {
+export function Stars({ score, size = 'md' }: { score: number | null | undefined; size?: 'sm' | 'md' | 'lg' | 'xl' }) {
   const k = starsOf(score);
   return (
     <span class={`stars ${size}`} role="img" aria-label={`${k} étoile${k > 1 ? 's' : ''} sur 3${score == null ? '' : ` (note ${n1(score)}/10)`}`} title={score == null ? '' : `note ${n1(score)}/10`}>
@@ -30,7 +30,7 @@ export function windColor(kn: number | null | undefined): { background: string; 
   return { background: s[1], color: s[2] };
 }
 /** Surf : le vent qui vient de la terre lisse les vagues (foncé = bon), le vent de mer les abîme (clair). */
-const SURF_WIND: Record<string, { background: string; color: string }> = {
+export const SURF_WIND: Record<string, { background: string; color: string }> = {
   'pétole': { background: '#1F5F86', color: '#fff' }, offshore: { background: '#1F5F86', color: '#fff' }, 'side-off': { background: '#2F86A6', color: '#fff' },
   side: { background: '#7CC3D6', color: '#10343A' }, 'side-on': { background: '#BFE5EE', color: '#10343A' }, onshore: { background: '#E4F3F7', color: '#41535A' },
 };
@@ -38,7 +38,7 @@ const WK_LABEL: Record<string, string> = { 'pétole': 'pétole', offshore: 'offs
 
 // ------------------------------------------------------------------ météo
 type Meteo = { temp: (number | null)[]; rain: (number | null)[]; cloud: (number | null)[]; code: (number | null)[] };
-function meteoAt(d: AllData, spot: string, t: number): { temp: number | null; rain: number | null; code: number | null } | null {
+export function meteoAt(d: AllData, spot: string, t: number): { temp: number | null; rain: number | null; code: number | null } | null {
   const m = d.meteo;
   if (!m?.available || !m.spots?.[spot]) return null;
   const i = (m.times as number[]).indexOf(t);
@@ -58,7 +58,7 @@ export function WeatherIcon({ code, day, size = 18 }: { code: number | null; day
   if (code >= 1) return day ? <CloudSun {...p} /> : <CloudMoon {...p} />;
   return day ? <Sun {...p} /> : <Moon {...p} />;
 }
-const WMO: Record<number, string> = { 0: 'ciel clair', 1: 'peu nuageux', 2: 'partiellement nuageux', 3: 'couvert', 45: 'brouillard', 48: 'brouillard givrant', 51: 'bruine', 53: 'bruine', 55: 'bruine forte', 61: 'pluie faible', 63: 'pluie', 65: 'forte pluie', 80: 'averses', 81: 'averses', 82: 'fortes averses', 95: 'orage', 96: 'orage', 99: 'orage' };
+export const WMO: Record<number, string> = { 0: 'ciel clair', 1: 'peu nuageux', 2: 'partiellement nuageux', 3: 'couvert', 45: 'brouillard', 48: 'brouillard givrant', 51: 'bruine', 53: 'bruine', 55: 'bruine forte', 61: 'pluie faible', 63: 'pluie', 65: 'forte pluie', 80: 'averses', 81: 'averses', 82: 'fortes averses', 95: 'orage', 96: 'orage', 99: 'orage' };
 
 export function Arrow({ from, size = 12 }: { from: number | null; size?: number }) {
   if (from === null || from === undefined) return <span class="arrow" style={{ width: size, height: size }} />;

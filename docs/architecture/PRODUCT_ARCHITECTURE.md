@@ -153,3 +153,8 @@ Les apps actuelles restent en ligne jusqu'à ce que leur remplaçante soit véri
 | D-18 | Note wing v1.1 : « trop de vent » seulement au-delà de 35 nd (tous niveaux) ; « Limite » renommé « Commentaire » ; navigation : modules à droite (Meilleure session, Sessions 2H, Prévision, Spots) | **Validée par Tom (10/11)** |
 | D-17 | **Session 2H** commune aux 3 disciplines : au moins 2 h d'affilée à 5/10 ou plus, de jour, calculée sur les notes horaires des moteurs (règle d'affichage, aucune note modifiée) | **Appliquée (10/11)** — à valider |
 | D-15 | Notes comparables entre disciplines : même échelle 0-10 mais **pas de classement croisé** tant que les retours terrain ne l'ont pas calibré (l'accueil affiche la meilleure option par discipline) | **Validée (10/11)** |
+
+### D-20 (10/11/2026, Tom) — direction graphique et explication de la note
+- Direction retenue : style de la référence de Tom (note horaire en barres, cartes, boussole, détail de la note en jauges), clair + sombre, navigation et mots de l'app actuelle, nœuds. Détails : docs/design/CREATIVE_DIRECTION.md §0.
+- Le moteur wing publie les facteurs V, R, D de chaque heure (affichage seul, note inchangée, test + recalcul sur données réelles : 0 écart). Surf et downwind : pas de facteurs publiés pour l'instant, l'app montre les conditions de l'heure.
+

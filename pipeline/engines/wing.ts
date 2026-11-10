@@ -65,15 +65,19 @@ export function dirFactor(windFrom: number, spot: Pick<Spot, 'orientation' | 'wa
 }
 
 export type WingHour = { t: number; kn: number | null; gust: number | null; dir: number | null; conf: number | null; day: boolean; sector: string | null;
-  scores: Record<WingLevel, number | null>; limit: Record<WingLevel, string | null> };
+  scores: Record<WingLevel, number | null>; limit: Record<WingLevel, string | null>; f: Record<WingLevel, WingFactors | null> };
 
 /** Une heure, un niveau. Renvoie la note et le facteur qui la limite le plus (pour l'expliquer). */
-export function scoreHour(kn: number, gust: number | null, dir: number | null, day: boolean, spot: Pick<Spot, 'orientation' | 'waterBody'>, L: WingLevel) {
-  if (!day) return { score: 0, limit: 'nuit' };
+/** Facteurs publiés pour expliquer la note : [force V, régularité R, direction D], arrondis au centième (affichage seulement). */
+export type WingFactors = [number, number, number];
+const r2 = (x: number) => Math.round(x * 100) / 100;
+export function scoreHour(kn: number, gust: number | null, dir: number | null, day: boolean, spot: Pick<Spot, 'orientation' | 'waterBody'>, L: WingLevel): { score: number; limit: string | null; f: WingFactors } {
   const g = gust !== null && kn > 0 ? gust / kn : 1;
   const eff = g > 1.3 && gust !== null ? (kn + gust) / 2 : kn;
   const V = windFactor(eff, L), R = gustFactor(g);
   const D = dir === null ? { f: 1, label: 'direction inconnue' } : dirFactor(dir, spot, L);
+  const f: WingFactors = [r2(V), r2(R), r2(D.f)];
+  if (!day) return { score: 0, limit: 'nuit', f };
   const score = Math.round(10 * V * R * D.f * 10) / 10;
   const w = WIND[L];
   // à égalité, la direction passe en premier : « vent de terre » est plus important à lire que « trop de vent »
@@ -85,7 +89,7 @@ export function scoreHour(kn: number, gust: number | null, dir: number | null, d
   const worst = why.reduce((a, b) => (b[0] < a[0] ? b : a));
   // mode Offshore : le vent de terre ne baisse pas la note mais reste toujours signalé
   const risky = 'sector' in D && (D.sector === 'offshore' || D.sector === 'side-off') ? D.label : null;
-  return { score, limit: worst[0] < 1 ? worst[1] : risky };
+  return { score, limit: worst[0] < 1 ? worst[1] : risky, f };
 }
 
 export type WingWindow = { level: WingLevel; start: number; end: number; hours: number; mean: number; peak: number };
@@ -123,13 +127,13 @@ export function wingForecast(block: ForecastBlock | undefined, registry: Registr
       const ms = v?.wind_speed_10m[i] ?? null, gs = v?.wind_gusts_10m[i] ?? null, dir = v?.wind_direction_10m[i] ?? null;
       const day = E.solarElevation(t, geo.lat, geo.lon) > DAYLIGHT_ELEVATION;
       const kn = ms === null ? null : Math.round(ms * MS_TO_KN * 10) / 10, gust = gs === null ? null : Math.round(gs * MS_TO_KN * 10) / 10;
-      const scores = {} as Record<WingLevel, number | null>, limit = {} as Record<WingLevel, string | null>;
+      const scores = {} as Record<WingLevel, number | null>, limit = {} as Record<WingLevel, string | null>, f = {} as Record<WingLevel, WingFactors | null>;
       for (const L of WING_LEVELS) {
-        if (kn === null) { scores[L] = null; limit[L] = null; continue; }
-        const r = scoreHour(kn, gust, dir, day, s, L); scores[L] = r.score; limit[L] = r.limit;
+        if (kn === null) { scores[L] = null; limit[L] = null; f[L] = null; continue; }
+        const r = scoreHour(kn, gust, dir, day, s, L); scores[L] = r.score; limit[L] = r.limit; f[L] = r.f;
       }
       const o = s.orientation;
-      return { t, kn, gust, dir, conf: v?.confidence?.[i] ?? null, day, sector: dir === null || !o || o.seaward == null ? null : sectorOf(dir, o.seaward).s.id, scores, limit };
+      return { t, kn, gust, dir, conf: v?.confidence?.[i] ?? null, day, sector: dir === null || !o || o.seaward == null ? null : sectorOf(dir, o.seaward).s.id, scores, limit, f };
     }).filter((h) => h.kn !== null && h.t >= now - 3 * 3600e3);
     return {
       id: s.id, name: s.name, orientation: s.orientation, waterBody: s.waterBody, hours,

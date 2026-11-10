@@ -72,3 +72,18 @@ test('wing : à partir de la super prévision collectée, 6 spots, provenance ga
   assert.equal(w.provenance?.kind, 'corrected');
   assert.equal(wingForecast(undefined, registry, t0).available, false);
 });
+
+test('wing : facteurs publiés pour expliquer la note (affichage seul, la note ne change pas)', () => {
+  // La Grande-Motte, 18 nd de 110°, rafales 27 (× 1,5) : V 1, R 0,73, D 1 → 7,3
+  const r = sc('la-grande-motte', 18, 27, 110, 'secu');
+  assert.deepEqual(r.f, [1, 0.73, 1]);
+  assert.equal(r.score, 7.3);
+  // la nuit, la note reste 0 mais les facteurs restent lisibles
+  const n = sc('la-grande-motte', 18, 27, 110, 'secu', false);
+  assert.equal(n.score, 0); assert.equal(n.limit, 'nuit'); assert.deepEqual(n.f, [1, 0.73, 1]);
+  // sur un balayage, 10 × V × R × D (facteurs arrondis au centième) reste à ±0,1 de la note publiée
+  for (const kn of [8, 12, 14, 17, 22, 30, 35, 37]) for (const g of [1, 1.2, 1.45, 1.7, 2.1]) for (const dir of [0, 90, 135, 180, 225, 315]) for (const L of ['secu', 'offshore'] as WingLevel[]) {
+    const x = sc('port-camargue', kn, kn * g, dir, L);
+    assert.ok(Math.abs(10 * x.f[0] * x.f[1] * x.f[2] - x.score) <= 0.1, `${kn} nd × ${g} de ${dir}° (${L}) : ${x.f} → ${x.score}`);
+  }
+});

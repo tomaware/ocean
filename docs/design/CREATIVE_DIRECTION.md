@@ -1,6 +1,13 @@
-# OCEAN / Flow Light — direction créative (étape A, à valider)
+# OCEAN / Flow Light — direction créative
 
-> Statut : **exploration**, rien n'est figé. Maquettes de l'écran pilote Vent (mobile 390 px + ordinateur) et mini design system sur le canevas « OCEAN Flow Light — écran Vent ». Données **fictives** sur toutes les maquettes.
+> **Décision de Tom (10/11/2026)** : direction retenue = le style de sa référence (note horaire + cartes + boussole + détail de la note en jauges), **avec un mode sombre**, en gardant la navigation et les mots de l'app actuelle (WIND / VAGUE / HOULE, Meilleure session, Sessions 2H, Prévision, Spots, étoiles sur 3, « Ça envoie », « Commentaire », Sécu first / Offshore) et les **nœuds (nd)**. Maquettes validées (« oui c'est top ») sur le canevas « OCEAN Flow Light — écran Vent » : WIND (prévision, détail de la note, vent heure par heure), VAGUE, HOULE, ordinateur, mini design system, en clair et en sombre. Les variantes A / B ci-dessous sont l'exploration qui a précédé ; elles ne sont plus suivies.
+
+## 0. Ce qui est appliqué dans l'app
+- **Thèmes** : clair (fond #F2F3F0, cartes blanches) et sombre (fond #0D191E, cartes #16262C) ; automatique selon le téléphone, ou choisi dans Profil. Carte OpenStreetMap assombrie en mode sombre.
+- **Navigation** : WIND / VAGUE / HOULE en pilule en haut ; modules soulignés sous l'en-tête (mobile) ou colonne de gauche (ordinateur) ; flèche Retour en gras.
+- **Fiche spot** : choix du jour (avec étoiles) → **Note du jour** (étoiles, créneau(x) de session 2H, « Ça envoie », 24 barres horaires rouge / jaune / vert, nuit grisée, trait « Maintenant ») → deux cartes (WIND : Vent + Météo ; VAGUE : Vagues + Vent ; HOULE : Vent + Houle) → carte avec boussole (vent de l'heure, axe de la plage) → **critères** : WIND = 4 jauges (force, régularité, direction / plage, lumière du jour) et la formule ; VAGUE / HOULE = conditions de l'heure (le détail par critère de ces moteurs n'est pas publié) → tableaux heure par heure et jour par jour (Windguru / surf-forecast) inchangés.
+- **Heure de référence des cartes** : l'heure en cours si l'on regarde aujourd'hui en journée, sinon la meilleure heure du jour choisi.
+- **Aucune note recalculée par l'interface** : les jauges WIND lisent les facteurs V × R × D publiés par le moteur wing (D-20).
 
 ## 1. Audit de l'existant (ce qui compte pour le design)
 - **Données disponibles et fiables** (chaîne vérifiée) : vent corrigé (super prévision) + 7 modèles bruts, rafales, direction ; vagues à la côte (fourchette), houle (hauteur, période, direction), vent au spot et son orientation (offshore / onshore), température de l'eau ; houle + vent sur les parcours downwind ; météo du spot (air, pluie, nuages) ; notes des moteurs, sessions 2H, fiabilité des modèles.

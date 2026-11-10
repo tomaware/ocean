@@ -18,6 +18,9 @@ Cas de référence avant / après : La Franqui, tramontane 20 nd (vent de terre)
 
 Le reste de ce document décrit la v1 (historique). Wing seulement, pas de kite (plages de vent différentes). Code : `pipeline/engines/wing.ts`, cas de référence : `tests/wing.test.ts`. Toute modification = décision documentée + cas de référence mis à jour.
 
+## Facteurs publiés (10/11, D-20)
+Chaque heure publiée porte aussi `f[mode] = [V, R, D]` (arrondis au centième) pour expliquer la note dans l'app (jauges « Force du vent », « Régularité », « Direction / plage »). **La formule et les notes ne changent pas** : vérifié sur les données réelles (720 notes recalculées, 0 écart) et par un test (10 × V × R × D à ± 0,1 de la note). La nuit, la note reste 0 et les facteurs restent lisibles.
+
 ## 1. Ce que la note dit
 
 Une note de 0 à 10 par spot, par heure et par niveau (débutant, intermédiaire, confirmé), qui répond à « est-ce que je sors, et c'est bien ? ». Elle ne se compare pas aux notes surf ou downwind (D-15).

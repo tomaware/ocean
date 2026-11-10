@@ -8,6 +8,7 @@ import { useLive } from '../services/perso';
 import { Badge, Fav, Section, Seg } from '../components/ui';
 import { SpotMap } from '../components/SpotMap';
 import { headFor, ModuleView, pickHours } from '../components/Views';
+import { ScoreBars } from '../components/Today';
 import { seriesFor, type Series } from './series';
 import { bestScoreBySpot, Freshness, levelFor, LiveBox, matches, moduleOf, upcoming } from './pages';
 
@@ -22,8 +23,8 @@ export type Sub = (typeof SUBS)[number]['id'];
 // ------------------------------------------------------------ vue d'une journée, propre à chaque onglet
 export const chipColors = (sc: number | null) =>
   sc === null ? { background: 'var(--c-surface-2)', color: 'var(--c-ink-3)' }
-  : sc >= 8.5 ? { background: '#1D6B46', color: '#fff' } : sc >= 7 ? { background: '#3E9A6B', color: '#fff' }
-  : sc >= 5 ? { background: '#E3B65A', color: '#2A1E00' } : { background: 'var(--c-surface-2)', color: 'var(--c-ink-2)' };
+  : sc >= 8.5 ? { background: 'var(--c-best)', color: '#fff' } : sc >= 7 ? { background: 'var(--c-good)', color: '#0F3322' }
+  : sc >= 5 ? { background: 'var(--c-mid)', color: '#2A1E00' } : { background: 'var(--c-surface-2)', color: 'var(--c-ink-2)' };
 
 export function DayChart({ d, spot, dayT, level, window, title }: { d: AllData; spot: PublicSpot; dayT: number; level: Level; window?: [number, number]; title?: string }) {
   const s = useMemo(() => seriesFor(d, spot, spotDiscipline(spot), level), [d, spot, level]);
@@ -116,6 +117,7 @@ function SessionCard({ d, s, now, L, big }: { d: AllData; s: Session; now: numbe
         <span class={big ? 'big' : ''}><strong>{s.spotName}</strong></span><Badge score={s.peak} envoie={s.envoie} size={big ? 'lg' : undefined} />
       </a>
       <span class="muted small">{big ? span(s.start, s.end, now) : `${hh(s.start)} – ${hh(s.end)}`} · {s.hours} h · {s.text}</span>
+      {big && (() => { const ser = seriesFor(d, spot, s.discipline, L); return ser ? <ScoreBars s={ser} dayT={s.start} now={now} /> : null; })()}
       <DayChart d={d} spot={spot} dayT={s.start} level={L} window={[s.start, s.end]} title={big ? undefined : ' '} />
       {s.why && <span class="faint">Commentaire : {s.why}</span>}
     </div>

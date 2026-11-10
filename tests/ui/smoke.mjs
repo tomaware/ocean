@@ -9,7 +9,7 @@ const routes = [['', 'Où naviguer en wing'], ['wind/meilleure', 'Meilleure sess
 const errs = [];
 const b = await chromium.launch();
 // langue fixée (fr-FR) ; un 3e passage sans langue fixée vérifie que l'app survit à une langue système invalide
-for (const [name, opt] of [['mobile', { ...devices['iPhone 13'], locale: 'fr-FR' }], ['ordinateur', { viewport: { width: 1280, height: 900 }, locale: 'fr-FR' }], ['langue-système', { viewport: { width: 1280, height: 900 } }]]) {
+for (const [name, opt] of [['mobile', { ...devices['iPhone 13'], locale: 'fr-FR' }], ['ordinateur', { viewport: { width: 1280, height: 900 }, locale: 'fr-FR' }], ['langue-système', { viewport: { width: 1280, height: 900 } }], ['sombre', { ...devices['iPhone 13'], locale: 'fr-FR', colorScheme: 'dark' }]]) {
   const ctx = await b.newContext(opt);
   const p = await ctx.newPage();
   let shown = false;
@@ -18,6 +18,7 @@ for (const [name, opt] of [['mobile', { ...devices['iPhone 13'], locale: 'fr-FR'
   for (const reading of ['synthese', 'expert']) {
     await p.goto(base + '/#/');
     await p.evaluate((r) => localStorage.setItem('ocean.prefs.v1', JSON.stringify({ reading: r })), reading);
+    if (name === 'sombre') { await p.reload(); const bg = await p.evaluate(() => getComputedStyle(document.body).backgroundColor); if (bg !== 'rgb(13, 25, 30)') errs.push(`sombre : fond ${bg} (thème sombre non appliqué)`); }
     for (const [r, text] of routes) {
       await p.goto(`${base}/#/${r}`); await p.reload();
       try { await p.getByRole('heading', { name: text }).first().waitFor({ timeout: 8000 }); } catch { errs.push(`${name} #/${r} : « ${text} » absent`); }
@@ -37,6 +38,17 @@ for (const [name, opt] of [['mobile', { ...devices['iPhone 13'], locale: 'fr-FR'
       if (r === 'spot/plagesud-grandemotte' && !(await p.locator('table.wg .wg-bars').count())) errs.push(`${name} #/${r} : houle absente du tableau`);
       if (r === 'spot/carnon' && (await p.locator('.sf .sf-col').count()) < 10) errs.push(`${name} #/${r} : barres de vagues absentes`);
       if (r.startsWith('spot/') && !(await p.locator('.stars').count())) errs.push(`${name} #/${r} : étoiles absentes`);
+      // fiche spot au style validé le 10/11 : note du jour (24 barres), 2 cartes de conditions, boussole, critères
+      if (r.startsWith('spot/')) {
+        if ((await p.locator('.notecard .scorebars rect[class^="b-"]').count()) !== 24) errs.push(`${name} #/${r} : barres horaires de la note ≠ 24`);
+        if ((await p.locator('.today .cond').count()) !== 2) errs.push(`${name} #/${r} : cartes de conditions ≠ 2`);
+        if (!(await p.locator('.daytabs button').count())) errs.push(`${name} #/${r} : choix du jour absent`);
+        if (!(await p.locator('.mapbox .compass').count())) errs.push(`${name} #/${r} : boussole absente`);
+        if (r === 'spot/port-camargue' && (await p.locator('.crit .gauge').count()) !== 4) errs.push(`${name} #/${r} : 4 critères wing attendus`);
+        // changer de jour met à jour la note du jour
+        const tabsN = await p.locator('.daytabs button').count();
+        if (tabsN > 1) { await p.locator('.daytabs button').nth(1).click(); if ((await p.locator('.daytabs button[aria-pressed="true"]').innerText()) !== (await p.locator('.daytabs button').nth(1).innerText())) errs.push(`${name} #/${r} : choix du jour sans effet`); }
+      }
       const tabs = await p.locator('.tabs a').allInnerTexts();
       if (tabs.map((x) => x.trim()).join(',') !== 'WIND,VAGUE,HOULE') errs.push(`${name} #/${r} : onglets ${tabs.join(',')}`);
     }
@@ -59,5 +71,5 @@ for (const [name, opt] of [['mobile', { ...devices['iPhone 13'], locale: 'fr-FR'
   await ctx.close();
 }
 await b.close();
-console.log(errs.length ? 'ÉCHEC\n' + errs.join('\n') : `[interface] OK : ${routes.length} écrans × 2 niveaux de lecture × mobile / ordinateur / langue système, aucune erreur`);
+console.log(errs.length ? 'ÉCHEC\n' + errs.join('\n') : `[interface] OK : ${routes.length} écrans × 2 niveaux de lecture × mobile / ordinateur / langue système / sombre, aucune erreur`);
 process.exit(errs.length ? 1 : 0);
