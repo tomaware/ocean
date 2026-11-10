@@ -1,6 +1,6 @@
 # Remise en question (③)
 
-Généré le 2026-11-10 13:47 UTC par `pipeline/verify/run.ts`.
+Généré le 2026-11-10 13:59 UTC par `pipeline/verify/run.ts`.
 
 Erreur = prévu − mesuré. Vent en m/s aux stations METAR (aéroports), vagues : hauteur significative en m aux bouées Candhis. « courtTerme » = modèles sur les 3 derniers jours (pas une vraie prévision) ; « archive » = prévisions réellement émises N h avant.
 
@@ -37,7 +37,7 @@ Erreur = prévu − mesuré. Vent en m/s aux stations METAR (aéroports), vagues
   - 01102 : meteofrance_wave poids —, ×— (MAE 0.33 m, n 124) ; ecmwf_wam025 poids —, ×— (MAE 0.19 m, n 124) ; ewam poids —, ×— (MAE 0.25 m, n 124) ; gwam poids —, ×— (MAE 0.36 m, n 124) ; copernicus poids —, ×— (MAE 0.23 m, n 53)
   - 01101 : meteofrance_wave poids 11.11, ×1.25 (MAE 0.26 m, n 172) ; ecmwf_wam025 poids 17.53, ×0.98 (MAE 0.13 m, n 172) ; ewam poids 13.7, ×1.08 (MAE 0.18 m, n 172) ; gwam poids 9.37, ×1.1 (MAE 0.15 m, n 172) ; ncep_gfswave025 poids 8.69, ×1.06 (MAE 0.17 m, n 172) ; copernicus poids 18.39, ×0.98 (MAE 0.19 m, n 100)
   - 06601 : 
-- Vent downwind : La Grande-Motte × 1.16, Port Camargue × 1.03 (super prévision + relevé récent).
+- Vent downwind : La Grande-Motte × 1.14, Port Camargue × 1.03 (super prévision + relevé récent).
 
 ## Prévisions archivées (vraie échéance)
 
