@@ -149,6 +149,7 @@ Les apps actuelles restent en ligne jusqu'à ce que leur remplaçante soit véri
 | D-13 | Stack : TypeScript strict + Vite + Preact + uPlot + Leaflet, statique sur GitHub Pages | **Validée (10/11)** |
 | D-14 | Note WING / KITE : formule rédigée et validée par Tom avant le code ; spots = les 6 de la super prévision (La Franqui → Almanarre) | **Validée (10/11)** |
 | D-16 | **Wing seul**, pas de kite (plages de vent différentes) ; plages de vent recalées sur des guides wing ; formule v1.0 (`docs/product/WING_SCORE.md`) | **Validée (10/11)** |
+| D-19 | Wing v2.0 : modes **Sécu first / Offshore** à la place des 3 niveaux ; note seule, « Ça envoie » = ≥ 4 h à plus de 20 nd ; Sessions de 2H limitées à 55 km de Montpellier ; menu des modules à gauche sous OCEAN ; « Retour » ramène à l'écran précédent | **Validée par Tom (10/11)** |
 | D-18 | Note wing v1.1 : « trop de vent » seulement au-delà de 35 nd (tous niveaux) ; « Limite » renommé « Commentaire » ; navigation : modules à droite (Meilleure session, Sessions 2H, Prévision, Spots) | **Validée par Tom (10/11)** |
 | D-17 | **Session 2H** commune aux 3 disciplines : au moins 2 h d'affilée à 5/10 ou plus, de jour, calculée sur les notes horaires des moteurs (règle d'affichage, aucune note modifiée) | **Appliquée (10/11)** — à valider |
 | D-15 | Notes comparables entre disciplines : même échelle 0-10 mais **pas de classement croisé** tant que les retours terrain ne l'ont pas calibré (l'accueil affiche la meilleure option par discipline) | **Validée (10/11)** |

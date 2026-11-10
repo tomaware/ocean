@@ -1,7 +1,7 @@
 // Onglets WIND / VAGUE / HOULE : menu des modules à droite (Meilleure session, Sessions 2H, Prévision, Spots).
 import { useMemo, useState } from 'preact/hooks';
 import type { AllData, Discipline, Level, PublicSpot, Session } from '../services/data';
-import { DISC_LABEL, LEVEL_LABEL, LEVELS, spotDiscipline } from '../services/data';
+import { DISC_LABEL, distanceKm, HOME, LEVEL_LABEL, LEVELS_FOR, spotDiscipline } from '../services/data';
 import { compass, dayKey, dayLabel, dayShort, hh, hourOf, n0, n1, span } from '../services/format';
 import { setPrefs, usePrefs } from '../services/prefs';
 import { useLive } from '../services/perso';
@@ -87,11 +87,18 @@ export function DayChart({ d, spot, dayT, level, window, title }: { d: AllData; 
 // ------------------------------------------------------------ PRÉVISION : grille spots × 5 jours
 const shortName = (s: PublicSpot) => s.name.replace(/\s*\(.*\)/, '').replace('Port Camargue / Espiguette', 'Espiguette').replace('La Grande-Motte', 'G-Motte').replace(/^Plage Sud/, 'P. Sud').replace(/→ La Grande-Motte$/, '→ G-Motte');
 
-function Prevision({ d, now, disc, spots, L }: { d: AllData; now: number; disc: Discipline; spots: PublicSpot[]; L: Level }) {
+function Prevision({ d, now, disc, spots, L, query }: { d: AllData; now: number; disc: Discipline; spots: PublicSpot[]; L: Level; query: URLSearchParams }) {
   const prefs = usePrefs();
-  const days = useMemo(() => [0, 1, 2, 3, 4].map((k) => now + k * 86400e3), [now]);
+  const days = useMemo(() => [0, 1, 2, 3, 4].map((k) => now + k * 86400e3), [Math.floor(now / 3600e3)]);
   const series = useMemo(() => Object.fromEntries(spots.map((s) => [s.id, seriesFor(d, s, disc, L)])), [d, spots, disc, L]);
-  const [sel, setSel] = useState<{ spot: string; day: number } | null>(null);
+  // case ouverte gardée dans l'adresse : en revenant d'une fiche spot, on retrouve la grille telle qu'on l'a laissée
+  const initial = (() => { const [sp, dt] = (query.get('sel') ?? '').split(','); return sp && Number(dt) ? { spot: sp, day: Number(dt) } : null; })();
+  const [sel, setSelState] = useState<{ spot: string; day: number } | null>(initial);
+  const setSel = (v: { spot: string; day: number } | null) => {
+    setSelState(v);
+    const base = location.hash.split('?')[0];
+    history.replaceState(history.state, '', v ? `${base}?sel=${v.spot},${v.day}` : base);
+  };
   const sess = upcoming(d, now).filter((s) => s.discipline === disc && matches(s, prefs));
   const cell = (sp: PublicSpot, dayT: number) => {
     const k = dayKey(dayT);
@@ -109,7 +116,7 @@ function Prevision({ d, now, disc, spots, L }: { d: AllData; now: number; disc: 
       <p class="faint">Case colorée = session 2H (nombre d’heures, couleur = note) ; sinon {disc === 'surf' ? 'hauteur max des vagues (m)' : 'vent max de la journée (nd)'}. Touche une case pour le détail.</p>
       <div class="card table-wrap">
         <table class="grid5">
-          <thead><tr><th />{spots.map((s) => <th key={s.id} title={s.name}>{shortName(s)}</th>)}</tr></thead>
+          <thead><tr><th />{spots.map((s) => <th key={s.id} title={s.name}><strong>{shortName(s)}</strong></th>)}</tr></thead>
           <tbody>
             {days.map((dayT, k) => (
               <tr key={dayT}>
@@ -138,7 +145,7 @@ function Prevision({ d, now, disc, spots, L }: { d: AllData; now: number; disc: 
           <DayChart d={d} spot={selSpot} dayT={sel.day} level={L} title={dayLabel(sel.day, now)}
             window={(() => { const s = sess.find((x) => x.spot === sel.spot && dayKey(x.start) === dayKey(sel.day)); return s ? [s.start, s.end] as [number, number] : undefined; })()} />
           {sess.filter((x) => x.spot === sel.spot && dayKey(x.start) === dayKey(sel.day)).map((x) => (
-            <div key={x.id} class="row between"><span class="small">{hh(x.start)} – {hh(x.end)} · {x.text}{x.why ? ` · Commentaire : ${x.why}` : ''}</span><Badge score={x.peak} /></div>
+            <div key={x.id} class="row between"><span class="small">{hh(x.start)} – {hh(x.end)} · {x.text}{x.why ? ` · Commentaire : ${x.why}` : ''}</span><Badge score={x.peak} envoie={x.envoie} /></div>
           ))}
         </div>
       )}
@@ -152,7 +159,7 @@ function SessionCard({ d, s, now, L, big }: { d: AllData; s: Session; now: numbe
   return (
     <div class="stack" style={{ gap: 'var(--s-2)' }}>
       <a href={`#/spot/${s.spot}`} class="row between" style={{ textDecoration: 'none', color: 'inherit' }}>
-        <span class={big ? 'big' : ''}><strong>{s.spotName}</strong></span><Badge score={s.peak} size={big ? 'lg' : undefined} />
+        <span class={big ? 'big' : ''}><strong>{s.spotName}</strong></span><Badge score={s.peak} envoie={s.envoie} size={big ? 'lg' : undefined} />
       </a>
       <span class="muted small">{big ? span(s.start, s.end, now) : `${hh(s.start)} – ${hh(s.end)}`} · {s.hours} h · {s.text}</span>
       <DayChart d={d} spot={spot} dayT={s.start} level={L} window={[s.start, s.end]} title={big ? undefined : ' '} />
@@ -162,7 +169,7 @@ function SessionCard({ d, s, now, L, big }: { d: AllData; s: Session; now: numbe
 }
 
 // ------------------------------------------------------------ module
-export function Module({ d, now, disc, sub }: { d: AllData; now: number; disc: Discipline; sub: Sub }) {
+export function Module({ d, now, disc, sub, query }: { d: AllData; now: number; disc: Discipline; sub: Sub; query: URLSearchParams }) {
   const prefs = usePrefs();
   const m = moduleOf(disc);
   const L = levelFor(prefs, disc);
@@ -173,14 +180,17 @@ export function Module({ d, now, disc, sub }: { d: AllData; now: number; disc: D
   const all = upcoming(d, now).filter((s) => s.discipline === disc && matches(s, prefs));
   const top = d.sessions.best[L]?.[disc] ?? null;
   const others = all.filter((s) => s.id !== top?.id).sort((a, b) => b.mean - a.mean).slice(0, 3);
-  const list = all.filter((s) => !onlyFav || prefs.favorites.includes(s.spot));
+  const near = new Set(spots.filter((s) => distanceKm(s) <= HOME.radiusKm).map((s) => s.id));
+  const far = spots.filter((s) => !near.has(s.id));
+  const list = all.filter((s) => near.has(s.spot) && (!onlyFav || prefs.favorites.includes(s.spot)));
   const byDay = new Map<string, Session[]>();
   list.forEach((s) => { const k = dayKey(s.start); if (!byDay.has(k)) byDay.set(k, []); byDay.get(k)!.push(s); });
   const meta = d.meta.disciplines[disc];
 
   let body;
   if (sub === 'sessions') body = (
-    <Section title="Sessions 2H" aside={<Seg label="Spots" value={onlyFav ? 'fav' : 'all'} onChange={(v) => setOnlyFav(v === 'fav')} options={[['all', 'Tous'], ['fav', 'Favoris']]} />}>
+    <Section title={`Sessions de 2H (Localisation ${HOME.name})`} aside={<Seg label="Spots" value={onlyFav ? 'fav' : 'all'} onChange={(v) => setOnlyFav(v === 'fav')} options={[['all', 'Tous'], ['fav', 'Favoris']]} />}>
+      <p class="faint">Spots à moins de {HOME.radiusKm} km de {HOME.name}{far.length ? ` (hors ${far.map((s) => s.name.replace(/\s*\(.*\)/, '')).join(', ')} : trop loin pour 2 h ; voir Prévision)` : ''}.{disc === 'wing' ? ' « Ça envoie » = au moins 4 h à plus de 20 nd.' : ''}</p>
       {byDay.size === 0 && <div class="card empty">Aucune session en vue{onlyFav ? ' sur tes favoris' : ''}.</div>}
       {[...byDay.values()].map((arr) => (
         <div key={arr[0].id} class="stack">
@@ -190,7 +200,7 @@ export function Module({ d, now, disc, sub }: { d: AllData; now: number; disc: D
       ))}
     </Section>
   );
-  else if (sub === 'prevision') body = <Prevision d={d} now={now} disc={disc} spots={spots} L={L} />;
+  else if (sub === 'prevision') body = <Prevision d={d} now={now} disc={disc} spots={spots} L={L} query={query} />;
   else if (sub === 'spots') body = (
     <Section title="Spots">
       <SpotMap spots={spots} best={best} />
@@ -221,7 +231,7 @@ export function Module({ d, now, disc, sub }: { d: AllData; now: number; disc: D
         <h1>{m.title}</h1>
         <span class="muted">{m.sub}</span>
         <div class="row between"><Freshness d={d} now={now} />
-          {disc !== 'surf' && <Seg<Level> label={`Niveau ${DISC_LABEL[disc]}`} value={L} onChange={(v) => setPrefs((p) => ({ ...p, levels: { ...p.levels, [disc]: v } }))} options={LEVELS.map((l) => [l, LEVEL_LABEL[l]] as [Level, string])} />}
+          {disc !== 'surf' && <Seg<Level> label={disc === 'wing' ? 'Mode' : `Niveau ${DISC_LABEL[disc]}`} value={L} onChange={(v) => setPrefs((p) => ({ ...p, levels: { ...p.levels, [disc]: v } }))} options={LEVELS_FOR[disc].map((l) => [l, LEVEL_LABEL[l]] as [Level, string])} />}
         </div>
       </header>
       <div class="module">

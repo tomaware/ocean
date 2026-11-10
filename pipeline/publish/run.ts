@@ -4,7 +4,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import type { Check } from '../../src/types/contracts.ts';
 import { loadRegistry } from '../collect/points.ts';
 import { privacyEngines } from '../engines/run.ts';
-import { allSessions, bestByDiscipline, LEVELS, publicSpots } from './sessions.ts';
+import { allSessions, bestByDiscipline, ALL_LEVELS, publicSpots } from './sessions.ts';
 
 const ROOT = new URL('../../', import.meta.url);
 const OUT = new URL('data/v1/public/', ROOT);
@@ -28,7 +28,7 @@ function main(): void {
   const surf = read('data/v1/engines/surf.json'), downwind = read('data/v1/engines/downwind.json'), wing = read('data/v1/engines/wing.json');
   const now = collect.generatedAt as number;
   const sessions = allSessions({ wing, surf, downwind }, now);
-  const best = Object.fromEntries(LEVELS.map((L) => [L, bestByDiscipline(sessions, L)]));
+  const best = Object.fromEntries(ALL_LEVELS.map((L) => [L, bestByDiscipline(sessions, L)]));
   const checks: Check[] = [...collect.checks, ...engines.checks, ...(verify?.checks ?? [])];
   const meta = {
     generatedAt: now, version: 1,
@@ -39,7 +39,7 @@ function main(): void {
       surf: { available: true, source: surf.sources?.copernicus ? 'Moteur Super Prévi Surf : 6 modèles de vagues dont Copernicus Med-WAV (4,2 km), recalés sur les bouées Candhis ; vent AROME / ECMWF' : 'Moteur Super Prévi Surf : 5 modèles de vagues recalés sur les bouées Candhis, vent AROME / ECMWF (Copernicus indisponible pour cette mise à jour)', note: surf.sources?.copernicus ? 'Generated using E.U. Copernicus Marine Service Information' : 'Copernicus absent ou trop ancien' },
       downwind: { available: true, source: 'Moteur downwind : vent AROME / ECMWF recalé sur la super prévision, houle au large (5 modèles)', note: '' },
     },
-    rules: { session: 'au moins 2 h d’affilée à 5/10 ou plus, de jour', labels: { top: 'Ça envoie (≥ 7)', ok: 'Ça se tente (5 à 7)', no: 'Non (< 5)' } },
+    rules: { session: 'au moins 2 h d’affilée à 5/10 ou plus, de jour', envoie: 'wing : au moins 4 h à plus de 20 nd dans la session', sessionsRadiusKm: 55, home: 'Montpellier' },
   };
   const files: Record<string, string> = {
     'meta.json': JSON.stringify(meta),

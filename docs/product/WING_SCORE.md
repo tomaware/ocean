@@ -1,6 +1,22 @@
-# Note wing foil — v1.1
+# Note wing foil — v2.0
 
-> **Statut : validée par Tom le 10/11 (D-14, D-16) ; v1.1 le 10/11 à 12 h 41 (D-18 : « trop de vent c'est plus de 35 nœuds, sinon c'est OK »).** Wing seulement, pas de kite (plages de vent différentes). Code : `pipeline/engines/wing.ts`, cas de référence : `tests/wing.test.ts`. Toute modification = décision documentée + cas de référence mis à jour.
+> **Statut : validée par Tom le 10/11 (D-14, D-16) ; v1.1 le 10/11 à 12 h 41 (D-18 : « trop de vent c'est plus de 35 nœuds, sinon c'est OK ») ; v2.0 le 10/11 à 13 h 45 (D-19 : deux modes « Secu first – OffShore » au lieu des trois niveaux ; « ça envoie » quand il y a plus de 4 h de vent à plus de 20 nd).**
+
+## v2.0 en bref (remplace les niveaux des §§ 3 et 5)
+
+| | Sécu first | Offshore |
+|---|---|---|
+| Vent : 0 → 1 | 12 → 15 nd | 11 → 14 nd |
+| Vent : 1 jusqu'à | 35 nd inclus | 35 nd inclus |
+| Vent de mer (0-30°) | 0,8 | 0,8 |
+| Side-on / side-shore | 1 | 1 |
+| Side-off (100-135°) | 0 | 1 (commentaire « side-off ») |
+| Vent de terre (> 135°) | 0 | 1 (commentaire « vent de terre ») |
+
+Rafales (R), plan d'eau fermé, nuit : inchangés. Affichage : la note seule (/10) ; **« Ça envoie »** seulement si la session compte au moins 4 h à plus de 20 nd (vent moyen corrigé). Sessions de 2H : spots à moins de 55 km de Montpellier (La Franqui, Beauduc, Almanarre restent dans Prévision et Meilleure session).
+Cas de référence avant / après : La Franqui, tramontane 20 nd (vent de terre) : 0 → 0 en Sécu first, 10 en Offshore ; Espiguette, 18 nd de NO (side-off) : intermédiaire 3 → Sécu first 0, Offshore 10.
+
+Le reste de ce document décrit la v1 (historique). Wing seulement, pas de kite (plages de vent différentes). Code : `pipeline/engines/wing.ts`, cas de référence : `tests/wing.test.ts`. Toute modification = décision documentée + cas de référence mis à jour.
 
 ## 1. Ce que la note dit
 

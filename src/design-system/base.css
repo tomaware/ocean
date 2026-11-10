@@ -16,6 +16,8 @@ p { margin: 0; }
 
 /* coque : barre du haut avec les 3 modules WIND / VAGUE / HOULE */
 .shell { min-height: 100dvh; display: grid; grid-template-rows: auto 1fr; }
+.body { display: grid; grid-template-columns: 1fr; min-width: 0; }
+.side { display: none; }
 .topbar { position: sticky; top: 0; z-index: 1000; background: color-mix(in srgb, var(--c-surface) 92%, transparent); backdrop-filter: blur(8px); border-bottom: 1px solid var(--c-line);
   display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: var(--s-3); padding: env(safe-area-inset-top) var(--s-4) 0; min-height: 56px; }
 .brand { display: flex; align-items: center; gap: var(--s-2); text-decoration: none; color: var(--c-ink); font-weight: 700; letter-spacing: .08em; }
@@ -52,6 +54,7 @@ p { margin: 0; }
 /* notes */
 .badge { display: inline-flex; align-items: center; gap: var(--s-2); padding: 3px 10px; border-radius: var(--r-pill); font-weight: 600; font-size: var(--fs-sm); white-space: nowrap; }
 .badge .n { font-variant-numeric: tabular-nums; font-weight: 700; }
+.badge .of { font-weight: 500; opacity: .7; font-size: .85em; }
 .badge.top { background: var(--c-top-soft); color: var(--c-top); }
 .badge.ok { background: var(--c-ok-soft); color: var(--c-ok); }
 .badge.no { background: var(--c-no-soft); color: var(--c-no); }
@@ -122,12 +125,18 @@ table.data th, .table-wrap th { font-weight: 600; color: var(--c-ink-2); font-si
 .subnav { display: flex; gap: var(--s-1); overflow-x: auto; scrollbar-width: none; margin: 0 calc(-1 * var(--s-4)); padding: 0 var(--s-4); }
 .subnav a { flex: none; padding: 8px 14px; border-radius: var(--r-pill); background: var(--c-surface-2); color: var(--c-ink-2); text-decoration: none; font-weight: 600; font-size: var(--fs-sm); white-space: nowrap; }
 .subnav a[aria-current="page"] { background: var(--c-accent); color: #fff; }
+/* ordinateur : modules dans une colonne à gauche, sous OCEAN ; les pastilles du haut disparaissent */
 @media (min-width: 900px) {
-  .module { grid-template-columns: 1fr 210px; }
-  .subnav { order: 2; position: sticky; top: 76px; flex-direction: column; margin: 0; padding: var(--s-3); background: var(--c-surface); border: 1px solid var(--c-line); border-radius: var(--r-lg); }
-  .subnav a { background: transparent; border-radius: var(--r-md); padding: 10px 12px; font-size: var(--fs-md); }
-  .subnav a[aria-current="page"] { background: var(--c-accent-soft); color: var(--c-accent); }
+  .body { grid-template-columns: 220px 1fr; }
+  .side { display: flex; flex-direction: column; gap: 2px; position: sticky; top: 57px; align-self: start; height: calc(100dvh - 57px); padding: var(--s-6) var(--s-3); border-right: 1px solid var(--c-line); background: var(--c-surface); }
+  .side a { display: flex; align-items: center; gap: var(--s-2); padding: 10px 12px; border-radius: var(--r-md); color: var(--c-ink-2); text-decoration: none; font-weight: 600; }
+  .side a:hover { color: var(--c-ink); background: var(--c-surface-2); }
+  .side a[aria-current="page"] { background: var(--c-accent-soft); color: var(--c-accent); }
+  .side hr { border: 0; border-top: 1px solid var(--c-line); margin: var(--s-3) 0; width: 100%; }
+  .subnav { display: none; }
 }
+.back { font-weight: 800; font-size: var(--fs-md); color: var(--c-ink); background: none; border: 0; padding: 4px 0; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; justify-self: start; }
+.back:hover { color: var(--c-accent); }
 
 /* graphique d'une journée (pastilles horaires) */
 .daychart { display: grid; gap: var(--s-2); }

@@ -4,24 +4,26 @@
 import type { ForecastBlock, Registry, Spot } from '../../src/types/contracts.ts';
 import { SurfEngine as E } from '../collect/points.ts';
 
-export const WING_VERSION = '1.1.0';   // 1.1 (10/11, D-18, Tom) : « trop de vent » seulement au-delà de 35 nd, tous niveaux
+export const WING_VERSION = '2.0.0';
+// 1.1 (10/11, D-18, Tom) : « trop de vent » seulement au-delà de 35 nd.
+// 2.0 (10/11, D-19, Tom) : deux modes au lieu de trois niveaux : « Sécu first » (aucun vent de terre ni side-off)
+//     et « Offshore » (side-off et vent de terre acceptés, toujours signalés en commentaire).
 export const MS_TO_KN = 1.94384;
-export type WingLevel = 'debutant' | 'intermediaire' | 'confirme';
-export const WING_LEVELS: WingLevel[] = ['debutant', 'intermediaire', 'confirme'];
+export type WingLevel = 'secu' | 'offshore';
+export const WING_LEVELS: WingLevel[] = ['secu', 'offshore'];
 
-/** Vent (nœuds) : 0 sous `min`, 1 entre `lo` et `hi`, 0 à partir de `max`. */
+/** Vent (nœuds) : 0 sous `min`, monte jusqu'à `lo`, 1 jusqu'à 35 nd inclus, 0 au-delà. */
 export const WIND: Record<WingLevel, { min: number; lo: number; hi: number; max: number }> = {
-  debutant: { min: 12, lo: 15, hi: 35, max: 35 },
-  intermediaire: { min: 11, lo: 14, hi: 35, max: 35 },
-  confirme: { min: 9, lo: 14, hi: 35, max: 35 },
+  secu: { min: 12, lo: 15, hi: 35, max: 35 },
+  offshore: { min: 11, lo: 14, hi: 35, max: 35 },
 };
 /** Direction : facteur par secteur (angle entre le vent et la direction du large). */
 export const SECTORS = [
-  { id: 'onshore', label: 'vent de mer (face à la plage)', upTo: 30, f: { debutant: 0.7, intermediaire: 0.8, confirme: 0.8 } },
-  { id: 'side-on', label: 'side-on', upTo: 70, f: { debutant: 1, intermediaire: 1, confirme: 1 } },
-  { id: 'side', label: 'side-shore', upTo: 100, f: { debutant: 1, intermediaire: 1, confirme: 1 } },
-  { id: 'side-off', label: 'side-off (dérive vers le large)', upTo: 135, f: { debutant: 0, intermediaire: 0.3, confirme: 0.6 } },
-  { id: 'offshore', label: 'vent de terre : danger, dérive au large', upTo: 180, f: { debutant: 0, intermediaire: 0, confirme: 0 } },
+  { id: 'onshore', label: 'vent de mer (face à la plage)', upTo: 30, f: { secu: 0.8, offshore: 0.8 } },
+  { id: 'side-on', label: 'side-on', upTo: 70, f: { secu: 1, offshore: 1 } },
+  { id: 'side', label: 'side-shore', upTo: 100, f: { secu: 1, offshore: 1 } },
+  { id: 'side-off', label: 'side-off (dérive vers le large)', upTo: 135, f: { secu: 0, offshore: 1 } },
+  { id: 'offshore', label: 'vent de terre : dérive au large', upTo: 180, f: { secu: 0, offshore: 1 } },
 ] as const;
 export const AVOID_FACTOR = 0.6;       // plan d'eau fermé, secteur déconseillé
 export const DAYLIGHT_ELEVATION = -2;  // comme le moteur downwind
@@ -81,7 +83,9 @@ export function scoreHour(kn: number, gust: number | null, dir: number | null, d
     [R, 'vent rafaleux'],
   ] as [number, string][];
   const worst = why.reduce((a, b) => (b[0] < a[0] ? b : a));
-  return { score, limit: worst[0] < 1 ? worst[1] : null };
+  // mode Offshore : le vent de terre ne baisse pas la note mais reste toujours signalé
+  const risky = 'sector' in D && (D.sector === 'offshore' || D.sector === 'side-off') ? D.label : null;
+  return { score, limit: worst[0] < 1 ? worst[1] : risky };
 }
 
 export type WingWindow = { level: WingLevel; start: number; end: number; hours: number; mean: number; peak: number };

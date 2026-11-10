@@ -56,9 +56,9 @@ async function main(): Promise<void> {
   checks.push(...(await vsProduction(ocean, now, copB?.provenance.issuedAt ?? null)));
 
   const wing = wingForecast(sp, registry, now);
-  const nSess = wing.spots.reduce((a, x) => a + x.sessions.intermediaire.length, 0);
+  const nSess = wing.spots.reduce((a, x) => a + x.sessions.secu.length, 0);
   checks.push({ id: 'sorties-wing', ok: wing.available && wing.spots.length === 6 && wing.spots.every((x) => x.hours.length > 0),
-    detail: wing.available ? `${wing.spots.length} spots notés (wing v${wing.version}) ; ${nSess} session(s) 2H en intermédiaire sur les heures prévues` : String((wing as { reason?: string }).reason) });
+    detail: wing.available ? `${wing.spots.length} spots notés (wing v${wing.version}) ; ${nSess} session(s) 2H en mode Sécu first sur les heures prévues` : String((wing as { reason?: string }).reason) });
 
   const surfText = JSON.stringify(ocean.surfJSON), dwText = JSON.stringify(ocean.downwindJSON) + JSON.stringify(wing);
   checks.push(privacyEngines(surfText + dwText, live, [(process.env.SUPER_PREVISION_URL ?? '').trim()]));
@@ -129,15 +129,15 @@ function report(now: number, checks: Check[], o: ReturnType<typeof runEngines>, 
   for (const w of o.surfJSON.windows.slice(0, 5)) s += `| ${d(w.start)} → ${d(w.end)} | ${name[w.spot] ?? w.spot} | ${w.mean} | ${w.peak} |\n`;
   s += `\n## Meilleurs créneaux downwind (4 jours)\n\n| Quand | Parcours | Note moyenne | Pic |\n|---|---|---|---|\n`;
   for (const w of o.downwindJSON.best.slice(0, 5)) s += `| ${d(w.start)} → ${d(w.end)} | ${w.from} → ${w.to} | ${w.mean} | ${w.peak} |\n`;
-  s += `\n## Wing foil — sessions 2H (niveau intermédiaire, vent corrigé de la super prévision)\n\n| Spot | Créneaux |\n|---|---|\n`;
-  for (const x of wing.spots) s += `| ${x.name} | ${x.sessions.intermediaire.map((w) => `${d(w.start)} → ${d(w.end)} : ${label(w.peak)} (moy. ${w.mean}, pic ${w.peak})`).join(' ; ') || 'aucun'} |\n`;
-  s += `\n### Détail (toutes les 2 h de jour, intermédiaire)\n\nVent en nœuds (rafales) · d'où il vient · secteur · note · ce qui limite.\n\n`;
+  s += `\n## Wing foil — sessions 2H (mode Sécu first, vent corrigé de la super prévision)\n\n| Spot | Créneaux |\n|---|---|\n`;
+  for (const x of wing.spots) s += `| ${x.name} | ${x.sessions.secu.map((w) => `${d(w.start)} → ${d(w.end)} : ${label(w.peak)} (moy. ${w.mean}, pic ${w.peak})`).join(' ; ') || 'aucun'} |\n`;
+  s += `\n### Détail (toutes les 2 h de jour, Sécu first)\n\nVent en nœuds (rafales) · d'où il vient · secteur · note · ce qui limite.\n\n`;
   const DIR = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSO', 'SO', 'OSO', 'O', 'ONO', 'NO', 'NNO'];
   for (const x of wing.spots) {
     const rows = x.hours.filter((h) => h.day && h.t >= now && new Date(h.t).getUTCHours() % 2 === 0);
-    s += `**${x.name}** — ` + (rows.map((h) => `${d(h.t)} ${Math.round(h.kn ?? 0)} (${h.gust === null ? '—' : Math.round(h.gust)}) ${h.dir === null ? '?' : DIR[Math.round(h.dir / 22.5) % 16]} ${h.sector ?? ''} **${h.scores.intermediaire}**${h.limit.intermediaire ? ' ' + h.limit.intermediaire : ''}`).join(' · ') || 'aucune heure') + `\n\n`;
+    s += `**${x.name}** — ` + (rows.map((h) => `${d(h.t)} ${Math.round(h.kn ?? 0)} (${h.gust === null ? '—' : Math.round(h.gust)}) ${h.dir === null ? '?' : DIR[Math.round(h.dir / 22.5) % 16]} ${h.sector ?? ''} **${h.scores.secu}**${h.limit.secu ? ' ' + h.limit.secu : ''}`).join(' · ') || 'aucune heure') + `\n\n`;
   }
-  s += `\nCopernicus Med-WAV est inclus pour le surf quand l'extrait a moins de 30 h (même règle que l'app en service) ; la note wing (v1.0, validée le 10/11) part du vent corrigé de la super prévision ; pas de note kite (décision de Tom).\n`;
+  s += `\nCopernicus Med-WAV est inclus pour le surf quand l'extrait a moins de 30 h (même règle que l'app en service) ; la note wing (v2.0, modes Sécu first / Offshore) part du vent corrigé de la super prévision ; pas de note kite (décision de Tom).\n`;
   return s;
 }
 

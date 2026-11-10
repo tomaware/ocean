@@ -5,14 +5,16 @@ import type { Discipline, Level } from './data';
 export type Reading = 'synthese' | 'detail' | 'expert';
 export type Prefs = { levels: Record<Discipline, Level>; favorites: string[]; reading: Reading; perso: { enabled: boolean; url: string }; theme: 'auto' | 'light' | 'dark' };
 const KEY = 'ocean.prefs.v1';
-export const DEFAULT_PREFS: Prefs = { levels: { wing: 'intermediaire', surf: 'intermediaire', downwind: 'intermediaire' }, favorites: [], reading: 'synthese', perso: { enabled: false, url: '' }, theme: 'auto' };
+export const DEFAULT_PREFS: Prefs = { levels: { wing: 'secu', surf: 'intermediaire', downwind: 'intermediaire' }, favorites: [], reading: 'synthese', perso: { enabled: false, url: '' }, theme: 'auto' };
 
 function read(): Prefs {
   try {
     const raw = localStorage.getItem(KEY);
     if (!raw) return DEFAULT_PREFS;
     const p = JSON.parse(raw);
-    return { ...DEFAULT_PREFS, ...p, levels: { ...DEFAULT_PREFS.levels, ...(p.levels ?? {}) }, perso: { ...DEFAULT_PREFS.perso, ...(p.perso ?? {}) } };
+    const levels = { ...DEFAULT_PREFS.levels, ...(p.levels ?? {}) };
+    if (levels.wing !== 'secu' && levels.wing !== 'offshore') levels.wing = 'secu';   // ancienne préférence (3 niveaux) → Sécu first
+    return { ...DEFAULT_PREFS, ...p, levels, perso: { ...DEFAULT_PREFS.perso, ...(p.perso ?? {}) } };
   } catch { return DEFAULT_PREFS; }
 }
 let current = read();

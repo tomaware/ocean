@@ -2,15 +2,16 @@ import type { ComponentChildren } from 'preact';
 import { Route, Star, Waves, Wind } from 'lucide-preact';
 import type { Discipline, Session } from '../services/data';
 import { DISC_LABEL, LEVEL_LABEL } from '../services/data';
-import { hh, labelOf, n1, span, toneOf } from '../services/format';
+import { hh, n1, span, toneOf } from '../services/format';
 import { toggleFavorite, usePrefs } from '../services/prefs';
 
-export function Badge({ score, size }: { score: number | null | undefined; size?: 'lg' }) {
+/** Note seule (D-19) ; « Ça envoie » uniquement quand la session wing a au moins 4 h à plus de 20 nd. */
+export function Badge({ score, size, envoie }: { score: number | null | undefined; size?: 'lg'; envoie?: boolean }) {
   const t = toneOf(score);
   if (score === null || score === undefined) return <span class="badge no">pas de session</span>;
   return (
-    <span class={`badge ${t}`} style={size === 'lg' ? { fontSize: 'var(--fs-md)', padding: '5px 12px' } : undefined}>
-      {labelOf(score)}{score !== null && score !== undefined && <span class="n" aria-label={`note ${n1(score)} sur 10`}>{n1(score)}</span>}
+    <span class={`badge ${envoie ? 'top' : t}`} style={size === 'lg' ? { fontSize: 'var(--fs-md)', padding: '5px 12px' } : undefined}>
+      {envoie && 'Ça envoie'}<span class="n" aria-label={`note ${n1(score)} sur 10`}>{n1(score)}<span class="of">/10</span></span>
     </span>
   );
 }
@@ -48,10 +49,10 @@ export function SessionRow({ s, now, showSpot = true, compact = false }: { s: Se
           {showSpot && <strong>{s.spotName}</strong>}
           <span class="faint">{compact ? `${hh(s.start)} – ${hh(s.end)} · ${s.hours} h` : span(s.start, s.end, now)}</span>
         </div>
-        <span class="small muted">{s.text}{!compact && s.level !== 'tous' ? ` · ${LEVEL_LABEL[s.level].toLowerCase()}` : ''}</span>
+        <span class="small muted">{s.text}{!compact && s.level !== 'tous' ? ` · ${LEVEL_LABEL[s.level]}` : ''}</span>
         {s.why && <span class="faint">Commentaire : {s.why}</span>}
       </div>
-      <Badge score={s.peak} />
+      <Badge score={s.peak} envoie={s.envoie} />
     </a>
   );
 }

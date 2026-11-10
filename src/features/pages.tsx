@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'preact/hooks';
 import { Info, Radio, ShieldCheck, TriangleAlert } from 'lucide-preact';
 import type { AllData, Discipline, Level, PublicSpot, Session } from '../services/data';
-import { DISC_LABEL, LEVEL_LABEL, LEVELS, spotDiscipline } from '../services/data';
+import { DISC_LABEL, LEVEL_LABEL, LEVELS_FOR, spotDiscipline } from '../services/data';
 import { ago, compass, dayKey, dayLabel, hh, hourOf, labelOf, msToKn, n0, n1, span } from '../services/format';
 import { setPrefs, usePrefs, type Reading } from '../services/prefs';
 import { useLive, type Live } from '../services/perso';
+import { goBack } from '../services/nav';
 import { Badge, DiscIcon, Fav, Section, Seg, SessionRow } from '../components/ui';
 import { Strip } from '../components/Strip';
 import { Chart } from '../components/Chart';
@@ -83,7 +84,7 @@ function SpotView({ d, spot, now }: { d: AllData; spot: PublicSpot; now: number 
   return (
     <>
       <header class="page-head">
-        <a href={`#/${moduleOf(disc).slug}`} class="small">← {moduleOf(disc).tab}</a>
+        <button type="button" class="back" onClick={() => goBack(`#/${moduleOf(disc).slug}`)}>← Retour</button>
         <div class="row between">
           <div class="row"><DiscIcon d={disc} size={20} /><h1>{spot.name}</h1><Fav id={spot.id} name={spot.name} /></div>
           <Freshness d={d} now={now} />
@@ -92,13 +93,13 @@ function SpotView({ d, spot, now }: { d: AllData; spot: PublicSpot; now: number 
       </header>
       <div class="row between">
         <Seg<Reading> label="Niveau de lecture" value={reading} onChange={(v) => setPrefs((p) => ({ ...p, reading: v }))} options={[['synthese', 'Synthèse'], ['detail', 'Détail'], ['expert', 'Expert']]} />
-        {s?.levels && <Seg<Level> label="Niveau de pratique" value={level} onChange={(v) => setPrefs((p) => ({ ...p, levels: { ...p.levels, [disc]: v } }))} options={LEVELS.map((l) => [l, LEVEL_LABEL[l]] as [Level, string])} />}
+        {s?.levels && <Seg<Level> label="Niveau de pratique" value={level} onChange={(v) => setPrefs((p) => ({ ...p, levels: { ...p.levels, [disc]: v } }))} options={LEVELS_FOR[disc].map((l) => [l, LEVEL_LABEL[l]] as [Level, string])} />}
       </div>
       {disc === 'wing' && <LiveBox live={live.live} spot={spot.id} />}
       {!s ? <div class="notice warn">Pas de prévision disponible pour ce spot dans la dernière mise à jour.</div> : (
         <>
           <Section title="Sessions 2H">
-            <div class="card">{sessions.length ? <div class="list">{sessions.map((x) => <SessionRow key={x.id} s={x} now={now} showSpot={false} />)}</div> : <div class="empty">Pas de session 2H en vue{s.levels ? ` au niveau ${LEVEL_LABEL[level].toLowerCase()}` : ''}.</div>}</div>
+            <div class="card">{sessions.length ? <div class="list">{sessions.map((x) => <SessionRow key={x.id} s={x} now={now} showSpot={false} />)}</div> : <div class="empty">Pas de session 2H en vue{s.levels ? ` en ${LEVEL_LABEL[level]}` : ''}.</div>}</div>
           </Section>
           <Section title="Jour par jour">
             <div class="card days">
@@ -165,7 +166,7 @@ export function Profile({ d }: { d: AllData }) {
         <div class="card stack" style={{ gap: 'var(--s-4)' }}>
           {(['wing', 'downwind'] as Discipline[]).map((disc) => (
             <div key={disc} class="row between"><div class="row"><DiscIcon d={disc} /><span>{DISC_LABEL[disc]}</span></div>
-              <Seg<Level> label={`Niveau ${DISC_LABEL[disc]}`} value={prefs.levels[disc]} onChange={(v) => setPrefs((p) => ({ ...p, levels: { ...p.levels, [disc]: v } }))} options={LEVELS.map((l) => [l, LEVEL_LABEL[l]] as [Level, string])} /></div>
+              <Seg<Level> label={`Niveau ${DISC_LABEL[disc]}`} value={prefs.levels[disc]} onChange={(v) => setPrefs((p) => ({ ...p, levels: { ...p.levels, [disc]: v } }))} options={LEVELS_FOR[disc].map((l) => [l, LEVEL_LABEL[l]] as [Level, string])} /></div>
           ))}
           <p class="faint">Surf : la note tient déjà compte du niveau indiqué pour chaque spot.</p>
         </div>
@@ -208,7 +209,7 @@ export function Reliability({ d, now }: { d: AllData; now: number }) {
   const cal = v?.calibration?.surf ?? {};
   return (
     <>
-      <header class="page-head"><a href="#/profil" class="small">← Profil</a><h1>Fiabilité</h1>
+      <header class="page-head"><button type="button" class="back" onClick={() => goBack('#/profil')}>← Retour</button><h1>Fiabilité</h1>
         <span class="muted">Chaque heure, les prévisions sont comparées aux mesures. Les modèles qui se trompent le moins pèsent le plus.</span><Freshness d={d} now={now} /></header>
       <div class="notice"><Info size={14} /> « 3 derniers jours » compare les modèles aux mesures récentes (très courte échéance). Les prévisions réellement émises 6 h, 24 h ou 48 h avant sont archivées et comparées au fil des jours ({v?.archive?.runs ?? 0} prévisions archivées).</div>
       <Section title="Vent : erreur moyenne par modèle (3 derniers jours)">

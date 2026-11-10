@@ -3,9 +3,9 @@
 import { createRequire } from 'node:module';
 const { chromium, devices } = createRequire(import.meta.url)('playwright');   // installé à part (CI : npm i --no-save playwright)
 const base = process.argv[2] ?? 'http://localhost:4173';
-const routes = [['', 'Meilleure session à venir'], ['wind', 'Meilleure session à venir'], ['wind/sessions', 'Sessions 2H'], ['wind/prevision', 'Prévision 5 jours'], ['wind/spots', 'Spots'],
-  ['vague', 'Meilleure session à venir'], ['vague/prevision', 'Prévision 5 jours'], ['vague/sessions', 'Sessions 2H'], ['houle/prevision', 'Prévision 5 jours'], ['houle/sessions', 'Sessions 2H'],
-  ['spot/port-camargue', 'Jour par jour'], ['spot/carnon', 'Jour par jour'], ['spot/plagesud-grandemotte', 'Jour par jour'], ['sessions', 'Meilleure session à venir'], ['profil', 'Mode perso'], ['fiabilite', 'Fiabilité']];
+const routes = [['', 'Où naviguer en wing'], ['wind/meilleure', 'Meilleure session à venir'], ['wind/sessions', 'Sessions de 2H (Localisation Montpellier)'], ['wind/prevision', 'Prévision 5 jours'], ['wind/spots', 'Spots'],
+  ['vague/meilleure', 'Meilleure session à venir'], ['vague/prevision', 'Prévision 5 jours'], ['vague/sessions', 'Sessions de 2H'], ['houle/prevision', 'Prévision 5 jours'], ['houle/sessions', 'Sessions de 2H'],
+  ['spot/port-camargue', 'Jour par jour'], ['spot/carnon', 'Jour par jour'], ['spot/plagesud-grandemotte', 'Jour par jour'], ['sessions', 'Où naviguer en wing'], ['profil', 'Mode perso'], ['fiabilite', 'Fiabilité']];
 const errs = [];
 const b = await chromium.launch();
 // langue fixée (fr-FR) ; un 3e passage sans langue fixée vérifie que l'app survit à une langue système invalide
@@ -20,7 +20,7 @@ for (const [name, opt] of [['mobile', { ...devices['iPhone 13'], locale: 'fr-FR'
     await p.evaluate((r) => localStorage.setItem('ocean.prefs.v1', JSON.stringify({ reading: r })), reading);
     for (const [r, text] of routes) {
       await p.goto(`${base}/#/${r}`); await p.reload();
-      try { await p.getByText(text, { exact: false }).first().waitFor({ timeout: 8000 }); } catch { errs.push(`${name} #/${r} : « ${text} » absent`); }
+      try { await p.getByRole('heading', { name: text }).first().waitFor({ timeout: 8000 }); } catch { errs.push(`${name} #/${r} : « ${text} » absent`); }
       const over = await p.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
       if (over > 1) errs.push(`${name} #/${r} (${reading}) : débordement horizontal de ${over} px`);
       if (await p.locator('.notice.warn').filter({ hasText: 'Données indisponibles' }).count()) errs.push(`${name} #/${r} : données indisponibles`);
@@ -31,11 +31,26 @@ for (const [name, opt] of [['mobile', { ...devices['iPhone 13'], locale: 'fr-FR'
         await p.locator('table.grid5 .cell').first().click();
         if (!(await p.locator('.daychart').count())) errs.push(`${name} #/${r} : pas de détail au clic`);
       }
-      if (/^(wind|vague|houle)(\/sessions)?$/.test(r) && (await p.locator('.daychart').count()) === 0 && !(await p.getByText('Pas de session 2H').count()) && !(await p.getByText('Aucune session').count())) errs.push(`${name} #/${r} : graphiques absents sous les sessions`);
+      if (/^(wind|vague|houle)\/(meilleure|sessions)$/.test(r) && (await p.locator('.daychart').count()) === 0 && !(await p.getByText('Pas de session 2H').count()) && !(await p.getByText('Aucune session').count())) errs.push(`${name} #/${r} : graphiques absents sous les sessions`);
       const tabs = await p.locator('.tabs a').allInnerTexts();
       if (tabs.map((x) => x.trim()).join(',') !== 'WIND,VAGUE,HOULE') errs.push(`${name} #/${r} : onglets ${tabs.join(',')}`);
     }
   }
+  // retour arrière : grille → case → fiche spot → « Retour » ramène à la grille avec la même case ouverte
+  await p.goto(`${base}/#/wind/prevision`); await p.reload();
+  await p.locator('table.grid5 .cell').nth(3).click();
+  const before = await p.evaluate(() => location.hash);
+  await p.getByText('Fiche complète').click();
+  await p.getByText('Jour par jour').first().waitFor({ timeout: 8000 });
+  await p.locator('button.back').click();
+  await p.locator('table.grid5').waitFor({ timeout: 8000 });
+  const after = await p.evaluate(() => location.hash);
+  if (after !== before || !(await p.locator('.daychart').count())) errs.push(`${name} : retour arrière ${before} → ${after}`);
+  // l'onglet se rouvre sur le dernier module consulté
+  await p.locator('.tabs a').nth(1).click(); await p.waitForTimeout(300);
+  await p.locator('.tabs a').nth(0).click(); await p.waitForTimeout(300);
+  if (!(await p.evaluate(() => location.hash)).startsWith('#/wind/prevision')) errs.push(`${name} : WIND ne rouvre pas le dernier module (${await p.evaluate(() => location.hash)})`);
+  if (name === 'ordinateur' && (await p.locator('.side a').count()) < 6) errs.push(`${name} : colonne de gauche absente`);
   await ctx.close();
 }
 await b.close();

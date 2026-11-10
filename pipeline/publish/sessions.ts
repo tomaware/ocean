@@ -4,9 +4,13 @@
 import type { Registry } from '../../src/types/contracts.ts';
 
 export type Discipline = 'wing' | 'surf' | 'downwind';
-export type Level = 'debutant' | 'intermediaire' | 'confirme';
-export const LEVELS: Level[] = ['debutant', 'intermediaire', 'confirme'];
-export const LEVEL_LABEL: Record<Level, string> = { debutant: 'débutant', intermediaire: 'intermédiaire', confirme: 'confirmé' };
+export type Level = 'debutant' | 'intermediaire' | 'confirme' | 'secu' | 'offshore';
+export const LEVELS: Level[] = ['debutant', 'intermediaire', 'confirme'];          // downwind (moteur actuel)
+export const WING_MODES: Level[] = ['secu', 'offshore'];                          // wing v2 (D-19)
+export const ALL_LEVELS: Level[] = [...LEVELS, ...WING_MODES];
+export const LEVEL_LABEL: Record<Level, string> = { debutant: 'débutant', intermediaire: 'intermédiaire', confirme: 'confirmé', secu: 'Sécu first', offshore: 'Offshore' };
+/** « Ça envoie » (wing, D-19) : seulement si la session compte au moins 4 h de vent moyen au-dessus de 20 nd. */
+export const ENVOIE_KN = 20, ENVOIE_H = 4;
 export const SESSION_MIN_H = 2, SESSION_SCORE = 5;
 const H = 3600e3;
 
@@ -14,6 +18,7 @@ export type Session = {
   id: string; discipline: Discipline; spot: string; spotName: string; level: Level | 'tous';
   start: number; end: number; hours: number; mean: number; peak: number; peakAt: number;
   label: string; tone: 'top' | 'ok'; text: string; why: string | null; confidence: number | null;
+  envoie: boolean; windyHours: number | null;   // heures à plus de 20 nd (wing)
 };
 
 export const label = (s: number | null | undefined) => (s === null || s === undefined ? '—' : s >= 7 ? 'Ça envoie' : s >= 5 ? 'Ça se tente' : 'Non');
@@ -43,19 +48,21 @@ function mk(d: Discipline, spot: string, spotName: string, level: Level | 'tous'
   const k = sc.indexOf(Math.max(...sc)), pi = w.idx[k];
   const mean = Math.round(sc.reduce((a, b) => a + b, 0) / sc.length * 10) / 10, peak = sc[k];
   return { id: `${d}:${spot}:${level}:${w.from}`, discipline: d, spot, spotName, level, start: w.from, end: w.to, hours: w.idx.length, mean, peak, peakAt: times[pi],
-    label: label(peak), tone: peak >= 7 ? 'top' : 'ok', text: text(pi), why: why(pi), confidence: conf(pi) };
+    label: label(peak), tone: peak >= 7 ? 'top' : 'ok', text: text(pi), why: why(pi), confidence: conf(pi), envoie: false, windyHours: null };
 }
 
 export function wingSessions(wing: any, now: number): Session[] {
   const out: Session[] = [];
   for (const s of wing.spots ?? []) {
     const times = s.hours.map((h: any) => h.t);
-    for (const L of LEVELS) {
+    const modes = Object.keys(s.hours[0]?.scores ?? {}) as Level[];
+    for (const L of modes) {
       const sc = s.hours.map((h: any) => h.scores[L]);
       for (const w of windows(s.hours.map((h: any, i: number) => ({ t: h.t, s: h.scores[L], day: h.day, i })), now)) {
-        out.push(mk('wing', s.id, s.name, L, w, sc, times,
+        const windy = w.idx.filter((i) => (s.hours[i].kn ?? 0) > ENVOIE_KN).length;
+        out.push({ ...mk('wing', s.id, s.name, L, w, sc, times,
           (i) => { const h = s.hours[i]; return `${Math.round(h.kn)} nd de ${compass(h.dir)} (rafales ${h.gust === null ? '—' : Math.round(h.gust)})${h.sector ? ' · ' + sectorText(h.sector) : ''}`; },
-          (i) => s.hours[i].limit[L], (i) => s.hours[i].conf));
+          (i) => s.hours[i].limit[L], (i) => s.hours[i].conf), envoie: windy >= ENVOIE_H, windyHours: windy });
       }
     }
   }
