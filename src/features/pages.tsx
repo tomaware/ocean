@@ -80,6 +80,10 @@ function SpotView({ d, spot, now }: { d: AllData; spot: PublicSpot; now: number 
   const [dayT, setDay] = useState<number | null>(null);
   const day = dayT !== null && days.some((t) => dayKey(t) === dayKey(dayT)) ? dayT : days[0] ?? now;
   const best = sessions.length ? Math.max(...sessions.map((x) => x.peak)) : null;
+  // heure survolée (souris) ou touchée : la carte, les cartes de conditions et les critères suivent cette heure
+  const [picked, setPicked] = useState<number | null>(null);
+  const pickT = (t: number | null) => setPicked(t === null || !s ? null : (() => { const k = s.times.indexOf(t); return k < 0 ? null : k; })());
+  const pickedOnDay = picked !== null && s && dayKey(s.times[picked]) === dayKey(day) ? picked : null;
   return (
     <>
       <header class="page-head">
@@ -97,12 +101,12 @@ function SpotView({ d, spot, now }: { d: AllData; spot: PublicSpot; now: number 
       {disc === 'wing' && <LiveBox live={live.live} spot={spot.id} />}
       {!s ? <div class="notice warn">Pas de prévision disponible pour ce spot dans la dernière mise à jour.</div> : (
         <>
-          {days.length > 0 && <DayTabs s={s} days={days} value={day} now={now} onChange={setDay} />}
+          {days.length > 0 && <DayTabs s={s} days={days} value={day} now={now} onChange={(t) => { setDay(t); setPicked(null); }} />}
           <div class="today">
-            <NoteCard s={s} dayT={day} now={now} sessions={sessions} level={level} />
-            <CondCards d={d} spot={spot} s={s} dayT={day} now={now} />
-            <MapCompass d={d} spot={spot} s={s} dayT={day} now={now} best={best} />
-            <Criteria d={d} spot={spot} s={s} dayT={day} now={now} level={level} sessions={sessions} />
+            <NoteCard s={s} dayT={day} now={now} sessions={sessions} level={level} picked={pickedOnDay} onPick={setPicked} />
+            <CondCards d={d} spot={spot} s={s} dayT={day} now={now} picked={pickedOnDay} />
+            <MapCompass d={d} spot={spot} s={s} dayT={day} now={now} best={best} picked={pickedOnDay} />
+            <Criteria d={d} spot={spot} s={s} dayT={day} now={now} level={level} sessions={sessions} picked={pickedOnDay} />
           </div>
           <Section title={disc === 'surf' ? 'Vagues heure par heure' : disc === 'wing' ? 'Vent heure par heure' : 'Vent et houle heure par heure'}>
             <div class="card stack">
@@ -111,7 +115,7 @@ function SpotView({ d, spot, now }: { d: AllData; spot: PublicSpot; now: number 
                 const ss = sessions.find((x) => dayKey(x.start) === dayKey(day));
                 return <>
                   <span class="faint">{dayLabel(day, now)} : {headFor(s, picks)}</span>
-                  <ModuleView d={d} spot={spot} s={s} picks={picks} window={ss ? [ss.start, ss.end] : undefined} />
+                  <ModuleView d={d} spot={spot} s={s} picks={picks} window={ss ? [ss.start, ss.end] : undefined} picked={pickedOnDay === null ? null : s.times[pickedOnDay]} onPick={pickT} />
                 </>;
               })()}
             </div>

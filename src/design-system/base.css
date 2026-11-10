@@ -241,12 +241,28 @@ table.wg.models th { font-weight: 500; }
 .tag.warn { background: var(--c-warn-soft); color: var(--c-warn); }
 .mapbox { position: relative; min-height: 220px; }
 .mapbox .map { height: 260px; }
-.compass { position: absolute; top: 10px; right: 10px; z-index: 700; pointer-events: none; width: 112px; height: 112px; }
-.compass .ring { fill: color-mix(in srgb, var(--c-surface) 70%, transparent); stroke: var(--c-ink); stroke-opacity: .5; stroke-width: 1.5; }
-.compass text { fill: var(--c-ink); font-size: 9px; font-weight: 700; font-family: var(--font); }
-.compass .arr { fill: var(--c-ink); }
-.compass .beach { stroke: var(--c-accent); stroke-width: 3; stroke-linecap: round; }
-.mappill { position: absolute; left: 50%; bottom: 28px; transform: translateX(-50%); z-index: 700; pointer-events: none; background: #FFC94D; color: #2B2000; font-weight: 800; font-size: var(--fs-sm); padding: 5px 12px; border-radius: var(--r-pill); white-space: nowrap; box-shadow: 0 1px 4px rgba(0,0,0,.25); }
+.maprep { position: absolute; left: 50%; top: 50%; width: 360px; height: 280px; transform: translate(-50%, -50%); z-index: 700; pointer-events: none; overflow: visible; }
+.maprep .ring { fill: color-mix(in srgb, #FFFFFF 18%, transparent); stroke: #FFFFFF; stroke-opacity: .9; stroke-width: 1.5; }
+.maprep .cardinal { fill: #152B33; font: 700 10px var(--font); paint-order: stroke; stroke: #FFFFFF; stroke-width: 3px; }
+.maprep .beach { stroke: var(--c-accent); stroke-width: 4; stroke-linecap: round; }
+.maprep .wind line { stroke: #FFC94D; stroke-width: 3; } .maprep .wind path { fill: #FFC94D; }
+.maprep .swell line { stroke: #3FBF9F; stroke-width: 3; stroke-dasharray: 6 4; } .maprep .swell path { fill: #3FBF9F; }
+.maprep .wind-tag rect { fill: #FFC94D; } .maprep .wind-tag text { fill: #2B2000; font: 800 12px var(--font); }
+.maprep .swell-tag rect { fill: #3FBF9F; } .maprep .swell-tag text { fill: #0B2E26; font: 800 12px var(--font); }
+.maprep g rect { filter: drop-shadow(0 1px 2px rgba(0,0,0,.3)); }
+.mapwhen { position: absolute; left: 10px; bottom: 26px; z-index: 700; pointer-events: none; background: color-mix(in srgb, var(--c-surface) 88%, transparent); color: var(--c-ink); font-size: var(--fs-xs); font-weight: 700; padding: 4px 10px; border-radius: var(--r-pill); }
+.scorebars-w { position: relative; }
+.scorebars { touch-action: pan-y; cursor: crosshair; }
+.scorebars .grid { stroke: var(--c-line); stroke-width: 1; stroke-dasharray: 2 3; }
+.scorebars .grid5 { stroke: var(--c-ink-2); stroke-width: 1.5; }
+.scorebars .lbl5 { fill: var(--c-ink); font-weight: 800; }
+.scorebars .val { fill: var(--c-ink-2); font-size: 9.5px; font-weight: 700; }
+.scorebars .pk { fill: var(--c-accent); fill-opacity: .14; }
+.hourtip { position: absolute; z-index: 20; width: 260px; display: grid; gap: 3px; padding: 10px 12px; border-radius: var(--r-md); background: var(--c-surface); color: var(--c-ink); border: 1px solid var(--c-line); box-shadow: 0 6px 20px rgba(0,0,0,.18); font-size: var(--fs-xs); pointer-events: none; }
+.hourtip .row { flex-wrap: nowrap; }
+.hourtip .row > span:last-child { text-align: right; }
+table.wg col.pk { background: color-mix(in srgb, var(--c-accent) 16%, transparent); }
+.sf-col.pk { background: color-mix(in srgb, var(--c-accent) 16%, transparent); }
 .crit { display: grid; gap: var(--s-2); }
 .crit-row { display: flex; align-items: center; gap: var(--s-3); }
 .crit-row .txt { flex: 1; display: grid; gap: 1px; min-width: 0; }

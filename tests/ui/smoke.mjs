@@ -43,8 +43,21 @@ for (const [name, opt] of [['mobile', { ...devices['iPhone 13'], locale: 'fr-FR'
         if ((await p.locator('.notecard .scorebars rect[class^="b-"]').count()) !== 24) errs.push(`${name} #/${r} : barres horaires de la note ≠ 24`);
         if ((await p.locator('.today .cond').count()) !== 2) errs.push(`${name} #/${r} : cartes de conditions ≠ 2`);
         if (!(await p.locator('.daytabs button').count())) errs.push(`${name} #/${r} : choix du jour absent`);
-        if (!(await p.locator('.mapbox .compass').count())) errs.push(`${name} #/${r} : boussole absente`);
+        if (!(await p.locator('.mapbox .maprep').count())) errs.push(`${name} #/${r} : repère de la carte absent`);
         if (r === 'spot/port-camargue' && (await p.locator('.crit .gauge').count()) !== 4) errs.push(`${name} #/${r} : 4 critères wing attendus`);
+        // survol / toucher d'une colonne de la note : fenêtre explicative, et la carte suit l'heure choisie (demande de Tom, 10/11)
+        const bb = await p.locator('.notecard .scorebars').boundingBox();
+        const bars = await p.locator('.notecard .scorebars rect.b-good, .notecard .scorebars rect.b-mid, .notecard .scorebars rect.b-bad').count();
+        if (bb && bars) {
+          const bar = p.locator('.notecard .scorebars rect.b-good, .notecard .scorebars rect.b-mid, .notecard .scorebars rect.b-bad').first();
+          const rb = await bar.boundingBox();
+          if (name === 'mobile' || name === 'sombre') await p.mouse.click(rb.x + rb.width / 2, rb.y + rb.height - 2); else await p.mouse.move(rb.x + rb.width / 2, rb.y + rb.height - 2);
+          await p.waitForTimeout(150);
+          if (!(await p.locator('.hourtip').count())) errs.push(`${name} #/${r} : pas de fenêtre au survol de la note`);
+          if (!/survolée/.test(await p.locator('.mapwhen').innerText().catch(() => ''))) errs.push(`${name} #/${r} : la carte ne suit pas l'heure survolée`);
+          if (!(await p.locator('.maprep .wind-tag').count())) errs.push(`${name} #/${r} : repère vent absent sur la carte`);
+        }
+        if (!(await p.locator('.notecard .scorebars .grid5').count())) errs.push(`${name} #/${r} : ligne 5 absente`);
         // changer de jour met à jour la note du jour
         const tabsN = await p.locator('.daytabs button').count();
         if (tabsN > 1) { await p.locator('.daytabs button').nth(1).click(); if ((await p.locator('.daytabs button[aria-pressed="true"]').innerText()) !== (await p.locator('.daytabs button').nth(1).innerText())) errs.push(`${name} #/${r} : choix du jour sans effet`); }

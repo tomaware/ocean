@@ -2,7 +2,7 @@
 // cartes de conditions, boussole sur la carte, détail de la note. Aucune note n'est recalculée ici : on affiche ce que
 // les moteurs ont publié (pour le wing, les facteurs V × R × D publiés avec chaque heure).
 import type { Ref } from 'preact';
-import { useEffect, useRef, useState } from 'preact/hooks';
+import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import type { AllData, Level, PublicSpot, Session } from '../services/data';
 import { LEVEL_LABEL } from '../services/data';
 import { compass, dayKey, dayShort, hh, hourOf, n0, n1 } from '../services/format';
@@ -26,6 +26,8 @@ export function refIndex(s: Series, dayT: number, now: number): number | null {
   if (cur !== undefined) return cur;
   return idx.reduce((a, i) => ((s.score[i] ?? -1) > (s.score[a] ?? -1) ? i : a), idx[0]);
 }
+/** 10 → « 10 », 7,25 → « 7,3 » */
+const sc1 = (x: number | null | undefined) => (x == null ? '—' : Number.isInteger(Math.round(x * 10) / 10) ? String(Math.round(x)) : n1(x));
 const dec = (x: number) => String(Math.round(x * 100) / 100).replace('.', ',');
 
 export function DayTabs({ s, days, value, now, onChange }: { s: Series; days: number[]; value: number; now: number; onChange: (t: number) => void }) {
@@ -58,9 +60,13 @@ function useWidth(initial: number): [Ref<HTMLDivElement>, number] {
   return [ref, w];
 }
 
-export function ScoreBars({ s, dayT, now }: { s: Series; dayT: number; now: number }) {
+/** Une heure choisie au survol (souris) ou au toucher : cartes, critères et carte suivent cette heure. */
+export type PickProps = { picked?: number | null; onPick?: (i: number | null) => void; level?: Level };
+
+export function ScoreBars({ s, dayT, now, picked = null, onPick, level }: { s: Series; dayT: number; now: number } & PickProps) {
   const [ref, width] = useWidth(340);
-  const W = Math.max(240, width), H = W > 600 ? 110 : 80, x0 = 18, bw = (W - x0) / 24;
+  const W = Math.max(240, width), H = W > 600 ? 130 : 104, top = 24, P = H - top, x0 = 20, bw = (W - x0) / 24;
+  const y = (v: number) => H - (v / 10) * P;
   const byH = new Map(dayIdx(s, dayT).map((i) => [hourOf(s.times[i]), i]));
   const today = dayKey(dayT) === dayKey(now);
   const nowH = today ? hourOf(now) + new Date(now).getMinutes() / 60 : null;
@@ -68,23 +74,67 @@ export function ScoreBars({ s, dayT, now }: { s: Series; dayT: number; now: numb
   const dayHours = [...byH.entries()].filter(([, i]) => s.day[i]).map(([h]) => h);
   const isNight = (h: number) => { const i = byH.get(h); return i !== undefined ? !s.day[i] : dayHours.length > 0 && (h < Math.min(...dayHours) || h > Math.max(...dayHours)); };
   const best = [...byH.values()].filter((i) => s.day[i]).sort((a, b) => (s.score[b] ?? -1) - (s.score[a] ?? -1))[0];
-  const label = `Note heure par heure, ${today ? 'aujourd’hui' : dayShort(dayT)}${best !== undefined ? ` ; meilleure à ${hourOf(s.times[best])} h (${n1(s.score[best])}/10)` : ''}`;
+  const label = `Note heure par heure, ${today ? 'aujourd’hui' : dayShort(dayT)}${best !== undefined ? ` ; meilleure à ${hourOf(s.times[best])} h (${n1(s.score[best])}/10)` : ''}. Survole ou touche une colonne pour le détail.`;
+  const wide = bw >= 22;
+  const pickedH = picked !== null && dayKey(s.times[picked]) === dayKey(dayT) ? hourOf(s.times[picked]) : null;
+  const at = (e: PointerEvent) => {
+    const r = (e.currentTarget as SVGElement).getBoundingClientRect();
+    const h = Math.floor(((e.clientX - r.left) * (W / r.width) - x0) / bw);
+    return h >= 0 && h < 24 ? byH.get(h) ?? null : null;
+  };
   return (
     <div class="scorebars-w" ref={ref}>
-    <svg class="scorebars" viewBox={`0 0 ${W} ${H + 30}`} width={W} height={H + 30} role="img" aria-label={label}>
-      {Array.from({ length: 24 }, (_, h) => { return isNight(h) ? <rect key={`z${h}`} class="z" x={x0 + h * bw} y={12} width={bw + 0.5} height={H - 12} /> : null; })}
+    <svg class="scorebars" viewBox={`0 0 ${W} ${H + 22}`} width={W} height={H + 22} role="img" aria-label={label}
+      onPointerMove={onPick ? (e) => { if (e.pointerType === 'mouse') { const i = at(e as unknown as PointerEvent); if (i !== null) onPick(i); } } : undefined}
+      onPointerDown={onPick ? (e) => { const i = at(e as unknown as PointerEvent); if (i !== null) onPick(i === picked && (e as PointerEvent).pointerType !== 'mouse' ? null : i); } : undefined}
+      onPointerLeave={onPick ? (e) => { if ((e as PointerEvent).pointerType === 'mouse') onPick(null); } : undefined}>
+      {Array.from({ length: 24 }, (_, h) => (isNight(h) ? <rect key={`z${h}`} class="z" x={x0 + h * bw} y={top} width={bw + 0.5} height={P} /> : null))}
+      {/* quadrillage : 0, 2,5, 7,5, 10 en fin ; 5 = seuil d'une session 2H, en gras */}
+      {[0, 2.5, 7.5, 10].map((v) => <line key={v} class="grid" x1={x0} x2={W} y1={y(v)} y2={y(v)} />)}
+      {[3, 6, 9, 12, 15, 18, 21].map((h) => <line key={`v${h}`} class="grid" x1={x0 + h * bw} x2={x0 + h * bw} y1={top} y2={H} />)}
+      <line class="grid5" x1={x0} x2={W} y1={y(5)} y2={y(5)} />
+      {pickedH !== null && <rect class="pk" x={x0 + pickedH * bw} y={top - 4} width={bw} height={P + 4} rx={3} />}
       {Array.from({ length: 24 }, (_, h) => {
         const i = byH.get(h);
         const night = isNight(h), sc = i === undefined ? null : s.score[i];
-        const v = i === undefined || night || sc === null ? 0.6 : Math.max(0.6, sc);
-        const bh = (v / 10) * (H - 14);
+        const v = i === undefined || night || sc === null ? 0.4 : Math.max(0.4, sc);
         const cls = night ? 'b-night' : i === undefined || sc === null ? 'b-none' : sc >= 7 ? 'b-good' : sc >= 5 ? 'b-mid' : 'b-bad';
-        return <rect key={h} class={cls} x={x0 + h * bw + 1.5} y={H - bh} width={bw - 3} height={bh} rx={2}><title>{`${h} h : ${night ? 'nuit' : i === undefined ? 'pas de prévision' : `${n1(sc)}/10`}`}</title></rect>;
+        return (
+          <g key={h}>
+            <rect class={cls} x={x0 + h * bw + 1.5} y={y(v)} width={bw - 3} height={H - y(v)} rx={2} />
+            {!night && sc !== null && <text class="val" x={x0 + h * bw + bw / 2} y={y(v) - 3} text-anchor="middle">{wide ? sc1(sc) : n0(sc)}</text>}
+          </g>
+        );
       })}
-      <text x={0} y={H + 4}>0</text><text x={0} y={(H + 12) / 2 + 3}>5</text><text x={0} y={16}>10</text>
-      {nowH !== null && <><line class="now" x1={x0 + nowH * bw} x2={x0 + nowH * bw} y1={10} y2={H} /><text class="now-l" x={Math.min(W - 30, Math.max(x0 + 26, x0 + nowH * bw))} y={8} text-anchor="middle">Maintenant</text></>}
-      {[0, 3, 6, 9, 12, 15, 18, 21].map((h) => <text key={h} x={x0 + h * bw + bw / 2} y={H + 16} text-anchor="middle">{h}</text>)}
+      <text x={0} y={y(0) + 4}>0</text><text class="lbl5" x={0} y={y(5) + 4}>5</text><text x={0} y={y(10) + 4}>10</text>
+      {nowH !== null && <><line class="now" x1={x0 + nowH * bw} x2={x0 + nowH * bw} y1={top - 6} y2={H} /><text class="now-l" x={Math.min(W - 30, Math.max(x0 + 26, x0 + nowH * bw))} y={10} text-anchor="middle">Maintenant</text></>}
+      {[0, 3, 6, 9, 12, 15, 18, 21].map((h) => <text key={h} x={x0 + h * bw + bw / 2} y={H + 15} text-anchor="middle">{h} h</text>)}
     </svg>
+    {pickedH !== null && picked !== null && <HourTip s={s} i={picked} level={level} left={Math.min(Math.max(0, x0 + pickedH * bw + bw / 2 - 130), W - 260)} top={H + 24} />}
+    </div>
+  );
+}
+
+/** Fenêtre au survol d'une colonne : pourquoi cette note (mêmes critères que le panneau à côté). */
+function HourTip({ s, i, level, left, top }: { s: Series; i: number; level?: Level; left: number; top: number }) {
+  const x = s.rows[i], sc = s.score[i];
+  let lines: [string, string][] = [];
+  let why: string | null = null;
+  if (s.discipline === 'wing') {
+    const f = level ? (x.f?.[level] as [number, number, number] | null | undefined) : null;
+    lines = [['Vent', `${n0(x.kn)} nd de ${compass(x.dir)} · raf. ${n0(x.gust)}`]];
+    if (f) lines.push(['Force', `${sc1(f[0] * 10)}/10`], ['Régularité', `${sc1(f[1] * 10)}/10`], ['Direction / plage', `${sc1(f[2] * 10)}/10${x.sector ? ` (${(SECTOR_TAG[x.sector] ?? x.sector).toLowerCase()})` : ''}`]);
+    why = level ? (x.limit?.[level] as string | null) : null;
+  } else if (s.discipline === 'surf') {
+    lines = [['Vagues', `${n1(x.lo)}–${n1(x.hi)} m`], ['Houle', `${compass(x.dir)} ${n1(x.hs)} m · ${n0(x.tp)} s`], ['Vent', `${n0(x.ws)} nd ${compass(x.wd)}${x.wk ? ` (${x.wk})` : ''}`]];
+  } else {
+    lines = [['Vent', `${n0(x.kn)} nd de ${compass(x.from)} · raf. ${n0(x.gust)}`], ['Côte', SHORE_TAG[x.shore] ?? '—'], ['Houle', x.bumpH == null ? '—' : `${n1(x.bumpH)} m · ${n0(x.bumpT)} s`]];
+  }
+  return (
+    <div class="hourtip" role="status" style={{ left: `${left}px`, top: `${top}px` }}>
+      <div class="row between"><strong>{hh(s.times[i])}</strong><span class="row" style={{ gap: '6px' }}><Stars score={sc} size="sm" /><strong>{s.day[i] ? `${sc1(sc)}/10` : 'nuit : 0'}</strong></span></div>
+      {lines.map(([k, v]) => <div key={k} class="row between"><span class="muted">{k}</span><span>{v}</span></div>)}
+      {why && <span class="comment">{why}</span>}
     </div>
   );
 }
@@ -92,7 +142,7 @@ export function ScoreBars({ s, dayT, now }: { s: Series; dayT: number; now: numb
 const SECTOR_TAG: Record<string, string> = { onshore: 'Vent de mer', 'side-on': 'Side-on', side: 'Side-shore', 'side-off': 'Side-off', offshore: 'Vent de terre', closed: 'Plan d’eau', avoid: 'Déconseillé' };
 const SHORE_TAG: Record<string, string> = { on: 'Vent de mer', sideon: 'Side-on', side: 'Side-shore', sideoff: 'Side-off', off: 'Vent de terre' };
 
-export function NoteCard({ s, dayT, now, sessions, level }: { s: Series; dayT: number; now: number; sessions: Session[]; level: Level }) {
+export function NoteCard({ s, dayT, now, sessions, level, picked, onPick }: { s: Series; dayT: number; now: number; sessions: Session[]; level: Level } & PickProps) {
   const idx = dayIdx(s, dayT).filter((i) => s.day[i]);
   const best = Math.max(-1, ...idx.map((i) => s.score[i] ?? -1));
   const ss = sessions.filter((x) => dayKey(x.start) === dayKey(dayT)).sort((a, b) => a.start - b.start);
@@ -113,15 +163,15 @@ export function NoteCard({ s, dayT, now, sessions, level }: { s: Series; dayT: n
           {s.levels && <span class="tag">{LEVEL_LABEL[level]}</span>}
         </span>
       </div>
-      <ScoreBars s={s} dayT={dayT} now={now} />
+      <ScoreBars s={s} dayT={dayT} now={now} picked={picked} onPick={onPick} level={level} />
       {why && <span class="comment"><strong>Commentaire :</strong> {why}</span>}
     </section>
   );
 }
 
 /** Deux cartes : WIND = Vent + Météo ; VAGUE = Vagues + Vent ; HOULE = Vent + Houle. */
-export function CondCards({ d, spot, s, dayT, now }: { d: AllData; spot: PublicSpot; s: Series; dayT: number; now: number }) {
-  const i = refIndex(s, dayT, now);
+export function CondCards({ d, spot, s, dayT, now, picked }: { d: AllData; spot: PublicSpot; s: Series; dayT: number; now: number; picked?: number | null }) {
+  const i = picked ?? refIndex(s, dayT, now);
   if (i === null) return null;
   const x = s.rows[i], at = `${hourOf(s.times[i])} h`;
   if (s.discipline === 'surf') {
@@ -149,25 +199,44 @@ export function CondCards({ d, spot, s, dayT, now }: { d: AllData; spot: PublicS
   </>;
 }
 
-/** Carte du spot avec la boussole (vent de l'heure de référence) et l'axe de la plage. */
-export function MapCompass({ d, spot, s, dayT, now, best }: { d: AllData; spot: PublicSpot; s: Series; dayT: number; now: number; best: number | null }) {
-  const i = refIndex(s, dayT, now);
+/** Carte du spot : repère centré sur le spot (cercle, N/E/S/O, axe de la plage), flèche du vent avec sa force,
+ *  et pour VAGUE la flèche de la houle. Suit l'heure survolée dans la note du jour ou les tableaux. */
+export function MapCompass({ d, spot, s, dayT, now, best, picked }: { d: AllData; spot: PublicSpot; s: Series; dayT: number; now: number; best: number | null; picked?: number | null }) {
+  const i = picked ?? refIndex(s, dayT, now);
+  // la carte Leaflet n'est recréée que si le spot change (pas à chaque heure survolée)
+  const spots = useMemo(() => [spot], [spot]);
+  const bestMap = useMemo(() => ({ [spot.id]: best }), [spot.id, best]);
   const x = i === null ? null : s.rows[i];
   const from = x === null ? null : s.discipline === 'surf' ? x.wd : s.discipline === 'wing' ? x.dir : x.from;
+  const kn = x === null ? null : s.discipline === 'surf' ? x.ws : x.kn;
+  const gust = x === null ? null : s.discipline === 'surf' ? x.wg : x.gust;
   const seaward = s.discipline === 'surf' ? d.surf.spots?.find((y: any) => y.id === spot.id)?.normal ?? null : spot.orientation?.seaward ?? null;
-  const pill = x === null ? null : s.discipline === 'surf' ? `VAGUES ${n1(x.hb)} m` : `VENT ${n0(x.kn)} nd`;
+  const swell = x !== null && s.discipline === 'surf' && x.dir != null ? { from: x.dir as number, txt: `HOULE ${n1(x.hs)} m · ${n0(x.tp)} s` } : null;
+  const R = 74;
+  const ray = (deg: number, r: number) => { const a = (deg * Math.PI) / 180; return [Math.sin(a) * r, -Math.cos(a) * r]; };
+  const tag = (deg: number, text: string, cls: string, r = R + 30) => {
+    const [lx, ly] = ray(deg, r), w = text.length * 7.2 + 16;
+    return <g class={cls}><rect x={lx - w / 2} y={ly - 12} width={w} height={24} rx={12} /><text x={lx} y={ly + 4.5} text-anchor="middle">{text}</text></g>;
+  };
+  const arrow = (deg: number, cls: string) => {
+    const [ox, oy] = ray(deg, R + 10), [ix, iy] = ray(deg, 16);
+    return <g class={cls}><line x1={ox} y1={oy} x2={ix} y2={iy} /><path d="M0 0 L-6 -12 L6 -12 Z" transform={`translate(${ix} ${iy}) rotate(${deg})`} /></g>;
+  };
   return (
     <div class="mapbox t-map">
-      <SpotMap spots={[spot]} best={{ [spot.id]: best }} focus={spot.id} />
-      {from !== null && (
-        <svg class="compass" viewBox="-56 -56 112 112" role="img" aria-label={`Vent de ${compass(from)} (${n0(from)}°)${seaward !== null ? `, plage ouverte vers ${compass(seaward)}` : ''}`}>
-          <circle class="ring" r={42} />
-          <text y={-45} text-anchor="middle">N</text><text x={50} y={3} text-anchor="middle">E</text><text y={53} text-anchor="middle">S</text><text x={-50} y={3} text-anchor="middle">O</text>
-          {seaward !== null && <line class="beach" x1={0} y1={-42} x2={0} y2={-34} transform={`rotate(${seaward})`} />}
-          <g transform={`rotate(${from + 180})`}><path class="arr" d="M0 -30 L11 16 L0 8 L-11 16 Z" /></g>
+      <SpotMap spots={spots} best={bestMap} focus={spot.id} />
+      {from != null && i !== null && (
+        <svg class="maprep" viewBox="-180 -140 360 280" role="img" aria-label={`${hh(s.times[i])} : vent de ${compass(from)} (${n0(from)}°), ${n0(kn)} nœuds, rafales ${n0(gust)}${swell ? `, houle de ${compass(swell.from)}` : ''}${seaward !== null ? `, plage ouverte vers ${compass(seaward)}` : ''}`}>
+          <circle class="ring" r={R} />
+          {[['N', 0], ['E', 90], ['S', 180], ['O', 270]].map(([l, a]) => { const [tx, ty] = ray(a as number, R - 10); return <text key={l} class="cardinal" x={tx} y={ty + 4} text-anchor="middle">{l}</text>; })}
+          {seaward !== null && (() => { const [bx, by] = ray(seaward, R); const [cx, cy] = ray(seaward, R - 9); return <line class="beach" x1={cx} y1={cy} x2={bx} y2={by} />; })()}
+          {swell && arrow(swell.from, 'swell')}
+          {arrow(from, 'wind')}
+          {swell && tag(swell.from, swell.txt, 'swell-tag', R + 60)}
+          {tag(from, `VENT ${n0(kn)} nd · ${compass(from)}${gust != null ? ` · raf. ${n0(gust)}` : ''}`, 'wind-tag')}
         </svg>
       )}
-      {pill && <span class="mappill">{pill}</span>}
+      {i !== null && <span class="mapwhen">{picked != null ? 'Heure survolée' : 'Heure affichée'} : {dayShort(s.times[i])} · {hh(s.times[i])}</span>}
     </div>
   );
 }
@@ -184,8 +253,8 @@ function Gauge({ v, name }: { v: number; name: string }) {
 }
 
 /** Détail de la note à l'heure de référence. WIND : les 4 critères publiés par le moteur wing ; VAGUE / HOULE : les conditions. */
-export function Criteria({ d, spot, s, dayT, now, level, sessions }: { d: AllData; spot: PublicSpot; s: Series; dayT: number; now: number; level: Level; sessions: Session[] }) {
-  const i = refIndex(s, dayT, now);
+export function Criteria({ d, spot, s, dayT, now, level, sessions, picked }: { d: AllData; spot: PublicSpot; s: Series; dayT: number; now: number; level: Level; sessions: Session[]; picked?: number | null }) {
+  const i = picked ?? refIndex(s, dayT, now);
   if (i === null) return null;
   const x = s.rows[i], at = `${hourOf(s.times[i])} h`;
   if (s.discipline === 'wing') {

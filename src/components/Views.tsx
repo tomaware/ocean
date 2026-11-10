@@ -81,7 +81,15 @@ export function pickHours(s: Series, opts: { day?: number; from?: number; days?:
 }
 
 // ------------------------------------------------------------------ WIND : tableau façon Windguru
-export function WindTable({ d, spot, s, picks, window, showDays }: { d: AllData; spot: PublicSpot; s: Series; picks: Pick[]; window?: [number, number]; showDays?: boolean }) {
+/** Survol / toucher d'une colonne (heure) : la fiche spot met à jour la carte, les cartes et les critères. */
+export type HourPick = { picked?: number | null; onPick?: (t: number | null) => void };
+const pickHandlers = (picks: Pick[], onPick: HourPick['onPick'], colOf: (el: Element) => number | null) => (onPick ? {
+  onPointerOver: (e: PointerEvent) => { const k = colOf(e.target as Element); if (k !== null && picks[k]) onPick(picks[k].t); },
+  onPointerDown: (e: PointerEvent) => { const k = colOf(e.target as Element); if (k !== null && picks[k]) onPick(picks[k].t); },
+  onPointerLeave: (e: PointerEvent) => { if (e.pointerType === 'mouse') onPick(null); },
+} : {});
+
+export function WindTable({ d, spot, s, picks, window, showDays, picked, onPick }: { d: AllData; spot: PublicSpot; s: Series; picks: Pick[]; window?: [number, number]; showDays?: boolean } & HourPick) {
   const row = (i: number) => s.rows[i];
   const isWing = s.discipline === 'wing';
   const kn = (i: number) => (isWing ? row(i).kn : row(i).kn);
@@ -92,7 +100,9 @@ export function WindTable({ d, spot, s, picks, window, showDays }: { d: AllData;
   const dayStarts = new Set(picks.filter((p, k) => k === 0 || dayKey(picks[k - 1].t) !== dayKey(p.t)).map((p) => p.t));
   return (
     <div class="wg-wrap">
-      <table class="wg" aria-label={`Vent heure par heure, ${spot.name}`}>
+      <table class="wg" aria-label={`Vent heure par heure, ${spot.name}`}
+        {...pickHandlers(picks, onPick, (el) => { const td = el.closest('td'); return td ? (td as HTMLTableCellElement).cellIndex - 1 : null; })}>
+        <colgroup><col />{picks.map((p) => <col key={p.t} class={picked === p.t ? 'pk' : ''} />)}</colgroup>
         <tbody>
           {showDays && <tr class="wg-days"><th />{picks.map((p) => <td key={p.t} class={dayStarts.has(p.t) ? 'sep' : ''}>{dayStarts.has(p.t) ? dayShort(p.t) : ''}</td>)}</tr>}
           <tr class="wg-h"><th>Heure</th>{picks.map((p) => <td key={p.t} class={`${on(p.t) ? 'on' : ''}${dayStarts.has(p.t) && showDays ? ' sep' : ''}`}>{hourOf(p.t)}</td>)}</tr>
@@ -113,19 +123,20 @@ export function WindTable({ d, spot, s, picks, window, showDays }: { d: AllData;
 }
 
 // ------------------------------------------------------------------ VAGUE : barres façon surf-forecast
-export function SurfBars({ s, picks, window, showDays, compact }: { s: Series; picks: Pick[]; window?: [number, number]; showDays?: boolean; compact?: boolean }) {
+export function SurfBars({ s, picks, window, showDays, compact, picked, onPick }: { s: Series; picks: Pick[]; window?: [number, number]; showDays?: boolean; compact?: boolean } & HourPick) {
   const r = (i: number) => s.rows[i];
   const max = Math.max(1.5, ...picks.map((p) => r(p.i).hb ?? 0)) * 1.25;   // marge pour l'étiquette au-dessus de la barre
   const on = (t: number) => !!window && t >= window[0] && t < window[1];
   const dayStarts = new Set(picks.filter((p, k) => k === 0 || dayKey(picks[k - 1].t) !== dayKey(p.t)).map((p) => p.t));
   return (
     <div class="sf-wrap">
-      <div class="sf" style={{ gridTemplateColumns: `repeat(${picks.length}, minmax(${compact ? 22 : 34}px, 1fr))` }} role="img" aria-label="Vagues, houle et vent heure par heure">
-        {picks.map((p) => {
+      <div class="sf" style={{ gridTemplateColumns: `repeat(${picks.length}, minmax(${compact ? 22 : 34}px, 1fr))` }} role="img" aria-label="Vagues, houle et vent heure par heure"
+        {...pickHandlers(picks, onPick, (el) => { const c = el.closest('[data-k]'); return c ? Number(c.getAttribute('data-k')) : null; })}>
+        {picks.map((p, k) => {
           const x = r(p.i), wk = (s.rows[p.i] as any).wk as string | null;
           const sty = SURF_WIND[wk ?? ''] ?? { background: 'var(--c-surface-2)', color: 'var(--c-ink-2)' };
           return (
-            <div key={p.t} class={`sf-col${on(p.t) ? ' on' : ''}${showDays && dayStarts.has(p.t) ? ' sep' : ''}`} title={`${hourOf(p.t)} h · vagues ${n1(x.lo)}–${n1(x.hi)} m · houle ${compass(x.dir)} ${n1(x.hs)} m ${n0(x.tp)} s · vent ${n0(x.ws)} nd ${compass(x.wd)} (${wk ?? '—'}) · note ${n1(s.score[p.i])}`}>
+            <div key={p.t} data-k={k} class={`sf-col${picked === p.t ? ' pk' : ''}${on(p.t) ? ' on' : ''}${showDays && dayStarts.has(p.t) ? ' sep' : ''}`} title={`${hourOf(p.t)} h · vagues ${n1(x.lo)}–${n1(x.hi)} m · houle ${compass(x.dir)} ${n1(x.hs)} m ${n0(x.tp)} s · vent ${n0(x.ws)} nd ${compass(x.wd)} (${wk ?? '—'}) · note ${n1(s.score[p.i])}`}>
               {showDays && <span class="sf-day">{dayStarts.has(p.t) ? dayShort(p.t) : ''}</span>}
               <span class="sf-wind" style={sty}><span>{compass(x.wd)}</span><Arrow from={x.wd} size={11} /></span>
               <div class="sf-barbox"><div class="sf-bar" style={{ height: `${((x.hb ?? 0) / max) * 100}%` }}><span>{n1(x.hb)}</span></div></div>
@@ -163,11 +174,11 @@ export function windHead(s: Series, picks: Pick[]): string {
 }
 
 /** Vue d'une journée (ou d'une période) selon l'onglet. */
-export function ModuleView({ d, spot, s, picks, window, showDays, compact }: { d: AllData; spot: PublicSpot; s: Series; picks: Pick[]; window?: [number, number]; showDays?: boolean; compact?: boolean }) {
+export function ModuleView({ d, spot, s, picks, window, showDays, compact, picked, onPick }: { d: AllData; spot: PublicSpot; s: Series; picks: Pick[]; window?: [number, number]; showDays?: boolean; compact?: boolean } & HourPick) {
   if (!picks.length) return <span class="faint">Pas de prévision sur cette période.</span>;
   return s.discipline === 'surf'
-    ? <SurfBars s={s} picks={picks} window={window} showDays={showDays} compact={compact} />
-    : <WindTable d={d} spot={spot} s={s} picks={picks} window={window} showDays={showDays} />;
+    ? <SurfBars s={s} picks={picks} window={window} showDays={showDays} compact={compact} picked={picked} onPick={onPick} />
+    : <WindTable d={d} spot={spot} s={s} picks={picks} window={window} showDays={showDays} picked={picked} onPick={onPick} />;
 }
 export const headFor = (s: Series, picks: Pick[]) => (s.discipline === 'surf' ? surfHead(s, picks) : windHead(s, picks));
 
