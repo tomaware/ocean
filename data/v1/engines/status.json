@@ -1,5 +1,5 @@
 {
- "generatedAt": 1794334976251,
+ "generatedAt": 1794336662345,
  "checks": [
   {
    "id": "golden-surf",
@@ -14,7 +14,7 @@
   {
    "id": "correction-vent-downwind",
    "ok": true,
-   "detail": "2 spot(s) de recalage : La Grande-Motte 53 h (× 1.01 en moyenne) + relevé récent, Port Camargue 52 h (× 0.93 en moyenne) + relevé récent"
+   "detail": "2 spot(s) de recalage : La Grande-Motte 51 h (× 0.97 en moyenne) + relevé récent, Port Camargue 51 h (× 0.92 en moyenne) + relevé récent"
   },
   {
    "id": "sorties-surf",
@@ -29,27 +29,22 @@
   {
    "id": "sorties-downwind",
    "ok": true,
-   "detail": "3/3 parcours notés ; 1 meilleurs créneaux"
+   "detail": "3/3 parcours notés ; 2 meilleurs créneaux"
   },
   {
    "id": "ecart-prod-surf",
    "ok": true,
-   "detail": "notes surf OCEAN vs app en service (calcul prod. 35 min avant, même extrait Copernicus) : médiane 0.00, 90 % ≤ 0.00, max 0.10 sur 664 heures (max : carnon ven. 16:00, OCEAN 8.7 / prod 8.8)"
+   "detail": "notes surf OCEAN vs app en service (calcul prod. 0 min avant, même extrait Copernicus) : médiane 0.00, 90 % ≤ 0.00, max 0.10 sur 668 heures (max : palavas mer. 03:00, OCEAN 4.9 / prod 5)"
   },
   {
    "id": "ecart-prod-downwind",
    "ok": true,
-   "detail": "notes downwind (intermédiaire, de jour) OCEAN vs app en service (calcul prod. 22 min avant) : médiane 0.00, 90 % ≤ 0.00, max 0.00 sur 120 heures"
-  },
-  {
-   "id": "vent-le-jai",
-   "ok": true,
-   "detail": "Le Jaï : meteofrance_arome_france_hd, le plus juste à LFML (erreur 1.14 m/s sur 100 mesures) ; 176 heures ; vent non corrigé"
+   "detail": "notes downwind (intermédiaire, de jour) OCEAN vs app en service (calcul prod. 50 min avant) : médiane 0.00, 90 % ≤ 0.00, max 0.40 sur 120 heures"
   },
   {
    "id": "sorties-wing",
    "ok": true,
-   "detail": "7 spots notés (wing v2.0.0) ; 5 session(s) 2H en mode Sécu first sur les heures prévues"
+   "detail": "7 spots notés (wing v2.0.0) ; 6 session(s) 2H en mode Sécu first sur les heures prévues"
   },
   {
    "id": "confidentialite-moteurs",
