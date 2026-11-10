@@ -156,7 +156,7 @@ table.data th, .table-wrap th { font-weight: 600; color: var(--c-ink-2); font-si
 .chip-v { width: 100%; text-align: center; border-radius: 5px; padding: 3px 0; font-weight: 700; font-size: var(--fs-sm); font-variant-numeric: tabular-nums; }
 .chip-s { font-size: 10px; color: var(--c-ink-2); min-height: 12px; white-space: nowrap; }
 .chip-h { font-size: 10px; color: var(--c-ink-3); }
-.arrow { width: 12px; height: 12px; color: var(--c-ink-2); display: block; }
+.arrow { width: 12px; height: 12px; color: var(--c-ink-2); display: block; margin: 0 auto; }
 
 /* grille prévision 5 jours */
 table.grid5 { border-collapse: separate; border-spacing: 4px; width: 100%; }
@@ -177,37 +177,26 @@ table.grid5 tbody th { text-align: left; font-size: var(--fs-sm); color: var(--c
 
 /* WIND / HOULE : tableau façon Windguru */
 .wg-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; display: grid; gap: 4px; }
-table.wg { border-collapse: separate; border-spacing: 2px 1px; font-size: 12px; font-variant-numeric: tabular-nums; width: 100%; }
+table.wg { border-collapse: separate; border-spacing: 0 2px; font-size: 12px; font-variant-numeric: tabular-nums; width: 100%; }
+/* un trait gris clair entre chaque heure ; colonnes avec étoiles sur fond gris clair (demande de Tom, 10/11) */
+table.wg td { border-left: 1px solid var(--c-line) !important; }
+table.wg col.st { background: var(--c-surface-2); }
 table.wg th { text-align: left; font-weight: 600; color: var(--c-ink-2); white-space: nowrap; padding: 2px 6px 2px 0; position: sticky; left: 0; background: var(--c-surface); z-index: 1; font-size: 11px; text-transform: none; letter-spacing: 0; border: 0; }
-table.wg td { text-align: center; padding: 3px 2px; min-width: 26px; border-radius: 3px; border: 0; white-space: nowrap; color: var(--c-ink); }
+table.wg td { text-align: center; padding: 3px 2px; min-width: 26px; border-radius: 0; border: 0; white-space: nowrap; color: var(--c-ink); }
 table.wg .wg-v td { font-weight: 700; font-size: 13px; }
 table.wg .wg-h td { color: var(--c-ink-3); font-size: 11px; }
 table.wg .wg-days td { font-weight: 700; font-size: 11px; color: var(--c-ink); text-align: left; padding-left: 0; }
-table.wg td.sep { border-left: 2px solid var(--c-line); }
+table.wg td.sep { border-left: 2px solid var(--c-ink-3) !important; }
 table.wg td.on { background: var(--c-accent-soft); color: var(--c-accent); font-weight: 700; }
 table.wg .wg-rain td { color: var(--c-accent); font-weight: 600; }
 table.wg .wg-sec td { font-size: 10px; color: var(--c-ink-3); }
 table.wg .wg-sec td.warn { color: var(--c-warn); font-weight: 700; }
-table.wg .wg-bars td { height: 52px; vertical-align: bottom; position: relative; padding: 0 2px; }
+table.wg .wg-bars td { height: 64px; vertical-align: bottom; position: relative; padding: 0 3px; }
+table.wg .wg-bars span { display: block; font-weight: 700; color: var(--c-ink); font-size: 11px; }
 table.wg .wg-bars .bar { background: var(--c-wave); border-radius: 3px 3px 0 0; min-height: 2px; }
 table.wg .wg-bars span { font-size: 10px; color: var(--c-ink-2); }
 table.wg.models th { font-weight: 500; }
 
-/* VAGUE : barres façon surf-forecast */
-.sf-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; display: grid; gap: 4px; }
-.sf { display: grid; gap: 3px; align-items: end; min-width: 100%; }
-.sf-col { display: grid; justify-items: center; gap: 3px; padding: 2px 0; border-radius: 6px; }
-.sf-col.on { background: var(--c-accent-soft); }
-.sf-col.sep { border-left: 2px dashed var(--c-line); }
-.sf-day { font-size: 11px; font-weight: 700; min-height: 14px; justify-self: start; padding-left: 2px; white-space: nowrap; }
-.sf-wind { display: grid; justify-items: center; width: 100%; border-radius: 4px; padding: 2px 0; font-size: 10px; font-weight: 700; }
-.sf-wind .arrow { color: currentColor; }
-.sf-barbox { height: 110px; width: 100%; display: flex; align-items: flex-end; }
-.sf-bar { width: 100%; background: var(--c-wave); border-radius: 3px 3px 0 0; min-height: 4px; position: relative; display: flex; justify-content: center; }
-.sf-bar span { position: absolute; top: -16px; font-size: 11px; font-weight: 700; color: var(--c-ink); white-space: nowrap; }
-.sf-sw { color: var(--c-ink); }
-.sf-t, .sf-h { font-size: 10px; color: var(--c-ink-2); white-space: nowrap; }
-@media (max-width: 560px) { .sf-barbox { height: 90px; } .sf-bar span { font-size: 10px; } }
 
 /* ------------------------------------------------------------------ fiche spot, style validé le 10/11 (maquette « OCEAN Flow Light ») */
 .daytabs { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; margin: 0 calc(-1 * var(--s-4)); padding: 2px var(--s-4); }
@@ -262,7 +251,6 @@ table.wg.models th { font-weight: 500; }
 .hourtip .row { flex-wrap: nowrap; }
 .hourtip .row > span:last-child { text-align: right; }
 table.wg col.pk { background: color-mix(in srgb, var(--c-accent) 16%, transparent); }
-.sf-col.pk { background: color-mix(in srgb, var(--c-accent) 16%, transparent); }
 .crit { display: grid; gap: var(--s-2); }
 .crit-row { display: flex; align-items: center; gap: var(--s-3); }
 .crit-row .txt { flex: 1; display: grid; gap: 1px; min-width: 0; }

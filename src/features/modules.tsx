@@ -29,8 +29,8 @@ export const chipColors = (sc: number | null) =>
 export function DayChart({ d, spot, dayT, level, window, title }: { d: AllData; spot: PublicSpot; dayT: number; level: Level; window?: [number, number]; title?: string }) {
   const s = useMemo(() => seriesFor(d, spot, spotDiscipline(spot), level), [d, spot, level]);
   if (!s) return null;
-  // VAGUE : une barre toutes les 2 h (lisible sur téléphone) ; WIND / HOULE : toutes les heures
-  const picks = pickHours(s, s.discipline === 'surf' ? { day: dayT, hours: [7, 19], step: 2 } : { day: dayT });
+  // WIND, VAGUE, HOULE : le même tableau, toutes les heures de 7 h à 20 h (harmonie demandée par Tom, 10/11)
+  const picks = pickHours(s, { day: dayT });
   return (
     <div class="daychart">
       <div class="row between"><span class="small"><strong>{title ?? dayLabel(dayT)}</strong></span><span class="faint">{headFor(s, picks)}</span></div>
@@ -59,16 +59,15 @@ function Prevision({ d, now, disc, spots, L, query }: { d: AllData; now: number;
     const k = dayKey(dayT);
     const ss = sess.filter((s) => s.spot === sp.id && dayKey(s.start) === k);
     if (ss.length) return { session: true, hours: ss.reduce((a, s) => a + s.hours, 0), peak: Math.max(...ss.map((s) => s.peak)), text: '' };
+    // pas de session : case vide (demande de Tom, 10/11 : « autant rien mettre ») ; « — » seulement sans prévision
     const s = series[sp.id];
-    if (!s) return { session: false, hours: 0, peak: null, text: '—' };
-    const idx = s.times.map((_, i) => i).filter((i) => dayKey(s.times[i]) === k && s.day[i]);
-    const v = (i: number) => (disc === 'surf' ? s.rows[i].hb : s.rows[i].kn) ?? 0;
-    return { session: false, hours: 0, peak: null, text: idx.length ? (disc === 'surf' ? n1(Math.max(...idx.map(v))) : n0(Math.max(...idx.map(v)))) : '—' };
+    const has = !!s && s.times.some((t, i) => dayKey(t) === k && s.day[i]);
+    return { session: false, hours: 0, peak: null, text: has ? '' : '—' };
   };
   const selSpot = sel ? spots.find((s) => s.id === sel.spot) : null;
   return (
     <Section title="Prévision 5 jours">
-      <p class="faint">Case colorée = session 2H (nombre d’heures, couleur = note) ; sinon {disc === 'surf' ? 'hauteur max des vagues (m)' : 'vent max de la journée (nd)'}. Touche une case pour le détail.</p>
+      <p class="faint">Case colorée = session 2H (nombre d’heures ; vert = bonne note, jaune = correcte). Case vide = pas de session ce jour-là. Touche une case pour le détail.</p>
       <div class="card table-wrap">
         <table class="grid5">
           <thead><tr><th />{spots.map((s) => <th key={s.id} title={s.name}><strong>{shortName(s)}</strong></th>)}</tr></thead>
@@ -82,7 +81,7 @@ function Prevision({ d, now, disc, spots, L, query }: { d: AllData; now: number;
                   return (
                     <td key={sp.id}>
                       <button type="button" class={`cell${c.session ? ' s' : ''}${on ? ' sel' : ''}`} style={c.session ? chipColors(c.peak) : undefined}
-                        aria-pressed={on} aria-label={`${sp.name}, ${dayLabel(dayT, now)} : ${c.session ? `session de ${c.hours} h, note max ${n1(c.peak)}` : c.text}`}
+                        aria-pressed={on} aria-label={`${sp.name}, ${dayLabel(dayT, now)} : ${c.session ? `session de ${c.hours} h, note max ${n1(c.peak)}` : c.text === '—' ? 'pas de prévision' : 'pas de session'}`}
                         onClick={() => setSel(on ? null : { spot: sp.id, day: dayT })}>
                         {c.session ? `${c.hours}h` : c.text}
                       </button>

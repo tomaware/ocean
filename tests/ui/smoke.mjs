@@ -28,15 +28,17 @@ for (const [name, opt] of [['mobile', { ...devices['iPhone 13'], locale: 'fr-FR'
       if (r.endsWith('/prevision')) {
         // la grille : 5 jours × spots, et le détail s'ouvre au clic
         const n = await p.locator('table.grid5 tbody tr').count();
+        if (await p.locator('table.grid5 .cell:not(.s)').filter({ hasText: /\d/ }).count()) errs.push(`${name} #/${r} : chiffres dans les cases sans session`);
         if (n !== 5) errs.push(`${name} #/${r} : ${n} jours dans la grille`);
         await p.locator('table.grid5 .cell').first().click();
         if (!(await p.locator('.daychart').count())) errs.push(`${name} #/${r} : pas de détail au clic`);
       }
       if (/^(wind|vague|houle)\/(meilleure|sessions)$/.test(r) && (await p.locator('.daychart').count()) === 0 && !(await p.getByText('Pas de session 2H').count()) && !(await p.getByText('Aucune session').count())) errs.push(`${name} #/${r} : graphiques absents sous les sessions`);
-      // chaque onglet a son affichage : WIND / HOULE = tableau façon Windguru, VAGUE = barres façon surf-forecast
+      // un seul tableau heure par heure pour WIND, VAGUE, HOULE (lignes propres à chacun)
       if (r === 'spot/port-camargue' && !(await p.locator('table.wg .wg-v').count())) errs.push(`${name} #/${r} : tableau du vent absent`);
       if (r === 'spot/plagesud-grandemotte' && !(await p.locator('table.wg .wg-bars').count())) errs.push(`${name} #/${r} : houle absente du tableau`);
-      if (r === 'spot/carnon' && (await p.locator('.sf .sf-col').count()) < 10) errs.push(`${name} #/${r} : barres de vagues absentes`);
+      if (r === 'spot/carnon' && ((await p.locator('table.wg .wg-bars td').count()) < 10 || (await p.locator('table.wg .wg-v').count()))) errs.push(`${name} #/${r} : VAGUE = même tableau que WIND, barres de vagues sans lignes vent / rafales`);
+      if (r === 'spot/port-camargue' && (await p.getByRole('rowheader', { name: 'Plage' }).count() + await p.locator('table.wg th', { hasText: /^Plage$/ }).count())) errs.push(`${name} #/${r} : ligne « Plage » encore là`);
       if (r.startsWith('spot/') && !(await p.locator('.stars').count())) errs.push(`${name} #/${r} : étoiles absentes`);
       // fiche spot au style validé le 10/11 : note du jour (24 barres), 2 cartes de conditions, boussole, critères
       if (r.startsWith('spot/')) {

@@ -111,7 +111,7 @@ function SpotView({ d, spot, now }: { d: AllData; spot: PublicSpot; now: number 
           <Section title={disc === 'surf' ? 'Vagues heure par heure' : disc === 'wing' ? 'Vent heure par heure' : 'Vent et houle heure par heure'}>
             <div class="card stack">
               {(() => {
-                const picks = disc === 'surf' ? pickHours(s, { day, hours: [7, 19], step: 2 }) : pickHours(s, { day });
+                const picks = pickHours(s, { day });
                 const ss = sessions.find((x) => dayKey(x.start) === dayKey(day));
                 return <>
                   <span class="faint">{dayLabel(day, now)} : {headFor(s, picks)}</span>
@@ -126,8 +126,8 @@ function SpotView({ d, spot, now }: { d: AllData; spot: PublicSpot; now: number 
           <Section title="Jour par jour">
             <div class="card stack">
               {(() => {
-                // WIND / HOULE : toutes les 3 h sur 5 jours (façon Windguru) ; VAGUE : 8 h, 13 h, 18 h sur 7 jours (façon surf-forecast)
-                const picks = disc === 'surf' ? pickHours(s, { from: now, days: 7, hours: [8, 18], step: 5 }) : pickHours(s, { from: now, days: 5, hours: [7, 19], step: 3 });
+                // WIND, VAGUE, HOULE : le même tableau, toutes les 3 h sur 5 jours
+                const picks = pickHours(s, { from: now, days: 5, hours: [7, 19], step: 3 });
                 return <ModuleView d={d} spot={spot} s={s} picks={picks} showDays compact={disc === 'surf'} />;
               })()}
             </div>
