@@ -1,11 +1,11 @@
 {
- "generatedAt": 1794268772746,
+ "generatedAt": 1794268827739,
  "status": [
   {
    "id": "open-meteo-marine",
    "ok": true,
    "message": "ok",
-   "durationMs": 878,
+   "durationMs": 1248,
    "points": 19,
    "models": [
     "meteofrance_wave",
@@ -15,32 +15,32 @@
     "ncep_gfswave025"
    ],
    "values": 426360,
-   "missing": 197638,
+   "missing": 207670,
    "rejected": 0,
-   "first": 1793923200000,
-   "last": 1794870000000
+   "first": 1794009600000,
+   "last": 1794956400000
   },
   {
    "id": "open-meteo-vent-moteurs",
    "ok": true,
    "message": "ok",
-   "durationMs": 876,
+   "durationMs": 1033,
    "points": 79,
    "models": [
     "meteofrance_seamless",
     "ecmwf_ifs025"
    ],
    "values": 125136,
-   "missing": 16827,
+   "missing": 22515,
    "rejected": 0,
-   "first": 1793923200000,
-   "last": 1794870000000
+   "first": 1794009600000,
+   "last": 1794956400000
   },
   {
    "id": "open-meteo-vent-spots",
    "ok": true,
    "message": "ok",
-   "durationMs": 121,
+   "durationMs": 166,
    "points": 6,
    "models": [
     "meteofrance_arome_france_hd",
@@ -52,16 +52,16 @@
     "gfs_seamless"
    ],
    "values": 30888,
-   "missing": 7722,
+   "missing": 9666,
    "rejected": 0,
-   "first": 1793923200000,
-   "last": 1794870000000
+   "first": 1794009600000,
+   "last": 1794956400000
   },
   {
    "id": "super-prevision",
    "ok": true,
    "message": "ok",
-   "durationMs": 1251,
+   "durationMs": 1597,
    "points": 6,
    "models": [
     "super-prevision"
@@ -76,34 +76,34 @@
    "id": "candhis",
    "ok": true,
    "message": "ok",
-   "durationMs": 63,
+   "durationMs": 166,
    "points": 5,
    "models": [],
-   "values": 34344,
-   "missing": 3664,
+   "values": 34326,
+   "missing": 3662,
    "rejected": 0,
    "lastObservationAgeMin": {
-    "03001": 30,
-    "03404": 30,
-    "01102": 600,
-    "01101": 30,
-    "06601": 28410
+    "03001": 31,
+    "03404": 31,
+    "01102": 601,
+    "01101": 31,
+    "06601": 28411
    }
   },
   {
    "id": "metar",
    "ok": true,
    "message": "ok",
-   "durationMs": 224,
+   "durationMs": 401,
    "points": 3,
    "models": [],
    "values": 1200,
    "missing": 457,
    "rejected": 0,
    "lastObservationAgeMin": {
-    "LFMT": 30,
-    "LFMP": 30,
-    "LFTH": 30
+    "LFMT": 31,
+    "LFMP": 31,
+    "LFTH": 31
    }
   }
  ],
@@ -111,12 +111,12 @@
   {
    "id": "fidelite-vagues",
    "ok": true,
-   "detail": "128307 valeurs comparées au parseur du moteur surf, 0 écart(s)"
+   "detail": "122835 valeurs comparées au parseur du moteur surf, 0 écart(s)"
   },
   {
    "id": "grille-open-meteo-marine",
    "ok": true,
-   "detail": "264 heures, 2026-11-06T00h → 2026-11-16T23h UTC"
+   "detail": "264 heures, 2026-11-07T00h → 2026-11-17T23h UTC"
   },
   {
    "id": "couverture-open-meteo-marine",
@@ -131,12 +131,12 @@
   {
    "id": "fidelite-vent",
    "ok": true,
-   "detail": "108309 valeurs comparées au parseur des moteurs surf / downwind, 0 écart(s)"
+   "detail": "102621 valeurs comparées au parseur des moteurs surf / downwind, 0 écart(s)"
   },
   {
    "id": "grille-open-meteo-vent-moteurs",
    "ok": true,
-   "detail": "264 heures, 2026-11-06T00h → 2026-11-16T23h UTC"
+   "detail": "264 heures, 2026-11-07T00h → 2026-11-17T23h UTC"
   },
   {
    "id": "couverture-open-meteo-vent-moteurs",
@@ -151,7 +151,7 @@
   {
    "id": "grille-open-meteo-vent-spots",
    "ok": true,
-   "detail": "264 heures, 2026-11-06T00h → 2026-11-16T23h UTC"
+   "detail": "264 heures, 2026-11-07T00h → 2026-11-17T23h UTC"
   },
   {
    "id": "couverture-open-meteo-vent-spots",
@@ -161,7 +161,7 @@
   {
    "id": "modeles-open-meteo-vent-spots",
    "ok": true,
-   "detail": "wind_speed_10m sur 48 h : meteofrance_arome_france_hd 96 % · meteofrance_arome_france 96 % · icon_d2 48 % · ecmwf_ifs025 100 % · icon_eu 100 % · meteofrance_arpege_europe 100 % · gfs_seamless 100 %"
+   "detail": "wind_speed_10m sur 48 h : meteofrance_arome_france_hd 94 % · meteofrance_arome_france 94 % · icon_d2 47 % · ecmwf_ifs025 100 % · icon_eu 100 % · meteofrance_arpege_europe 100 % · gfs_seamless 100 %"
   },
   {
    "id": "couverture-super-prevision",
@@ -171,12 +171,12 @@
   {
    "id": "fraicheur-candhis",
    "ok": true,
-   "detail": "03001 30 min · 03404 30 min · 01101 30 min (seuil 180 min)"
+   "detail": "03001 31 min · 03404 31 min · 01101 31 min (seuil 180 min)"
   },
   {
    "id": "fraicheur-metar",
    "ok": true,
-   "detail": "LFMT 30 min · LFMP 30 min · LFTH 30 min (seuil 120 min)"
+   "detail": "LFMT 31 min · LFMP 31 min · LFTH 31 min (seuil 120 min)"
   },
   {
    "id": "confidentialite",
