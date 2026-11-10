@@ -52,7 +52,8 @@ async function main(): Promise<void> {
   const dwN = ocean.downwindJSON.runs.filter((r: any) => r.hours.length > 0).length;
   checks.push({ id: 'sorties-downwind', ok: dwN === ocean.downwindJSON.runs.length, detail: `${dwN}/${ocean.downwindJSON.runs.length} parcours notés ; ${ocean.downwindJSON.best.length} meilleurs créneaux` });
 
-  checks.push(...(await vsProduction(ocean, now)));
+  const copB = bundle.forecasts.find((f) => f.id === 'copernicus-medwav');
+  checks.push(...(await vsProduction(ocean, now, copB?.provenance.issuedAt ?? null)));
 
   const wing = wingForecast(sp, registry, now);
   const nSess = wing.spots.reduce((a, x) => a + x.sessions.intermediaire.length, 0);
@@ -81,23 +82,29 @@ async function main(): Promise<void> {
 // Production actuelle (information) : les apps en service tournent à d'autres minutes, avec d'autres horizons
 // (downwind : 5 jours) et Copernicus pour le surf. Les écarts attendus sont faibles mais pas nuls.
 export const PROD = { surf: 'https://tomaware.github.io/super-previ-surf/data/forecast.json', downwind: 'https://raw.githubusercontent.com/tomaware/downwind-foil/main/data/downwind.json' };
-async function vsProduction(o: ReturnType<typeof runEngines>, now: number): Promise<Check[]> {
+async function vsProduction(o: ReturnType<typeof runEngines>, now: number, copIssued: number | null): Promise<Check[]> {
   const get = async (u: string) => { try { const r = await fetch(u, { headers: { 'User-Agent': 'ocean-pipeline' } }); return r.ok ? await r.json() : null; } catch { return null; } };
   const [ps, pd] = await Promise.all([get(PROD.surf), get(PROD.downwind)]);
-  const stats = (pairs: [number, number][]) => {
+  const hm = (t: number) => new Date(t).toLocaleString('fr-FR', { timeZone: 'Europe/Paris', weekday: 'short', hour: '2-digit', minute: '2-digit' });
+  const stats = (pairs: [number, number, string?][]) => {
     const d = pairs.map(([a, b]) => Math.abs(a - b)).sort((x, y) => x - y);
-    return d.length ? `médiane ${d[Math.floor(d.length / 2)].toFixed(2)}, 90 % ≤ ${d[Math.floor(d.length * 0.9)].toFixed(2)}, max ${d[d.length - 1].toFixed(2)} sur ${d.length} heures` : 'aucune heure commune';
+    const worst = pairs.reduce((w, p) => (Math.abs(p[0] - p[1]) > Math.abs(w[0] - w[1]) ? p : w), pairs[0]);
+    return d.length ? `médiane ${d[Math.floor(d.length / 2)].toFixed(2)}, 90 % ≤ ${d[Math.floor(d.length * 0.9)].toFixed(2)}, max ${d[d.length - 1].toFixed(2)} sur ${d.length} heures${worst?.[2] ? ` (max : ${worst[2]}, OCEAN ${worst[0]} / prod ${worst[1]})` : ''}` : 'aucune heure commune';
   };
   const age = (g: string | number | undefined) => (g ? `calcul prod. ${Math.round((now - (typeof g === 'number' ? g : Date.parse(g))) / 60000)} min avant` : 'date inconnue');
   const out: Check[] = [];
   if (ps?.spots) {
-    const pairs: [number, number][] = [];
+    const pairs: [number, number, string][] = [];
     for (const s of o.surfJSON.spots) {
       const p = ps.spots.find((x: any) => x.id === s.id); if (!p) continue;
       const idx = new Map<number, number>(p.h.t.map((t: number, i: number) => [t, i]));
-      s.h.t.forEach((t: number, i: number) => { const j = idx.get(t); if (t >= now && j !== undefined && s.h.score[i] !== null && p.h.score[j] !== null) pairs.push([s.h.score[i], p.h.score[j]]); });
+      s.h.t.forEach((t: number, i: number) => { const j = idx.get(t); if (t >= now && j !== undefined && s.h.score[i] !== null && p.h.score[j] !== null) pairs.push([s.h.score[i], p.h.score[j], `${s.id} ${hm(t)}`]); });
     }
-    out.push({ id: 'ecart-prod-surf', ok: true, detail: `notes surf OCEAN vs app en service (${age(ps.generated)}${ps.sources?.copernicus?.points ? ', prod avec Copernicus' : ''}) : ` + stats(pairs) });
+    // Les deux calculs ne partent pas forcément des mêmes entrées : l'app tourne à une autre minute et peut utiliser
+    // un autre extrait Copernicus (renouvelé toutes les 3 h). On le dit, pour lire l'écart correctement.
+    const pc = ps.sources?.copernicus?.generated ? Date.parse(ps.sources.copernicus.generated) : null;
+    const copNote = !pc ? 'prod sans Copernicus' : copIssued === pc ? 'même extrait Copernicus' : `extraits Copernicus différents (prod ${hm(pc)}, OCEAN ${copIssued ? hm(copIssued) : 'aucun'}) : écart attendu`;
+    out.push({ id: 'ecart-prod-surf', ok: true, detail: `notes surf OCEAN vs app en service (${age(ps.generated)}, ${copNote}) : ` + stats(pairs) });
   } else out.push({ id: 'ecart-prod-surf', ok: true, detail: 'prévision de l’app surf en service illisible' });
   if (pd?.runs) {
     const pairs: [number, number][] = [];
