@@ -4,7 +4,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import type { Check } from '../../src/types/contracts.ts';
 import { loadRegistry } from '../collect/points.ts';
 import { privacyEngines } from '../engines/run.ts';
-import type { CollectBundle, ForecastBlock } from '../../src/types/contracts.ts';
+import type { CollectBundle, ForecastBlock, Registry } from '../../src/types/contracts.ts';
 import { allSessions, bestByDiscipline, ALL_LEVELS, publicSpots } from './sessions.ts';
 
 const ROOT = new URL('../../', import.meta.url);
@@ -51,6 +51,27 @@ export function meteoPublic(bundle: CollectBundle | null, now: number) {
   return out;
 }
 
+/**
+ * Mesure publique « en direct » des spots sans balise Winds-Up (étang de Berre : METAR de Marignane, à ~3 km du Jaï).
+ * Données METAR (NOAA, domaine public) : publiables. Dernière mesure de moins de 3 h, vent en nœuds.
+ */
+export function liveObsPublic(bundle: CollectBundle | null, registry: Registry, now: number) {
+  const metar = bundle?.observations.find((o) => o.id === 'metar');
+  const out: Record<string, { t: number; kn: number | null; gust: number | null; dir: number | null; station: string; source: string }> = {};
+  if (!metar) return out;
+  for (const s of registry.spots) {
+    const st = (s.windSource as { station?: string } | undefined)?.station;
+    const o = st ? metar.stations[st] : undefined;
+    if (!st || !o) continue;
+    const k = o.t.map((t, i) => i).filter((i) => o.t[i] <= now && o.wind_speed_10m[i] !== null).pop();
+    if (k === undefined || now - o.t[k] > 3 * 3600e3) continue;
+    const kn = (x: number | null | undefined) => (x === null || x === undefined ? null : Math.round(x * 1.94384));
+    const name = registry.stations.find((x) => x.icao === st)?.name ?? st;
+    out[s.id] = { t: o.t[k], kn: kn(o.wind_speed_10m[k]), gust: kn(o.wind_gusts_10m?.[k]), dir: o.wind_direction_10m?.[k] ?? null, station: st, source: `METAR ${name} (${st}), mesure publique` };
+  }
+  return out;
+}
+
 function main(): void {
   const registry = loadRegistry();
   const collect = read('data/v1/collect/status.json'), engines = read('data/v1/engines/status.json'), verify = opt('data/v1/verify/scores.json');
@@ -78,7 +99,7 @@ function main(): void {
     'surf.json': JSON.stringify(surf),
     'downwind.json': JSON.stringify(downwind),
     'verify.json': JSON.stringify(verify ?? { generatedAt: now, unavailable: true }),
-    'meteo.json': JSON.stringify(meteoPublic(opt('data/v1/collect/bundle.json') as CollectBundle | null, now)),
+    'meteo.json': JSON.stringify({ ...meteoPublic(opt('data/v1/collect/bundle.json') as CollectBundle | null, now), obs: liveObsPublic(opt('data/v1/collect/bundle.json') as CollectBundle | null, registry, now) }),
   };
   const live = opt('data/private/super-prevision-live.json');
   const legacyIds = registry.spots.map((s) => s.legacy.superPrevisionVent).filter(Boolean) as string[];

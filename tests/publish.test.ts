@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { allSessions, bestByDiscipline, windows, publicSpots, compass, label } from '../pipeline/publish/sessions.ts';
-import { meteoPublic, publicPrivacy } from '../pipeline/publish/run.ts';
+import { liveObsPublic, meteoPublic, publicPrivacy } from '../pipeline/publish/run.ts';
 import { loadRegistry } from '../pipeline/collect/points.ts';
 
 const H = 3600e3, T0 = Date.UTC(2026, 10, 12, 7);
@@ -63,4 +63,17 @@ test('météo publiée : air, pluie, nuages, code temps par spot, et vent des mo
   assert.equal(m.windModels.spots.almanarre.icon_d2.kn[0], 19);  // 10 m/s = 19 nd
   assert.equal(m.windModels.spots.LFMT, undefined);             // stations METAR : pas publiées ici
   assert.equal(meteoPublic(null, t0).available, false);
+});
+
+test('mesure publique en direct : METAR de Marignane pour l’étang de Berre (spot sans Winds-Up), pas pour les autres', () => {
+  const now = Date.UTC(2026, 10, 10, 17, 50);
+  const reg = loadRegistry();
+  const bundle = { forecasts: [], observations: [{ id: 'metar', kind: 'observed', stations: {
+    LFML: { t: [now - 80 * 60e3, now - 20 * 60e3], wind_speed_10m: [5, 7.2], wind_gusts_10m: [null, 9.3], wind_direction_10m: [300, 310] },
+    LFMT: { t: [now - 20 * 60e3], wind_speed_10m: [4], wind_gusts_10m: [null], wind_direction_10m: [20] } } }] } as any;
+  const o = liveObsPublic(bundle, reg, now);
+  assert.deepEqual(Object.keys(o), ['berre-jai']);
+  assert.equal(o['berre-jai'].kn, 14); assert.equal(o['berre-jai'].gust, 18); assert.equal(o['berre-jai'].dir, 310); assert.equal(o['berre-jai'].t, now - 20 * 60e3);
+  // mesure trop vieille (> 3 h) : rien
+  assert.deepEqual(liveObsPublic(bundle, reg, now + 4 * 3600e3), {});
 });

@@ -4,7 +4,14 @@
 import { useEffect, useState } from 'preact/hooks';
 import { usePrefs } from './prefs';
 
-export type Live = { spot: string; name: string; t: number | null; kn: number | null; dir: string | null; panne: boolean };
+export type Live = { spot: string; name: string; t: number | null; kn: number | null; dir: string | null; panne: boolean; gust?: number | null; src?: string };
+
+const DIR16 = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSO', 'SO', 'OSO', 'O', 'ONO', 'NO', 'NNO'];
+/** Mesures publiques publiées avec les données (METAR), pour les spots sans balise Winds-Up : visibles par tous. */
+export function publicLive(obs: Record<string, any> | undefined, spots: { id: string; name: string }[]): Live[] {
+  return spots.filter((s) => obs?.[s.id]).map((s) => { const o = obs![s.id];
+    return { spot: s.id, name: s.name, t: o.t, kn: o.kn, gust: o.gust, dir: o.dir == null ? null : DIR16[Math.round(o.dir / 22.5) % 16], panne: false, src: o.source }; });
+}
 const norm = (s: string) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-');
 
 /** Rattache un spot de la super prévision au registre OCEAN par son nom (« La Franqui (Perpignan) » → la-franqui). */

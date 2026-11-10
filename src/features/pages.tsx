@@ -4,7 +4,7 @@ import type { AllData, Discipline, Level, PublicSpot, Session } from '../service
 import { DISC_LABEL, LEVEL_LABEL, LEVELS_FOR, spotDiscipline } from '../services/data';
 import { ago, compass, dayKey, dayLabel, hh, hourOf, labelOf, msToKn, n0, n1, span } from '../services/format';
 import { setPrefs, usePrefs, type Reading } from '../services/prefs';
-import { useLive, type Live } from '../services/perso';
+import { publicLive, useLive, type Live } from '../services/perso';
 import { goBack } from '../services/nav';
 import { Badge, DiscIcon, Fav, Section, Seg, SessionRow } from '../components/ui';
 import { Chart } from '../components/Chart';
@@ -36,14 +36,15 @@ export function Freshness({ d, now }: { d: AllData; now: number }) {
 export function LiveBox({ live, spot }: { live: Live[] | null; spot?: string }) {
   const rows = (live ?? []).filter((l) => !spot || l.spot === spot);
   if (!rows.length) return null;
+  const perso = rows.some((l) => !l.src);
   return (
     <div class="card" style={{ borderColor: 'var(--c-accent)' }}>
-      <div class="row"><Radio size={16} color="var(--c-accent)" /><strong>En direct</strong><span class="chip accent">mode perso · visible sur cet appareil seulement</span></div>
+      <div class="row"><Radio size={16} color="var(--c-accent)" /><strong>En direct</strong>{perso && <span class="chip accent">mode perso · visible sur cet appareil seulement</span>}</div>
       <div class="list">
         {rows.map((l) => (
           <div key={l.spot} class="row between">
-            <span>{l.name}</span>
-            <span class="small">{l.panne ? 'anémomètre en panne' : `${n0(l.kn)} nd ${l.dir ?? ''}${l.t ? ' · ' + ago(l.t) : ''}`}</span>
+            <span class="stack" style={{ gap: 0 }}><span>{l.name}</span>{l.src && <span class="faint">{l.src}</span>}</span>
+            <span class="small">{l.panne ? 'anémomètre en panne' : `${n0(l.kn)} nd ${l.dir ?? ''}${l.gust != null ? ` · raf. ${n0(l.gust)}` : ''}${l.t ? ' · ' + ago(l.t) : ''}`}</span>
           </div>
         ))}
       </div>
@@ -98,7 +99,7 @@ function SpotView({ d, spot, now }: { d: AllData; spot: PublicSpot; now: number 
         {s?.levels && <Seg<Level> label={disc === 'wing' ? 'Mode' : 'Niveau de pratique'} value={level} onChange={(v) => setPrefs((p) => ({ ...p, levels: { ...p.levels, [disc]: v } }))} options={LEVELS_FOR[disc].map((l) => [l, LEVEL_LABEL[l]] as [Level, string])} />}
         <Seg<Reading> label="Niveau de lecture" value={reading} onChange={(v) => setPrefs((p) => ({ ...p, reading: v }))} options={[['synthese', 'Synthèse'], ['detail', 'Détail'], ['expert', 'Expert']]} />
       </div>
-      {disc === 'wing' && <LiveBox live={live.live} spot={spot.id} />}
+      {disc === 'wing' && <LiveBox live={[...(live.live ?? []), ...publicLive(d.meteo?.obs, [spot])]} spot={spot.id} />}
       {s?.notice && <div class="notice">{s.notice}</div>}
       {!s ? <div class="notice warn">Pas de prévision disponible pour ce spot dans la dernière mise à jour.</div> : (
         <>

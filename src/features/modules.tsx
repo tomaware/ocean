@@ -4,7 +4,7 @@ import type { AllData, Discipline, Level, PublicSpot, Session } from '../service
 import { DISC_LABEL, distanceKm, HOME, LEVEL_LABEL, LEVELS_FOR, SESSION_SPOTS, SESSION_TOMORROW_ONLY, spotDiscipline } from '../services/data';
 import { compass, dayKey, dayLabel, dayShort, hh, hourOf, n0, n1, span } from '../services/format';
 import { setPrefs, usePrefs } from '../services/prefs';
-import { useLive } from '../services/perso';
+import { publicLive, useLive } from '../services/perso';
 import { Badge, Fav, Section, Seg } from '../components/ui';
 import { SpotMap } from '../components/SpotMap';
 import { headFor, ModuleView, pickHours } from '../components/Views';
@@ -196,7 +196,7 @@ export function Module({ d, now, disc, sub, query }: { d: AllData; now: number; 
         </nav>
         <div class="module-body">
           {!meta.available && <div class="notice warn">Prévision indisponible pour cette mise à jour : {meta.note || meta.source}</div>}
-          <LiveBox live={live.live} />
+          <LiveBox live={disc === 'wing' ? [...(live.live ?? []), ...publicLive(d.meteo?.obs, spots)].sort((a, b) => spots.findIndex((s) => s.id === a.spot) - spots.findIndex((s) => s.id === b.spot)) : live.live} />
           {body}
           <p class="faint">Session 2H = au moins 2 h d’affilée à 5/10 ou plus, de jour. Source : {meta.source}.</p>
         </div>
