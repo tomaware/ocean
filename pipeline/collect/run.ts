@@ -3,7 +3,7 @@
 // Usage : node pipeline/collect/run.ts
 import { mkdirSync, writeFileSync } from 'node:fs';
 import type { Check, CollectBundle, ForecastBlock, ObservationBlock, SourceStatus } from '../../src/types/contracts.ts';
-import { collectPlan, loadRegistry } from './points.ts';
+import { collectPlan, loadRegistry, SURF_BUOYS, SurfEngine, surfSpotsOf } from './points.ts';
 import { collectOpenMeteo, ENGINE_WIND_MODELS, MARINE_VARS, marineUrl, METEO_MODELS, METEO_VARS, meteoUrl, SPOT_WIND_MODELS, WAVE_MODELS, WIND_VARS, windUrl } from './openmeteo.ts';
 import { collectCandhis } from './candhis.ts';
 import { collectSuperPrevision } from './superprevision.ts';
@@ -59,8 +59,11 @@ async function main(): Promise<void> {
     checks.push({ id: 'fraicheur-copernicus', ok: cop.ageH < COPERNICUS_MAX_AGE_H,
       detail: `extrait de ${cop.ageH.toFixed(1)} h (${Object.keys(cop.block.values).length} points, ${cop.block.times.length} h)${cop.ageH < COPERNICUS_MAX_AGE_H ? '' : ' : trop vieux, ignoré par les moteurs'} (seuil ${COPERNICUS_MAX_AGE_H} h)` });
     if (marine) {
-      const miss = Object.keys(cop.block.values).filter((id) => !marine.block.values[id]);
-      checks.push({ id: 'points-copernicus', ok: miss.length === 0, detail: miss.length ? 'points Copernicus inconnus de la collecte : ' + miss.join(', ') : 'tous les points Copernicus correspondent à des points vagues de la collecte' });
+      // points surf d'OCEAN (spots + bouées) attendus dans l'extrait ; les points en trop (spots de l'app surf que
+      // OCEAN n'affiche plus) sont ignorés par le moteur
+      const want = SurfEngine.queryPoints(surfSpotsOf(registry), SURF_BUOYS, SurfEngine.mergeCfg(SurfEngine.DEFAULT_CONFIG, {})).map((p: { id: string }) => p.id) as string[];
+      const miss = want.filter((id) => !cop.block.values[id]), extra = Object.keys(cop.block.values).filter((id) => !want.includes(id));
+      checks.push({ id: 'points-copernicus', ok: miss.length === 0, detail: (miss.length ? `points surf sans Copernicus (vagues Open-Meteo seules) : ${miss.join(', ')}` : `${want.length} points surf couverts par Copernicus`) + (extra.length ? ` ; ignorés : ${extra.join(', ')}` : '') });
     }
   }
   const wind = await step('open-meteo-vent-moteurs', () => collectOpenMeteo('open-meteo-vent-moteurs', windUrl(plan.engineWind, ENGINE_WIND_MODELS), plan.engineWind, WIND_VARS, ENGINE_WIND_MODELS), status, (r) => span(r.block));

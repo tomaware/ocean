@@ -33,7 +33,7 @@ export function seriesFor(d: AllData, spot: PublicSpot, disc: Discipline, level:
         { label: 'Rafales', values: hours.map((h: any) => h.gust), color: '#256D70', unit: 'nd', dash: [4, 4] },
       ],
       source: w.source?.kind === 'forecast' ? w.source.note : d.meta.disciplines.wing.source,
-      notice: w.source?.kind === 'forecast' ? `Pas dans la super prévision : vent prévu par ${MODEL[w.source.model] ?? w.source.model}, le modèle le plus juste à Marignane ces 3 derniers jours, non corrigé.` : null,
+      notice: w.source?.kind === 'forecast' ? `Pas dans la super prévision : vent prévu par ${MODEL[w.source.model] ?? w.source.model}${w.source.ranked ? ', le modèle le plus juste à Marignane ces 3 derniers jours' : ''}${(w.source.relays ?? []).length > 1 ? ` (relayé par ${w.source.relays.slice(1).map((r: any) => MODEL[r.model] ?? r.model).join(', ')} au-delà de son horizon)` : ''}, non corrigé.` : null,
       extra: [
         { label: 'Orientation', value: spot.orientation?.seaward != null ? `plage ouverte vers ${n0(spot.orientation.seaward)}° (${compass(spot.orientation.seaward)})` : 'plan d’eau fermé' },
         { label: 'Confiance orientation', value: ({ low: 'faible, à confirmer', medium: 'moyenne', high: 'élevée' } as Record<string, string>)[spot.orientation?.confidence] ?? '—' },

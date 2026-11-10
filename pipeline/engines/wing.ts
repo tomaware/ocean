@@ -118,11 +118,19 @@ export const label = (s: number | null) => (s === null ? '—' : s >= 7 ? 'Ça e
 
 /** Modèle de vent retenu pour un spot hors super prévision : le plus juste aux mesures METAR de la station (3 derniers jours). */
 export const BEST_MODEL_FALLBACK = 'meteofrance_arome_france_hd';
+/** Ordre de repli quand aucun classement n'existe, du plus fin au plus large. */
+export const MODEL_ORDER = ['meteofrance_arome_france_hd', 'meteofrance_arome_france', 'icon_d2', 'icon_eu', 'ecmwf_ifs025', 'meteofrance_arpege_europe', 'gfs_seamless'];
 export type ModelRanking = Record<string, Record<string, { n: number; mae: number }>>;   // station → modèle → erreur
 export function bestModel(station: string, ranking: ModelRanking | undefined, available: string[]): { model: string; mae: number | null; n: number; ranked: boolean } {
   const r = Object.entries(ranking?.[station] ?? {}).filter(([m]) => available.includes(m)).sort((a, b) => a[1].mae - b[1].mae);
   if (r.length) return { model: r[0][0], mae: r[0][1].mae, n: r[0][1].n, ranked: true };
   return { model: available.includes(BEST_MODEL_FALLBACK) ? BEST_MODEL_FALLBACK : available[0], mae: null, n: 0, ranked: false };
+}
+/** Modèles dans l'ordre de préférence : classés (erreur croissante), puis les autres ; chaque heure prend le premier qui a une valeur. */
+export function modelOrder(station: string, ranking: ModelRanking | undefined, available: string[]): string[] {
+  const ranked = Object.entries(ranking?.[station] ?? {}).filter(([m]) => available.includes(m)).sort((a, b) => a[1].mae - b[1].mae).map(([m]) => m);
+  const rest = [...MODEL_ORDER, ...available].filter((m, i, a) => available.includes(m) && !ranked.includes(m) && a.indexOf(m) === i);
+  return [...ranked, ...rest];
 }
 type Series = { wind_speed_10m: (number | null)[]; wind_gusts_10m: (number | null)[]; wind_direction_10m: (number | null)[]; confidence?: (number | null)[] };
 
@@ -143,10 +151,17 @@ export function wingForecast(block: ForecastBlock | undefined, registry: Registr
       const vals = alt!.block!.values['spot_' + s.id] ?? {};
       const avail = Object.keys(vals).filter((m) => (vals[m]?.wind_speed_10m ?? []).some((x) => x !== null));
       const b = bestModel(st, alt!.ranking, avail);
-      times = alt!.block!.times; v = vals[b.model] as unknown as Series | undefined;
-      source = { kind: 'forecast', source: 'open-meteo', model: b.model, station: st, mae: b.mae, n: b.n, ranked: b.ranked, fetchedAt: alt!.block!.provenance.fetchedAt,
-        note: b.ranked ? `Vent prévu par ${b.model}, le modèle le plus juste aux mesures de ${st} sur les 3 derniers jours (erreur moyenne ${b.mae} m/s, ${b.n} mesures) ; non corrigé par la super prévision.`
-          : `Vent prévu par ${b.model} (classement aux mesures de ${st} indisponible) ; non corrigé par la super prévision.` };
+      // relais : au-delà de l'horizon du meilleur modèle (AROME HD ~ 2 jours), le suivant du classement prend le relais
+      const order = modelOrder(st, alt!.ranking, avail);
+      times = alt!.block!.times;
+      const pickM = times.map((_, i) => order.find((m) => vals[m]?.wind_speed_10m?.[i] != null) ?? null);
+      const col = (k: keyof Series) => times.map((_, i) => (pickM[i] ? (vals[pickM[i]!] as unknown as Series)[k]?.[i] ?? null : null));
+      v = { wind_speed_10m: col('wind_speed_10m'), wind_gusts_10m: col('wind_gusts_10m'), wind_direction_10m: col('wind_direction_10m') };
+      const relays: { model: string; from: number }[] = [];
+      pickM.forEach((m, i) => { if (m && times[i] >= now - 3 * 3600e3 && (!relays.length || relays[relays.length - 1].model !== m)) relays.push({ model: m, from: times[i] }); });
+      source = { kind: 'forecast', source: 'open-meteo', model: b.model, station: st, mae: b.mae, n: b.n, ranked: b.ranked, relays, fetchedAt: alt!.block!.provenance.fetchedAt,
+        note: (b.ranked ? `Vent prévu par ${b.model}, le modèle le plus juste aux mesures de ${st} sur les 3 derniers jours (erreur moyenne ${b.mae} m/s, ${b.n} mesures)`
+          : `Vent prévu par ${b.model} (classement aux mesures de ${st} indisponible)`) + (relays.length > 1 ? `, puis ${relays.slice(1).map((r) => r.model).join(', ')} au-delà de son horizon` : '') + ' ; non corrigé par la super prévision.' };
     } else {
       times = block!.times; v = block!.values['spot_' + s.id]?.['super-prevision'] as unknown as Series | undefined;
       source = { kind: 'corrected', source: 'super-prevision', fetchedAt: block!.provenance.fetchedAt };

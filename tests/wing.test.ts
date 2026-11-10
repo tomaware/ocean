@@ -101,6 +101,11 @@ test('wing : étang de Berre hors super prévision → modèle le plus juste à 
   assert.equal((b.source as any).kind, 'forecast'); assert.equal((b.source as any).model, 'icon_d2'); assert.equal((b.source as any).ranked, true);
   assert.deepEqual(b.hours.map((h) => h.kn), [19.4, 19.4, 19.4]);
   assert.ok(b.hours.every((h) => h.scores.secu! > 0), 'mistral sur l’étang : naviguable');
+  // relais : ICON-D2 s'arrête après 2 h → AROME HD prend le relais (même spot, jamais la super prévision)
+  const alt3 = { ...alt, values: { 'spot_berre-jai': { meteofrance_arome_france_hd: ser(5), icon_d2: { ...ser(10), wind_speed_10m: [10, 10, null] } } } };
+  const w3 = wingForecast(undefined, registry, t0, { block: alt3, ranking: { LFML: { meteofrance_arome_france_hd: { n: 40, mae: 2.1 }, icon_d2: { n: 40, mae: 1.2 } } } });
+  assert.deepEqual(w3.spots[0].hours.map((h) => h.kn), [19.4, 19.4, 9.7]);
+  assert.deepEqual((w3.spots[0].source as any).relays.map((r: any) => r.model), ['icon_d2', 'meteofrance_arome_france_hd']);
   // sans classement : AROME HD, signalé
   const w2 = wingForecast(undefined, registry, t0, { block: alt });
   assert.equal((w2.spots[0].source as any).model, 'meteofrance_arome_france_hd'); assert.equal((w2.spots[0].source as any).ranked, false);
