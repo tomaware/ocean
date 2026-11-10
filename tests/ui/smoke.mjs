@@ -57,6 +57,7 @@ for (const [name, opt] of [['mobile', { ...devices['iPhone 13'], locale: 'fr-FR'
           if (!(await p.locator('.hourtip').count())) errs.push(`${name} #/${r} : pas de fenêtre au survol de la note`);
           if (!/survolée/.test(await p.locator('.mapwhen').innerText().catch(() => ''))) errs.push(`${name} #/${r} : la carte ne suit pas l'heure survolée`);
           if (!(await p.locator('.maprep .wind-tag').count())) errs.push(`${name} #/${r} : repère vent absent sur la carte`);
+          if ((r === 'spot/plagesud-grandemotte' || r === 'spot/carnon') && !(await p.locator('.maprep .swell-tag').count())) errs.push(`${name} #/${r} : houle absente du repère de la carte`);
         }
         if (!(await p.locator('.notecard .scorebars .grid5').count())) errs.push(`${name} #/${r} : ligne 5 absente`);
         // changer de jour met à jour la note du jour

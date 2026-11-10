@@ -158,3 +158,6 @@ Les apps actuelles restent en ligne jusqu'à ce que leur remplaçante soit véri
 - Direction retenue : style de la référence de Tom (note horaire en barres, cartes, boussole, détail de la note en jauges), clair + sombre, navigation et mots de l'app actuelle, nœuds. Détails : docs/design/CREATIVE_DIRECTION.md §0.
 - Le moteur wing publie les facteurs V, R, D de chaque heure (affichage seul, note inchangée, test + recalcul sur données réelles : 0 écart). Surf et downwind : pas de facteurs publiés pour l'instant, l'app montre les conditions de l'heure.
 
+### D-21 (10/11/2026, Tom) — houle sur la carte, HOULE
+- Repère de la carte : flèche de la houle en plus du vent (« mets la houle aussi »). Pour les parcours downwind, OCEAN publie `swellDir` (direction d'où vient la mer au large, moyenne circulaire pondérée par Hs² des modèles lus par le moteur, mêmes points). Affichage seul : le moteur downwind et ses notes ne changent pas (golden inchangé). WIND : pas de données de houle collectées aux spots wing pour l'instant.
+

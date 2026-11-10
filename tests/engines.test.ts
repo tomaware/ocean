@@ -4,7 +4,7 @@ import { collectPlan, loadRegistry } from '../pipeline/collect/points.ts';
 import { parseOpenMeteo, MARINE_VARS, WAVE_MODELS, WIND_VARS, ENGINE_WIND_MODELS } from '../pipeline/collect/openmeteo.ts';
 import { parseCandhisHistory } from '../pipeline/collect/candhis.ts';
 import { parseSuperPrevision, privateLive } from '../pipeline/collect/superprevision.ts';
-import { compareOutputs, inputsFromBundle, inputsLegacy, runEngines, usesCopernicus } from '../pipeline/engines/engines.ts';
+import { circularMean, compareOutputs, inputsFromBundle, inputsLegacy, runEngines, usesCopernicus } from '../pipeline/engines/engines.ts';
 import { parseCopernicus, CMEMS_VARS } from '../pipeline/collect/copernicus.ts';
 import { privacyEngines } from '../pipeline/engines/run.ts';
 import type { CollectBundle, CollectPoint } from '../src/types/contracts.ts';
@@ -127,4 +127,19 @@ test('Copernicus : normalisation (heures ISO, bornes), erreurs détectées', () 
   assert.ok(Math.abs(r.ageH - (10 * H - 9 * H - 25 * 60e3 - 49e3) / H) < 1e-6);
   assert.throws(() => parseCopernicus({ generated: raw.generated, points: {} }, t0));
   assert.throws(() => parseCopernicus({ generated: raw.generated, points: { a: { time: ['2026-11-10T00:00:00Z'] }, b: { time: ['2026-11-10T01:00:00Z'] } } }, t0));
+});
+
+test('downwind : direction de la houle publiée pour la carte (affichage seul, notes inchangées)', () => {
+  assert.equal(circularMean([{ d: 350, w: 1 }, { d: 10, w: 1 }]), 0);
+  assert.equal(circularMean([{ d: 90, w: 3 }, { d: 180, w: 0 }]), 90);
+  assert.equal(circularMean([{ d: 90, w: 1 }, { d: 270, w: 1 }]), null);
+  assert.equal(circularMean([]), null);
+  const f = fixture();
+  const a = runEngines(inputsFromBundle(f.bundle, registry, f.live, NOW));
+  for (const r of a.downwindJSON.runs as any[]) {
+    assert.equal(r.swellDir.length, r.hours.length);
+    const ok = r.swellDir.filter((d: number | null) => d !== null);
+    assert.ok(ok.length >= r.hours.length * 0.9, `${r.id} : ${ok.length}/${r.hours.length} directions`);
+    assert.ok(ok.every((d: number) => d >= 0 && d < 360));
+  }
 });

@@ -72,7 +72,7 @@ export function seriesFor(d: AllData, spot: PublicSpot, disc: Discipline, level:
   const r = d.downwind.runs?.find((x: any) => x.id === spot.id);
   if (!r) return null;
   const f = Object.fromEntries((d.downwind.hourFields as string[]).map((k, i) => [k, i]));
-  const rows = r.hours.map((x: any[]) => ({ t: x[f.t], kn: x[f.kn], gust: x[f.gust], from: x[f.windFrom], shore: x[f.shore], dir: x[f.dir], bumpH: x[f.bumpH], bumpT: x[f.bumpT], hs: x[f.hs], cross: x[f.cross], score: x[f[level]], day: !!x[f.day], rt: !!x[f.roundTrip] }));
+  const rows = r.hours.map((x: any[], k: number) => ({ swd: r.swellDir?.[k] ?? null, t: x[f.t], kn: x[f.kn], gust: x[f.gust], from: x[f.windFrom], shore: x[f.shore], dir: x[f.dir], bumpH: x[f.bumpH], bumpT: x[f.bumpT], hs: x[f.hs], cross: x[f.cross], score: x[f[level]], day: !!x[f.day], rt: !!x[f.roundTrip] }));
   return {
     discipline: 'downwind', times: rows.map((x: any) => x.t), score: rows.map((x: any) => x.score), day: rows.map((x: any) => x.day), rows, levels: true,
     cols: [

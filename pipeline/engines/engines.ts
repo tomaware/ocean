@@ -66,11 +66,39 @@ export const usesCopernicus = (marine: Record<string, { series: { models: Record
 export function runEngines(inp: EngineInputs) {
   const surf = E.run(inp.surf);
   const downwind = D.run(inp.downwind);
+  const downwindJSON = D.toJSON(downwind, { pipeline: 'ocean' });
+  addSwellDirection(downwindJSON, inp.downwind.marine);
   return {
     surf, downwind,
     surfJSON: E.toForecastJSON(surf, { sources: { pipeline: 'ocean', copernicus: usesCopernicus(inp.surf.marine) ? { used: true } : null } }),
-    downwindJSON: D.toJSON(downwind, { pipeline: 'ocean' }),
+    downwindJSON,
   };
+}
+
+/** Moyenne circulaire (degrés) pondérée ; null si rien ou si les directions s'annulent. */
+export function circularMean(items: { d: number; w: number }[]): number | null {
+  let x = 0, y = 0;
+  for (const { d, w } of items) { x += w * Math.sin((d * Math.PI) / 180); y += w * Math.cos((d * Math.PI) / 180); }
+  if (!items.length || Math.hypot(x, y) < 1e-9) return null;
+  return Math.round((((Math.atan2(x, y) * 180) / Math.PI) + 360) % 360);
+}
+
+/**
+ * Direction d'où vient la houle au large, heure par heure, pour l'affichage (repère sur la carte, D-21).
+ * Lue sur les mêmes points marins et les mêmes modèles que le moteur downwind (`<parcours>_0`, `_1`),
+ * moyenne circulaire pondérée par l'énergie (Hs²). N'entre dans aucune note : le moteur n'est pas modifié.
+ */
+export function addSwellDirection(dw: { runs: { id: string; hours: unknown[][]; swellDir?: (number | null)[] }[] }, marine: Record<string, unknown>) {
+  const ecfg = E.mergeCfg(E.DEFAULT_CONFIG, {});
+  for (const r of dw.runs) {
+    r.swellDir = r.hours.map((h) => {
+      const t = h[0] as number;
+      const items: { d: number; w: number }[] = [];
+      for (const k of [0, 1]) for (const m of E.modelsAt(marine[`${r.id}_${k}`], t, ecfg) as { state: { hs: number; dir: number | null } }[])
+        if (m.state.dir != null && m.state.hs > 0) items.push({ d: m.state.dir, w: m.state.hs * m.state.hs });
+      return circularMean(items);
+    });
+  }
 }
 
 export type Diff = { n: number; max: number; where: string; windowsSame: boolean; detail: string };

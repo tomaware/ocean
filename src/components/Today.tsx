@@ -128,7 +128,7 @@ function HourTip({ s, i, level, left, top }: { s: Series; i: number; level?: Lev
   } else if (s.discipline === 'surf') {
     lines = [['Vagues', `${n1(x.lo)}–${n1(x.hi)} m`], ['Houle', `${compass(x.dir)} ${n1(x.hs)} m · ${n0(x.tp)} s`], ['Vent', `${n0(x.ws)} nd ${compass(x.wd)}${x.wk ? ` (${x.wk})` : ''}`]];
   } else {
-    lines = [['Vent', `${n0(x.kn)} nd de ${compass(x.from)} · raf. ${n0(x.gust)}`], ['Côte', SHORE_TAG[x.shore] ?? '—'], ['Houle', x.bumpH == null ? '—' : `${n1(x.bumpH)} m · ${n0(x.bumpT)} s`]];
+    lines = [['Vent', `${n0(x.kn)} nd de ${compass(x.from)} · raf. ${n0(x.gust)}`], ['Côte', SHORE_TAG[x.shore] ?? '—'], ['Houle', x.bumpH == null ? '—' : `${n1(x.bumpH)} m · ${n0(x.bumpT)} s${x.swd != null ? ` · de ${compass(x.swd)}` : ''}`]];
   }
   return (
     <div class="hourtip" role="status" style={{ left: `${left}px`, top: `${top}px` }}>
@@ -189,7 +189,7 @@ export function CondCards({ d, spot, s, dayT, now, picked }: { d: AllData; spot:
     </div>
   );
   if (s.discipline === 'downwind') return <>{wind}
-    <div class="card cond t-b"><span class="eyebrow">Houle au large</span><span class="v">{n1(x.bumpH)}<small> m</small></span><span class="d">{n0(x.bumpT)} s{x.rt ? ' · aller-retour possible' : ''}</span></div></>;
+    <div class="card cond t-b"><span class="eyebrow">Houle au large</span><span class="v">{n1(x.bumpH)}<small> m</small></span><span class="d">{n0(x.bumpT)} s{x.swd != null ? ` · de ${compass(x.swd)}` : ''}{x.rt ? ' · aller-retour possible' : ''}</span></div></>;
   const m = meteoAt(d, spot.id, s.times[i]);
   const night = dayIdx(s, dayT).find((k) => k > i && !s.day[k]);
   return <>{wind}
@@ -211,7 +211,10 @@ export function MapCompass({ d, spot, s, dayT, now, best, picked }: { d: AllData
   const kn = x === null ? null : s.discipline === 'surf' ? x.ws : x.kn;
   const gust = x === null ? null : s.discipline === 'surf' ? x.wg : x.gust;
   const seaward = s.discipline === 'surf' ? d.surf.spots?.find((y: any) => y.id === spot.id)?.normal ?? null : spot.orientation?.seaward ?? null;
-  const swell = x !== null && s.discipline === 'surf' && x.dir != null ? { from: x.dir as number, txt: `HOULE ${n1(x.hs)} m · ${n0(x.tp)} s` } : null;
+  const swell = x === null ? null
+    : s.discipline === 'surf' && x.dir != null ? { from: x.dir as number, txt: `HOULE ${n1(x.hs)} m · ${n0(x.tp)} s · ${compass(x.dir)}` }
+    : s.discipline === 'downwind' && x.swd != null ? { from: x.swd as number, txt: `HOULE ${n1(x.hs)} m${x.bumpT ? ` · ${n0(x.bumpT)} s` : ''} · ${compass(x.swd)}` }
+    : null;
   const R = 74;
   const ray = (deg: number, r: number) => { const a = (deg * Math.PI) / 180; return [Math.sin(a) * r, -Math.cos(a) * r]; };
   const tag = (deg: number, text: string, cls: string, r = R + 30) => {
@@ -290,7 +293,7 @@ export function Criteria({ d, spot, s, dayT, now, level, sessions, picked }: { d
     : [
         ['Vent', `${n0(x.kn)} nd, rafales ${n0(x.gust)}, de ${compass(x.from)}`],
         ['Côte', SHORE_TAG[x.shore] ?? '—'],
-        ['Houle', x.bumpH == null ? '—' : `${n1(x.bumpH)} m · ${n0(x.bumpT)} s`],
+        ['Houle', x.bumpH == null ? '—' : `${n1(x.bumpH)} m portants (${n1(x.hs)} m au total) · ${n0(x.bumpT)} s${x.swd != null ? ` · de ${compass(x.swd)}` : ''}`],
         ['Aller-retour', x.rt ? 'possible' : 'non'],
       ];
   return (

@@ -50,6 +50,9 @@ async function main(): Promise<void> {
   const surfN = ocean.surfJSON.spots.filter((s: any) => s.h.score.some((x: number | null) => x !== null)).length;
   checks.push({ id: 'sorties-surf', ok: surfN === ocean.surfJSON.spots.length, detail: `${surfN}/${ocean.surfJSON.spots.length} spots notés ; ${ocean.surfJSON.windows.length} créneaux` });
   const dwN = ocean.downwindJSON.runs.filter((r: any) => r.hours.length > 0).length;
+  const swN = ocean.downwindJSON.runs.reduce((a: number, r: any) => a + (r.swellDir ?? []).filter((d: number | null) => d !== null).length, 0);
+  const hN = ocean.downwindJSON.runs.reduce((a: number, r: any) => a + r.hours.length, 0);
+  checks.push({ id: 'houle-direction-downwind', ok: hN > 0 && swN >= hN * 0.9, detail: `direction de la houle (affichage, carte) : ${swN}/${hN} heures` });
   checks.push({ id: 'sorties-downwind', ok: dwN === ocean.downwindJSON.runs.length, detail: `${dwN}/${ocean.downwindJSON.runs.length} parcours notés ; ${ocean.downwindJSON.best.length} meilleurs créneaux` });
 
   const copB = bundle.forecasts.find((f) => f.id === 'copernicus-medwav');
