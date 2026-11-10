@@ -1,6 +1,6 @@
 # Rapport d'analyse (② ANALYSE)
 
-Généré le 2026-11-10 15:00 UTC par `pipeline/engines/run.ts`, juste après la collecte.
+Généré le 2026-11-10 15:04 UTC par `pipeline/engines/run.ts`, juste après la collecte.
 
 Les moteurs des apps actuelles (copies non modifiées dans `legacy/`) sont alimentés par la collecte commune. Le test golden refait le calcul comme les apps actuelles, avec leurs propres parseurs sur les mêmes réponses brutes, et exige les mêmes notes à ±0.1.
 
@@ -13,8 +13,8 @@ Les moteurs des apps actuelles (copies non modifiées dans `legacy/`) sont alime
 | correction-vent-downwind | ✅ | 2 spot(s) de recalage : La Grande-Motte 53 h (× 1.05 en moyenne) + relevé récent, Port Camargue 54 h (× 1 en moyenne) + relevé récent |
 | sorties-surf | ✅ | 8/8 spots notés ; 12 créneaux |
 | sorties-downwind | ✅ | 3/3 parcours notés ; 1 meilleurs créneaux |
-| ecart-prod-surf | ✅ | notes surf OCEAN vs app en service (calcul prod. 49 min avant, même extrait Copernicus) : médiane 0.00, 90 % ≤ 1.00, max 5.60 sur 1328 heures (max : gruissan dim. 22:00, OCEAN 3 / prod 8.6) |
-| ecart-prod-downwind | ✅ | notes downwind (intermédiaire, de jour) OCEAN vs app en service (calcul prod. 93 min avant) : médiane 0.00, 90 % ≤ 0.00, max 2.50 sur 111 heures |
+| ecart-prod-surf | ✅ | notes surf OCEAN vs app en service (calcul prod. 53 min avant, même extrait Copernicus) : médiane 0.00, 90 % ≤ 1.00, max 5.60 sur 1328 heures (max : gruissan dim. 22:00, OCEAN 3 / prod 8.6) |
+| ecart-prod-downwind | ✅ | notes downwind (intermédiaire, de jour) OCEAN vs app en service (calcul prod. 97 min avant) : médiane 0.00, 90 % ≤ 0.00, max 2.50 sur 111 heures |
 | sorties-wing | ✅ | 6 spots notés (wing v2.0.0) ; 3 session(s) 2H en mode Sécu first sur les heures prévues |
 | confidentialite-moteurs | ✅ | aucun relevé Winds-Up ni clé dans les sorties (seuls les facteurs de correction dérivés y figurent, comme dans l’app downwind actuelle) |
 | copernicus-surf | ✅ | Copernicus Med-WAV inclus dans le moteur surf (comme l’app en service) |

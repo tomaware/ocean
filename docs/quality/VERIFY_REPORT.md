@@ -1,6 +1,6 @@
 # Remise en question (③)
 
-Généré le 2026-11-10 15:00 UTC par `pipeline/verify/run.ts`.
+Généré le 2026-11-10 15:04 UTC par `pipeline/verify/run.ts`.
 
 Erreur = prévu − mesuré. Vent en m/s aux stations METAR (aéroports), vagues : hauteur significative en m aux bouées Candhis. « courtTerme » = modèles sur les 3 derniers jours (pas une vraie prévision) ; « archive » = prévisions réellement émises N h avant.
 
@@ -16,8 +16,8 @@ Erreur = prévu − mesuré. Vent en m/s aux stations METAR (aéroports), vagues
 
 | Station | Classement |
 |---|---|
-| LFMT | meteofrance_arome_france 1,7 · meteofrance_arpege_europe 1,7 · gfs_seamless 2,2 · meteofrance_arome_france_hd 2,2 · icon_eu 2,3 · icon_d2 2,7 · ecmwf_ifs025 4,3 |
-| LFMP | icon_eu 1,5 · gfs_seamless 1,6 · ecmwf_ifs025 1,7 · meteofrance_arome_france 1,8 · meteofrance_arome_france_hd 1,9 · meteofrance_arpege_europe 1,9 |
+| LFMT | meteofrance_arome_france 1,7 · meteofrance_arpege_europe 1,7 · gfs_seamless 2,2 · meteofrance_arome_france_hd 2,2 · icon_eu 2,3 · icon_d2 2,6 · ecmwf_ifs025 4,3 |
+| LFMP | icon_eu 1,5 · gfs_seamless 1,6 · ecmwf_ifs025 1,8 · meteofrance_arome_france 1,8 · meteofrance_arome_france_hd 1,9 · meteofrance_arpege_europe 2,0 |
 | LFTH | icon_eu 2,1 · meteofrance_arome_france_hd 2,6 · meteofrance_arome_france 2,6 · ecmwf_ifs025 2,7 · meteofrance_arpege_europe 2,7 · gfs_seamless 2,9 |
 
 ## Vagues : modèles classés par erreur moyenne (3 derniers jours, en m)
