@@ -32,6 +32,11 @@ for (const [name, opt] of [['mobile', { ...devices['iPhone 13'], locale: 'fr-FR'
         if (!(await p.locator('.daychart').count())) errs.push(`${name} #/${r} : pas de détail au clic`);
       }
       if (/^(wind|vague|houle)\/(meilleure|sessions)$/.test(r) && (await p.locator('.daychart').count()) === 0 && !(await p.getByText('Pas de session 2H').count()) && !(await p.getByText('Aucune session').count())) errs.push(`${name} #/${r} : graphiques absents sous les sessions`);
+      // chaque onglet a son affichage : WIND / HOULE = tableau façon Windguru, VAGUE = barres façon surf-forecast
+      if (r === 'spot/port-camargue' && !(await p.locator('table.wg .wg-v').count())) errs.push(`${name} #/${r} : tableau du vent absent`);
+      if (r === 'spot/plagesud-grandemotte' && !(await p.locator('table.wg .wg-bars').count())) errs.push(`${name} #/${r} : houle absente du tableau`);
+      if (r === 'spot/carnon' && (await p.locator('.sf .sf-col').count()) < 10) errs.push(`${name} #/${r} : barres de vagues absentes`);
+      if (r.startsWith('spot/') && !(await p.locator('.stars').count())) errs.push(`${name} #/${r} : étoiles absentes`);
       const tabs = await p.locator('.tabs a').allInnerTexts();
       if (tabs.map((x) => x.trim()).join(',') !== 'WIND,VAGUE,HOULE') errs.push(`${name} #/${r} : onglets ${tabs.join(',')}`);
     }

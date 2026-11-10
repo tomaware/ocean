@@ -19,6 +19,9 @@ export const WAVE_MODELS: string[] = SurfEngine.OM_WAVE_MODELS;
 
 /** Unité stockée par variable Open-Meteo (le vent est demandé en km/h, comme les moteurs, puis converti). */
 export function unitOf(variable: string): Unit {
+  if (variable === 'precipitation') return 'mm';
+  if (variable === 'cloud_cover') return '%';
+  if (variable === 'weather_code') return '1';
   if (/direction/.test(variable)) return 'deg';
   if (/speed|gusts/.test(variable)) return 'm/s';
   if (/period/.test(variable)) return 's';
@@ -33,11 +36,22 @@ export function plausible(variable: string, v: number): boolean {
     case 'deg': return v >= 0 && v <= 360;
     case 'm/s': return v >= 0 && v <= 70;
     case 's': return v >= 0 && v <= 30;
-    case 'degC': return v >= -2 && v <= 35;
+    case 'degC': return variable === 'temperature_2m' ? v >= -30 && v <= 50 : v >= -2 && v <= 35;   // air / eau
+    case 'mm': return v >= 0 && v <= 300;
+    case '%': return v >= 0 && v <= 100;
+    case '1': return Number.isInteger(v) && v >= 0 && v <= 99;   // code météo OMM
     default: return /sea_level/.test(variable) ? v >= -3 && v <= 3 : v >= 0 && v <= 15;
   }
 }
 
+// Météo du spot (WIND, VAGUE, HOULE) : température de l'air, pluie, nuages, code temps ; meilleur modèle Open-Meteo.
+export const METEO_VARS = ['temperature_2m', 'precipitation', 'cloud_cover', 'weather_code'];
+export const METEO_MODELS = ['best_match'];
+export function meteoUrl(points: CollectPoint[]): string {
+  return 'https://api.open-meteo.com/v1/forecast?latitude=' + points.map((p) => p.lat).join(',') +
+    '&longitude=' + points.map((p) => p.lon).join(',') + '&hourly=' + METEO_VARS.join(',') + '&models=best_match' +
+    `&timezone=GMT&past_days=1&forecast_days=${FORECAST_DAYS}`;
+}
 export function windUrl(points: CollectPoint[], models: string[]): string {
   return 'https://api.open-meteo.com/v1/forecast?latitude=' + points.map((p) => p.lat).join(',') +
     '&longitude=' + points.map((p) => p.lon).join(',') + '&hourly=' + WIND_VARS.join(',') + '&models=' + models.join(',') +

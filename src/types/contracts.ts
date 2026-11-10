@@ -4,7 +4,7 @@
 
 export type Discipline = 'wing' | 'kite' | 'surf' | 'downwind';
 export type Level = 'debutant' | 'intermediaire' | 'confirme';
-export type Unit = 'm/s' | 'deg' | 'm' | 's' | 'degC' | '1';   // '1' = sans unité (ex. confiance 0-1)
+export type Unit = 'm/s' | 'deg' | 'm' | 's' | 'degC' | '1' | 'mm' | '%';   // '1' = sans unité (ex. confiance 0-1)
 
 /** D'où vient une donnée : toujours conservé, jusqu'à l'interface. */
 export interface Provenance {

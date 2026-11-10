@@ -4,6 +4,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import type { Check } from '../../src/types/contracts.ts';
 import { loadRegistry } from '../collect/points.ts';
 import { privacyEngines } from '../engines/run.ts';
+import type { CollectBundle, ForecastBlock } from '../../src/types/contracts.ts';
 import { allSessions, bestByDiscipline, ALL_LEVELS, publicSpots } from './sessions.ts';
 
 const ROOT = new URL('../../', import.meta.url);
@@ -20,6 +21,34 @@ export function publicPrivacy(files: Record<string, string>, live: any, secrets:
   for (const id of legacyWindIds) if (all.includes(id)) extra.push('identifiant de balise ' + id);
   const ok = base.ok && extra.length === 0;
   return { id: 'confidentialite-publication', ok, detail: ok ? `${Object.keys(files).length} fichiers publiés vérifiés : aucun relevé Winds-Up, aucune clé, aucun identifiant de balise` : 'FUITE : ' + [base.ok ? '' : base.detail, ...extra].filter(Boolean).join(', ') };
+}
+
+/** Météo des spots (air, pluie, nuages, code temps) et vent des 7 modèles aux spots wing : affichage seulement. */
+export function meteoPublic(bundle: CollectBundle | null, now: number) {
+  if (!bundle) return { generatedAt: now, available: false };
+  const fc = (id: string) => bundle.forecasts.find((f) => f.id === id) as ForecastBlock | undefined;
+  const cut = (b: ForecastBlock, hours: number) => b.times.map((t, i) => [t, i] as const).filter(([t]) => t >= now - 3 * 3600e3 && t <= now + hours * 3600e3);
+  const r = (x: number | null | undefined, k = 1) => (x === null || x === undefined ? null : Math.round(x * k) / k);
+  const m = fc('open-meteo-meteo');
+  const out: Record<string, unknown> = { generatedAt: now, available: !!m };
+  if (m) {
+    const idx = cut(m, 7 * 24);
+    out.times = idx.map(([t]) => t);
+    out.provenance = { source: 'open-meteo (best_match)', fetchedAt: m.provenance.fetchedAt, kind: 'forecast' };
+    out.spots = Object.fromEntries(Object.entries(m.values).map(([pid, byM]) => {
+      const v = byM.best_match ?? Object.values(byM)[0] ?? {};
+      return [pid.replace(/^meteo_/, ''), { temp: idx.map(([, i]) => r(v.temperature_2m?.[i])), rain: idx.map(([, i]) => r(v.precipitation?.[i], 10)), cloud: idx.map(([, i]) => r(v.cloud_cover?.[i])), code: idx.map(([, i]) => r(v.weather_code?.[i])) }];
+    }));
+  }
+  const w = fc('open-meteo-vent-spots');
+  if (w) {
+    const idx = cut(w, 3 * 24);
+    const kn = (x: number | null | undefined) => (x === null || x === undefined ? null : Math.round(x * 1.94384));
+    out.windModels = { times: idx.map(([t]) => t), provenance: { source: 'open-meteo', fetchedAt: w.provenance.fetchedAt, kind: 'forecast', note: 'modèles bruts, avant correction' },
+      spots: Object.fromEntries(Object.entries(w.values).filter(([pid]) => pid.startsWith('spot_')).map(([pid, byM]) => [pid.slice(5),
+        Object.fromEntries(Object.entries(byM).map(([model, v]) => [model, { kn: idx.map(([, i]) => kn(v.wind_speed_10m?.[i])), gust: idx.map(([, i]) => kn(v.wind_gusts_10m?.[i])), dir: idx.map(([, i]) => r(v.wind_direction_10m?.[i])) }]))])) };
+  }
+  return out;
 }
 
 function main(): void {
@@ -49,6 +78,7 @@ function main(): void {
     'surf.json': JSON.stringify(surf),
     'downwind.json': JSON.stringify(downwind),
     'verify.json': JSON.stringify(verify ?? { generatedAt: now, unavailable: true }),
+    'meteo.json': JSON.stringify(meteoPublic(opt('data/v1/collect/bundle.json') as CollectBundle | null, now)),
   };
   const live = opt('data/private/super-prevision-live.json');
   const legacyIds = registry.spots.map((s) => s.legacy.superPrevisionVent).filter(Boolean) as string[];

@@ -7,6 +7,7 @@ import { setPrefs, usePrefs } from '../services/prefs';
 import { useLive } from '../services/perso';
 import { Badge, Fav, Section, Seg } from '../components/ui';
 import { SpotMap } from '../components/SpotMap';
+import { headFor, ModuleView, pickHours } from '../components/Views';
 import { seriesFor, type Series } from './series';
 import { bestScoreBySpot, Freshness, levelFor, LiveBox, matches, moduleOf, upcoming } from './pages';
 
@@ -18,68 +19,21 @@ export const SUBS = [
 ] as const;
 export type Sub = (typeof SUBS)[number]['id'];
 
-// ------------------------------------------------------------ graphique d'une journée (pastilles horaires)
-type Cell = { t: number; main: string; sub: string; dir: number | null; score: number | null };
-
-/** Valeurs horaires d'un spot pour un jour, selon la discipline : vent (WIND), vagues (VAGUE), vent + houle (HOULE). */
-function dayCells(s: Series, key: string): { cells: Cell[]; head: string } {
-  const idx = s.times.map((t, i) => i).filter((i) => dayKey(s.times[i]) === key && hourOf(s.times[i]) >= 7 && hourOf(s.times[i]) <= 20);
-  const r = (i: number) => s.rows[i];
-  let cells: Cell[] = [], head = '';
-  if (s.discipline === 'wing') {
-    cells = idx.map((i) => ({ t: s.times[i], main: n0(r(i).kn), sub: compass(r(i).dir), dir: r(i).dir, score: s.score[i] }));
-    const mx = idx.reduce((a, i) => ((r(i).kn ?? -1) > (r(a)?.kn ?? -1) ? i : a), idx[0]);
-    const g = Math.max(...idx.map((i) => r(i).gust ?? 0));
-    if (mx !== undefined) head = `max ${n0(r(mx).kn)} nd ${compass(r(mx).dir)} · raf. ${n0(g)}`;
-  } else if (s.discipline === 'surf') {
-    cells = idx.map((i) => ({ t: s.times[i], main: n1(r(i).hb), sub: n0(r(i).tp), dir: r(i).dir, score: s.score[i] }));
-    const mx = idx.reduce((a, i) => ((r(i).hb ?? -1) > (r(a)?.hb ?? -1) ? i : a), idx[0]);
-    if (mx !== undefined) head = `max ${n1(r(mx).hb)} m · ${n0(r(mx).tp)} s · houle de ${compass(r(mx).dir)}`;
-  } else {
-    cells = idx.map((i) => ({ t: s.times[i], main: n0(r(i).kn), sub: r(i).bumpH === null ? '—' : n1(r(i).bumpH), dir: r(i).from, score: s.score[i] }));
-    const mx = idx.reduce((a, i) => ((r(i).kn ?? -1) > (r(a)?.kn ?? -1) ? i : a), idx[0]);
-    const hb = Math.max(...idx.map((i) => r(i).bumpH ?? 0)), tb = Math.max(...idx.map((i) => r(i).bumpT ?? 0));
-    if (mx !== undefined) head = `max ${n0(r(mx).kn)} nd ${compass(r(mx).from)} · houle ${n1(hb)} m · ${n0(tb)} s`;
-  }
-  return { cells, head };
-}
-
-const chipColors = (sc: number | null) =>
+// ------------------------------------------------------------ vue d'une journée, propre à chaque onglet
+export const chipColors = (sc: number | null) =>
   sc === null ? { background: 'var(--c-surface-2)', color: 'var(--c-ink-3)' }
   : sc >= 8.5 ? { background: '#1D6B46', color: '#fff' } : sc >= 7 ? { background: '#3E9A6B', color: '#fff' }
   : sc >= 5 ? { background: '#E3B65A', color: '#2A1E00' } : { background: 'var(--c-surface-2)', color: 'var(--c-ink-2)' };
 
-function Arrow({ from }: { from: number | null }) {
-  if (from === null) return <span class="arrow" />;
-  // flèche dans le sens où va le vent / la houle (direction d'origine + 180°)
-  return <svg class="arrow" viewBox="0 0 12 12" aria-hidden="true" style={{ transform: `rotate(${from + 180}deg)` }}><path d="M6 1 L9.5 9 L6 7.2 L2.5 9 Z" fill="currentColor" /></svg>;
-}
-
 export function DayChart({ d, spot, dayT, level, window, title }: { d: AllData; spot: PublicSpot; dayT: number; level: Level; window?: [number, number]; title?: string }) {
   const s = useMemo(() => seriesFor(d, spot, spotDiscipline(spot), level), [d, spot, level]);
   if (!s) return null;
-  const { cells, head } = dayCells(s, dayKey(dayT));
-  if (!cells.length) return <span class="faint">Pas de prévision ce jour-là.</span>;
-  const unit = s.discipline === 'surf' ? 'm' : 'nd';
-  const legend = s.discipline === 'wing' ? 'vent (nd) · flèche : sens du vent · heure'
-    : s.discipline === 'surf' ? 'vagues (m) · flèche : sens de la houle · période (s) · heure' : 'vent (nd) · flèche : sens du vent · houle (m) · heure';
+  // VAGUE : une barre toutes les 2 h (lisible sur téléphone) ; WIND / HOULE : toutes les heures
+  const picks = pickHours(s, s.discipline === 'surf' ? { day: dayT, hours: [7, 19], step: 2 } : { day: dayT });
   return (
-    <div class="daychart" role="img" aria-label={`${title ?? spot.name}, ${dayLabel(dayT)} : ${head}`}>
-      <div class="row between"><span class="small"><strong>{title ?? dayLabel(dayT)}</strong></span><span class="faint">{head}</span></div>
-      <div class="chips">
-        {cells.map((c) => {
-          const inWin = window && c.t >= window[0] && c.t < window[1];
-          return (
-            <div key={c.t} class={`chipcol${inWin ? ' on' : ''}`} title={`${hh(c.t)} : ${c.main} ${unit} · ${c.sub} · note ${n1(c.score)}`}>
-              <span class="chip-v" style={chipColors(c.score)}>{c.main}</span>
-              <Arrow from={c.dir} />
-              <span class="chip-s">{s.discipline === 'wing' ? '' : c.sub}</span>
-              <span class="chip-h">{hourOf(c.t)}</span>
-            </div>
-          );
-        })}
-      </div>
-      <span class="chip-legend">{legend}</span>
+    <div class="daychart">
+      <div class="row between"><span class="small"><strong>{title ?? dayLabel(dayT)}</strong></span><span class="faint">{headFor(s, picks)}</span></div>
+      <ModuleView d={d} spot={spot} s={s} picks={picks} window={window} />
     </div>
   );
 }

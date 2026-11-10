@@ -2,16 +2,16 @@ import type { ComponentChildren } from 'preact';
 import { Route, Star, Waves, Wind } from 'lucide-preact';
 import type { Discipline, Session } from '../services/data';
 import { DISC_LABEL, LEVEL_LABEL } from '../services/data';
-import { hh, n1, span, toneOf } from '../services/format';
+import { hh, span } from '../services/format';
 import { toggleFavorite, usePrefs } from '../services/prefs';
+import { Stars } from './Views';
 
-/** Note seule (D-19) ; « Ça envoie » uniquement quand la session wing a au moins 4 h à plus de 20 nd. */
+/** Note en étoiles sur 3 (demande de Tom, 10/11) ; « Ça envoie » quand la session wing a au moins 4 h à plus de 20 nd. */
 export function Badge({ score, size, envoie }: { score: number | null | undefined; size?: 'lg'; envoie?: boolean }) {
-  const t = toneOf(score);
   if (score === null || score === undefined) return <span class="badge no">pas de session</span>;
   return (
-    <span class={`badge ${envoie ? 'top' : t}`} style={size === 'lg' ? { fontSize: 'var(--fs-md)', padding: '5px 12px' } : undefined}>
-      {envoie && 'Ça envoie'}<span class="n" aria-label={`note ${n1(score)} sur 10`}>{n1(score)}<span class="of">/10</span></span>
+    <span class={`badge star-badge${envoie ? ' top' : ''}`}>
+      {envoie && <span>Ça envoie</span>}<Stars score={score} size={size === 'lg' ? 'lg' : 'md'} />
     </span>
   );
 }

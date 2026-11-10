@@ -32,6 +32,7 @@ export interface CollectPlan {
   marine: CollectPoint[];        // Open-Meteo Marine (modèles de vagues)
   engineWind: CollectPoint[];    // Open-Meteo vent, modèles des moteurs surf / downwind
   windSpots: CollectPoint[];     // Open-Meteo vent, 7 modèles de la super prévision
+  meteo: CollectPoint[];         // Open-Meteo météo (air, pluie, nuages) : un point par spot / parcours
 }
 
 export function collectPlan(registry: Registry): CollectPlan {
@@ -51,5 +52,10 @@ export function collectPlan(registry: Registry): CollectPlan {
     .map((s) => ({ id: 'spot_' + s.id, lat: (s.geometry as { lat: number }).lat, lon: (s.geometry as { lon: number }).lon, usedBy: ['wind'] }))
     // ③ Remise en question : mêmes 7 modèles aux stations METAR, pour comparer prévu / mesuré
     .concat(registry.stations.map((st) => ({ id: 'st_' + st.icao, lat: st.lat, lon: st.lon, usedBy: ['verify'] })));
-  return { marine: [...marine.values()], engineWind: [...wind.values()], windSpots };
+  const meteo = registry.spots.map((s) => {
+    const g = s.geometry as { lat?: number; lon?: number; path?: [number, number][] };
+    const [lat, lon] = g.path ? g.path[Math.floor(g.path.length / 2)] : [g.lat!, g.lon!];
+    return { id: 'meteo_' + s.id, lat, lon, usedBy: ['meteo'] };
+  });
+  return { marine: [...marine.values()], engineWind: [...wind.values()], windSpots, meteo };
 }

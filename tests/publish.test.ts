@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { allSessions, bestByDiscipline, windows, publicSpots, compass, label } from '../pipeline/publish/sessions.ts';
-import { publicPrivacy } from '../pipeline/publish/run.ts';
+import { meteoPublic, publicPrivacy } from '../pipeline/publish/run.ts';
 import { loadRegistry } from '../pipeline/collect/points.ts';
 
 const H = 3600e3, T0 = Date.UTC(2026, 10, 12, 7);
@@ -47,4 +47,20 @@ test('publication : registre public sans identifiant Winds-Up, fuite détectée'
   assert.ok(!publicPrivacy({ 'a.json': '{"live":{"spots":{}}}' }, null, [], ids).ok);
   assert.ok(!publicPrivacy({ 'a.json': '"135-la-grande-motte"' }, null, [], ids).ok);
   assert.ok(!publicPrivacy({ 'a.json': 'https://script.google.com/macros/s/x' }, null, [], ids).ok);
+});
+
+test('météo publiée : air, pluie, nuages, code temps par spot, et vent des modèles en nœuds', () => {
+  const t0 = Date.UTC(2026, 10, 10, 6), H = 3600e3, times = Array.from({ length: 48 }, (_, k) => t0 + k * H);
+  const bundle = { generatedAt: t0 + 5 * H, forecasts: [
+    { id: 'open-meteo-meteo', times, models: ['best_match'], provenance: { fetchedAt: t0 }, values: { 'meteo_carnon': { best_match: { temperature_2m: times.map(() => 15.46), precipitation: times.map((_, k) => (k === 6 ? 1.24 : 0)), cloud_cover: times.map(() => 40), weather_code: times.map(() => 2) } } } },
+    { id: 'open-meteo-vent-spots', times, models: ['icon_d2'], provenance: { fetchedAt: t0 }, values: { 'spot_almanarre': { icon_d2: { wind_speed_10m: times.map(() => 10), wind_gusts_10m: times.map(() => 15), wind_direction_10m: times.map(() => 290) } }, 'st_LFMT': { icon_d2: { wind_speed_10m: times.map(() => 1) } } } },
+  ] } as any;
+  const m: any = meteoPublic(bundle, t0 + 5 * H);
+  assert.equal(m.available, true);
+  assert.equal(m.times[0], t0 + 2 * H);                       // 3 h de passé gardées
+  assert.equal(m.spots.carnon.temp[0], 15);
+  assert.equal(m.spots.carnon.rain[4], 1.2);
+  assert.equal(m.windModels.spots.almanarre.icon_d2.kn[0], 19);  // 10 m/s = 19 nd
+  assert.equal(m.windModels.spots.LFMT, undefined);             // stations METAR : pas publiées ici
+  assert.equal(meteoPublic(null, t0).available, false);
 });

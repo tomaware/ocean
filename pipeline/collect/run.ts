@@ -4,7 +4,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import type { Check, CollectBundle, ForecastBlock, ObservationBlock, SourceStatus } from '../../src/types/contracts.ts';
 import { collectPlan, loadRegistry } from './points.ts';
-import { collectOpenMeteo, ENGINE_WIND_MODELS, MARINE_VARS, marineUrl, SPOT_WIND_MODELS, WAVE_MODELS, WIND_VARS, windUrl } from './openmeteo.ts';
+import { collectOpenMeteo, ENGINE_WIND_MODELS, MARINE_VARS, marineUrl, METEO_MODELS, METEO_VARS, meteoUrl, SPOT_WIND_MODELS, WAVE_MODELS, WIND_VARS, windUrl } from './openmeteo.ts';
 import { collectCandhis } from './candhis.ts';
 import { collectSuperPrevision } from './superprevision.ts';
 import { collectMetar } from './metar.ts';
@@ -69,6 +69,8 @@ async function main(): Promise<void> {
     keepPrivate('raw-open-meteo-vent-moteurs.json', wind.json);
     checks.push(fidelityWind(wind.json, plan.engineWind, wind.block), hourlyGrid(wind.block, now), coverage(wind.block, 'wind_speed_10m', now), modelAvailability(wind.block, 'wind_speed_10m', now));
   }
+  const meteo = await step('open-meteo-meteo', () => collectOpenMeteo('open-meteo-meteo', meteoUrl(plan.meteo), plan.meteo, METEO_VARS, METEO_MODELS), status, (r) => span(r.block));
+  if (meteo) { forecasts.push(meteo.block); checks.push(coverage(meteo.block, 'temperature_2m', now)); }
   const spots = await step('open-meteo-vent-spots', () => collectOpenMeteo('open-meteo-vent-spots', windUrl(plan.windSpots, SPOT_WIND_MODELS), plan.windSpots, WIND_VARS, SPOT_WIND_MODELS), status, (r) => span(r.block));
   if (spots) { forecasts.push(spots.block); checks.push(hourlyGrid(spots.block, now), coverage(spots.block, 'wind_speed_10m', now), modelAvailability(spots.block, 'wind_speed_10m', now)); }
 
@@ -89,7 +91,7 @@ async function main(): Promise<void> {
   const metar = await step('metar', () => collectMetar(registry), status, (r) => ({ points: Object.keys(r.block.stations).length }));
   if (metar) { observations.push(metar.block); checks.push(freshness(metar.block, 120)); }
 
-  const bundle: CollectBundle = { version: 1, generatedAt: now, points: [...plan.marine, ...plan.engineWind, ...plan.windSpots], forecasts, observations, status, checks };
+  const bundle: CollectBundle = { version: 1, generatedAt: now, points: [...plan.marine, ...plan.engineWind, ...plan.windSpots, ...plan.meteo], forecasts, observations, status, checks };
   checks.push(privacy(bundle, [secretUrl]));
 
   mkdirSync(OUT, { recursive: true });

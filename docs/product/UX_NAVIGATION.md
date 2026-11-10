@@ -14,6 +14,12 @@ Dans chaque onglet, menu des modules à droite (ordinateur) ou en pastilles sous
 Graphique horaire (7 h – 20 h) : WIND = vent en nœuds + flèche ; VAGUE = hauteur (m) + flèche de houle + période (s) ; HOULE = vent + flèche + houle (m). Couleur = note.
 Adresses : `#/wind/meilleure`, `#/wind/sessions`, `#/wind/prevision`, `#/wind/spots` (idem `vague`, `houle`).
 
+### Affichage propre à chaque onglet (10/11, d'après les captures de Tom)
+- **WIND** : tableau façon Windguru, heure par heure (session) ou toutes les 3 h sur 5 jours (fiche) : temps (icône), air °C, pluie mm, vent et rafales colorés selon la force (échelle Windguru), direction, orientation de la plage, étoiles. En lecture Expert : les 7 modèles bruts à côté du vent corrigé.
+- **VAGUE** : barres façon surf-forecast : case du vent colorée selon offshore / onshore, hauteur des vagues, flèche de houle, période, étoiles ; résumé « 0,9 m » 1,4 m · houle SE 1,1 m 4 s · vent NNE 11 nd · eau 16 °C » ; fiche : 7 jours × 8 h / 13 h / 18 h. (Pas de marées : quelques centimètres en Méditerranée.)
+- **HOULE** : le mélange : tableau du vent (Windguru) + barres de houle et période.
+- **Note** : en étoiles sur 3 (★ ≥ 5, ★★ ≥ 7, ★★★ ≥ 8,5), la note /10 reste en info-bulle.
+
 ### Onglets
 | Onglet | Module | Contenu |
 |---|---|---|

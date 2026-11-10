@@ -11,6 +11,7 @@ import { Strip } from '../components/Strip';
 import { Chart } from '../components/Chart';
 import { SpotMap } from '../components/SpotMap';
 import { seriesFor } from './series';
+import { headFor, ModelsTable, ModuleView, pickHours } from '../components/Views';
 
 export const levelFor = (prefs: ReturnType<typeof usePrefs>, d: Discipline): Level => prefs.levels[d];
 export const matches = (s: Session, prefs: ReturnType<typeof usePrefs>) => s.level === 'tous' || s.level === levelFor(prefs, s.discipline);
@@ -102,17 +103,16 @@ function SpotView({ d, spot, now }: { d: AllData; spot: PublicSpot; now: number 
             <div class="card">{sessions.length ? <div class="list">{sessions.map((x) => <SessionRow key={x.id} s={x} now={now} showSpot={false} />)}</div> : <div class="empty">Pas de session 2H en vue{s.levels ? ` en ${LEVEL_LABEL[level]}` : ''}.</div>}</div>
           </Section>
           <Section title="Jour par jour">
-            <div class="card days">
-              {days.map((idx) => {
-                const dayIdx = idx.filter((i) => s.day[i]);
-                const top = Math.max(...dayIdx.map((i) => s.score[i] ?? 0), 0);
-                return (
-                  <div key={idx[0]} class="stack">
-                    <div class="day-head"><strong>{dayLabel(s.times[idx[0]], now)}</strong><span class="row small">{dayIdx.length ? <>meilleure heure <Badge score={top} /></> : 'nuit'}</span></div>
-                    <Strip label={`Notes heure par heure, ${dayLabel(s.times[idx[0]], now)}`} hours={idx.filter((i) => hourOf(s.times[i]) >= 6 && hourOf(s.times[i]) <= 21).map((i) => ({ t: s.times[i], s: s.score[i], day: s.day[i], title: s.cols.slice(0, 3).map((c) => c.fmt(s.rows[i])).join(' · ') }))} />
-                  </div>
-                );
-              })}
+            <div class="card stack">
+              {(() => {
+                // WIND / HOULE : toutes les 3 h sur 5 jours (façon Windguru) ; VAGUE : 8 h, 13 h, 18 h sur 7 jours (façon surf-forecast)
+                const picks = disc === 'surf' ? pickHours(s, { from: now, days: 7, hours: [8, 18], step: 5 }) : pickHours(s, { from: now, days: 5, hours: [7, 19], step: 3 });
+                const today = pickHours(s, { day: now });
+                return <>
+                  <span class="faint">{disc === 'surf' ? 'Aujourd’hui : ' : 'Aujourd’hui : '}{headFor(s, today.length ? today : picks.slice(0, 3))}</span>
+                  <ModuleView d={d} spot={spot} s={s} picks={picks} showDays compact={disc === 'surf'} />
+                </>;
+              })()}
             </div>
           </Section>
           {reading !== 'synthese' && (
@@ -133,6 +133,11 @@ function SpotView({ d, spot, now }: { d: AllData; spot: PublicSpot; now: number 
                   </table>
                 </div>
               </div>
+            </Section>
+          )}
+          {reading === 'expert' && disc === 'wing' && (
+            <Section title="Les 7 modèles, avant correction">
+              <div class="card"><ModelsTable d={d} spot={spot} s={s} from={now - 3600e3} /></div>
             </Section>
           )}
           {reading === 'expert' && (
