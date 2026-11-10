@@ -1,6 +1,6 @@
 # Rapport d'analyse (② ANALYSE)
 
-Généré le 2026-11-10 17:52 UTC par `pipeline/engines/run.ts`, juste après la collecte.
+Généré le 2026-11-10 18:00 UTC par `pipeline/engines/run.ts`, juste après la collecte.
 
 Les moteurs des apps actuelles (copies non modifiées dans `legacy/`) sont alimentés par la collecte commune. Le test golden refait le calcul comme les apps actuelles, avec leurs propres parseurs sur les mêmes réponses brutes, et exige les mêmes notes à ±0.1.
 
@@ -14,9 +14,9 @@ Les moteurs des apps actuelles (copies non modifiées dans `legacy/`) sont alime
 | sorties-surf | ✅ | 6/6 spots notés ; 12 créneaux |
 | houle-direction-downwind | ✅ | direction de la houle (affichage, carte) : 288/288 heures |
 | sorties-downwind | ✅ | 3/3 parcours notés ; 1 meilleurs créneaux |
-| ecart-prod-surf | ✅ | notes surf OCEAN vs app en service (calcul prod. 4 min avant, même extrait Copernicus) : médiane 0.00, 90 % ≤ 0.00, max 0.10 sur 668 heures (max : carnon ven. 16:00, OCEAN 8.7 / prod 8.8) |
-| ecart-prod-downwind | ✅ | notes downwind (intermédiaire, de jour) OCEAN vs app en service (calcul prod. 41 min avant) : médiane 0.00, 90 % ≤ 0.00, max 0.50 sur 120 heures |
-| vent-berre-jai | ✅ | Étang de Berre (Le Jaï) : meteofrance_arome_france_hd, le plus juste à LFML (erreur 1.13 m/s sur 100 mesures) ; 177 heures ; vent non corrigé |
+| ecart-prod-surf | ✅ | notes surf OCEAN vs app en service (calcul prod. 12 min avant, même extrait Copernicus) : médiane 0.00, 90 % ≤ 0.00, max 0.10 sur 664 heures (max : carnon ven. 16:00, OCEAN 8.7 / prod 8.8) |
+| ecart-prod-downwind | ✅ | notes downwind (intermédiaire, de jour) OCEAN vs app en service (calcul prod. 49 min avant) : médiane 0.00, 90 % ≤ 0.00, max 0.50 sur 120 heures |
+| vent-berre-jai | ✅ | Étang de Berre (Le Jaï) : meteofrance_arome_france_hd, le plus juste à LFML (erreur 1.13 m/s sur 100 mesures) ; 176 heures ; vent non corrigé |
 | sorties-wing | ✅ | 7 spots notés (wing v2.0.0) ; 5 session(s) 2H en mode Sécu first sur les heures prévues |
 | confidentialite-moteurs | ✅ | aucun relevé Winds-Up ni clé dans les sorties (seuls les facteurs de correction dérivés y figurent, comme dans l’app downwind actuelle) |
 | copernicus-surf | ✅ | Copernicus Med-WAV inclus dans le moteur surf (comme l’app en service) |
@@ -25,7 +25,7 @@ Les moteurs des apps actuelles (copies non modifiées dans `legacy/`) sont alime
 
 | Quand | Spot | Note moyenne | Pic |
 |---|---|---|---|
-| ven. 13 08:00 → ven. 13 18:00 | Carnon | 9.32 | 9.68 |
+| ven. 13 08:00 → ven. 13 18:00 | Carnon | 9.31 | 9.68 |
 | ven. 13 08:00 → ven. 13 18:00 | Palavas-les-Flots | 8.39 | 9.69 |
 | ven. 13 08:00 → ven. 13 18:00 | Saintes-Maries-de-la-Mer | 8.39 | 9.07 |
 | dim. 15 09:00 → dim. 15 18:00 | La Couronne (Martigues) | 7.82 | 8.44 |
