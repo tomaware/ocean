@@ -48,6 +48,8 @@ export function collectPlan(registry: Registry): CollectPlan {
   // Vent : spots wing / kite du registre (modèles de la super prévision)
   const windSpots = registry.spots
     .filter((s) => s.disciplines.includes('wing') && 'lat' in s.geometry)
-    .map((s) => ({ id: 'spot_' + s.id, lat: (s.geometry as { lat: number }).lat, lon: (s.geometry as { lon: number }).lon, usedBy: ['wind'] }));
+    .map((s) => ({ id: 'spot_' + s.id, lat: (s.geometry as { lat: number }).lat, lon: (s.geometry as { lon: number }).lon, usedBy: ['wind'] }))
+    // ③ Remise en question : mêmes 7 modèles aux stations METAR, pour comparer prévu / mesuré
+    .concat(registry.stations.map((st) => ({ id: 'st_' + st.icao, lat: st.lat, lon: st.lon, usedBy: ['verify'] })));
   return { marine: [...marine.values()], engineWind: [...wind.values()], windSpots };
 }

@@ -1,0 +1,50 @@
+/* OCEAN — tokens de design (docs/design/DESIGN_TOKENS.md). Direction « Ocean Studio + Forecast Lab » : sobre, précis. */
+:root {
+  /* couleurs */
+  --c-bg: #F8F9F7;
+  --c-surface: #FFFFFF;
+  --c-surface-2: #EEF2F0;
+  --c-ink: #192E37;
+  --c-ink-2: #4A5D65;         /* texte secondaire, 7,0:1 sur blanc */
+  --c-ink-3: #66767C;         /* légendes, 4,7:1 sur blanc */
+  --c-line: #DCE3E0;
+  --c-accent: #256D70;        /* 5,9:1 sur blanc */
+  --c-accent-soft: #E3F0EF;
+  --c-top: #1D6B46;  --c-top-soft: #E2F2E8;     /* « Ça envoie » */
+  --c-ok: #8A5A00;   --c-ok-soft: #FBF0D9;      /* « Ça se tente » */
+  --c-no: #5F6D72;   --c-no-soft: #ECEFEE;      /* « Non » */
+  --c-warn: #A3392B; --c-warn-soft: #FBE7E3;    /* danger : vent de terre */
+  --c-focus: #256D70;
+  /* échelle de notes (graphiques) */
+  --c-score-0: #C9D1CE; --c-score-5: #E3B65A; --c-score-7: #3E9A6B; --c-score-9: #1D6B46;
+
+  /* typographie */
+  --font: 'Inter', 'Geist', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --fs-xs: 12px; --fs-sm: 13px; --fs-md: 15px; --fs-lg: 17px; --fs-xl: 22px; --fs-2xl: 28px;
+  --lh: 1.45;
+
+  /* espacements 4 → 48 */
+  --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px; --s-5: 20px; --s-6: 24px; --s-8: 32px; --s-10: 40px; --s-12: 48px;
+
+  /* formes */
+  --r-sm: 6px; --r-md: 10px; --r-lg: 14px; --r-pill: 999px;
+  --shadow: 0 1px 2px rgba(25, 46, 55, .06), 0 2px 8px rgba(25, 46, 55, .05);
+  --nav-h: 64px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --c-bg: #0F1D23; --c-surface: #152830; --c-surface-2: #1C333C; --c-ink: #E8EFEC; --c-ink-2: #B5C3C1; --c-ink-3: #93A4A3;
+    --c-line: #28414A; --c-accent: #6FC1BE; --c-accent-soft: #1B3B3D;
+    --c-top: #7FD3A5; --c-top-soft: #173A2A; --c-ok: #F0C46A; --c-ok-soft: #3A2E14; --c-no: #A9B6B5; --c-no-soft: #22343A;
+    --c-warn: #F29B8C; --c-warn-soft: #3D2320; --c-focus: #6FC1BE;
+    --c-score-0: #2E454D; --shadow: none;
+  }
+}
+:root[data-theme="dark"] {
+  --c-bg: #0F1D23; --c-surface: #152830; --c-surface-2: #1C333C; --c-ink: #E8EFEC; --c-ink-2: #B5C3C1; --c-ink-3: #93A4A3;
+  --c-line: #28414A; --c-accent: #6FC1BE; --c-accent-soft: #1B3B3D;
+  --c-top: #7FD3A5; --c-top-soft: #173A2A; --c-ok: #F0C46A; --c-ok-soft: #3A2E14; --c-no: #A9B6B5; --c-no-soft: #22343A;
+  --c-warn: #F29B8C; --c-warn-soft: #3D2320; --c-focus: #6FC1BE;
+  --c-score-0: #2E454D; --shadow: none;
+}

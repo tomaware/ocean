@@ -12,8 +12,7 @@
         "lon": 3.065
       },
       "disciplines": [
-        "wing",
-        "kite"
+        "wing"
       ],
       "waterBody": "sea",
       "orientation": {
@@ -43,8 +42,7 @@
         "lon": 4.085
       },
       "disciplines": [
-        "wing",
-        "kite"
+        "wing"
       ],
       "waterBody": "sea",
       "orientation": {
@@ -74,8 +72,7 @@
         "lon": 4.115
       },
       "disciplines": [
-        "wing",
-        "kite"
+        "wing"
       ],
       "waterBody": "lagoon",
       "orientation": {
@@ -111,8 +108,7 @@
         "lon": 4.13
       },
       "disciplines": [
-        "wing",
-        "kite"
+        "wing"
       ],
       "waterBody": "sea",
       "orientation": {
@@ -142,8 +138,7 @@
         "lon": 4.585
       },
       "disciplines": [
-        "wing",
-        "kite"
+        "wing"
       ],
       "waterBody": "sea",
       "orientation": {
@@ -173,8 +168,7 @@
         "lon": 6.115
       },
       "disciplines": [
-        "wing",
-        "kite"
+        "wing"
       ],
       "waterBody": "sea",
       "orientation": {

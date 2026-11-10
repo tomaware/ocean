@@ -58,7 +58,8 @@ test('points de collecte = exactement ceux des moteurs actuels', () => {
     assert.ok(q && q.lat === p.lat && q.lon === p.lon, 'mer ' + p.id);
   }
   assert.equal(plan.marine.length, new Set([...surfPts, ...dwPts].map((p: CollectPoint) => p.id)).size);
-  assert.equal(plan.windSpots.length, 6);
+  assert.equal(plan.windSpots.filter((p) => p.id.startsWith('spot_')).length, 6);
+  assert.deepEqual(plan.windSpots.filter((p) => p.id.startsWith('st_')).map((p) => p.id), ['st_LFMT', 'st_LFMP', 'st_LFTH']);
   assert.ok(plan.engineWind.length >= 8 + 6 + 63 + 2);
   assert.ok(marineUrl(plan.marine).includes('past_days=3') && windUrl(plan.windSpots, SPOT_WIND_MODELS).includes('meteofrance_arome_france_hd'));
 });

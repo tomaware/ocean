@@ -13,5 +13,5 @@
     "types": ["node"],
     "lib": ["ES2023", "DOM"]
   },
-  "include": ["src/**/*.ts", "pipeline/**/*.ts", "tests/**/*.ts"]
+  "include": ["src/types/**/*.ts", "pipeline/**/*.ts", "tests/**/*.ts"]
 }

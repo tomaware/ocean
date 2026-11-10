@@ -5,3 +5,7 @@ data/private/
 data/v1/engines/surf.json
 data/v1/engines/downwind.json
 data/v1/engines/wing.json
+data/state/
+data/v1/public/
+data/v1/verify/
+dist/

@@ -1,4 +1,4 @@
-name: ① Collecte + ② Analyse
+name: OCEAN — collecte, analyse, vérification, publication
 
 on:
   schedule:
@@ -13,9 +13,9 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  collect:
+  pipeline:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
         with:
@@ -29,46 +29,69 @@ jobs:
         run: npm run typecheck
       - name: Tests
         run: npm test
-      - name: Collecte
+      - name: ① Collecte
         env:
-          SUPER_PREVISION_URL: ${{ secrets.SUPER_PREVISION_URL }}   # vent corrigé (jamais les relevés Winds-Up)
+          SUPER_PREVISION_URL: ${{ secrets.SUPER_PREVISION_URL }}   # vent corrigé (relevés Winds-Up : fichier privé, jamais publié)
         run: npm run collect
-      - name: Archiver les séries collectées
-        uses: actions/upload-artifact@v4
-        with:
-          name: collect-bundle
-          path: data/v1/collect/bundle.json
-          retention-days: 7
-      - name: Analyse (moteurs surf + downwind, test golden ; note wing)
+      - name: ② Analyse (moteurs surf + downwind, test golden ; note wing)
         env:
           SUPER_PREVISION_URL: ${{ secrets.SUPER_PREVISION_URL }}   # seulement pour vérifier qu'il ne fuit pas
         run: npm run engines
-      - name: Archiver les prévisions calculées
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: engines-output
-          path: |
-            data/v1/engines/surf.json
-            data/v1/engines/downwind.json
-            data/v1/engines/wing.json
-          if-no-files-found: ignore
-          retention-days: 7
+      - name: Récupérer l'archive des prévisions (branche data)
+        run: |
+          mkdir -p data/state
+          git fetch -q --depth 1 origin data && git show origin/data:state/archive.json > data/state/archive.json || { echo "pas d'archive : on repart de zéro"; rm -f data/state/archive.json; }
+      - name: ③ Remise en question
+        run: npm run verify
+      - name: ④ Sessions + données publiques
+        env:
+          SUPER_PREVISION_URL: ${{ secrets.SUPER_PREVISION_URL }}
+        run: npm run publish-data
       - name: Supprimer les fichiers privés
         if: always()
         run: rm -rf data/private
+      - name: ⑤ Interface
+        run: |
+          npm run build
+          mkdir -p dist/data && cp data/v1/public/*.json dist/data/
+      - name: Publier les données (branche data, un seul commit)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          D=$(mktemp -d); mkdir -p $D/public $D/state
+          cp data/v1/public/*.json $D/public/ && cp data/state/archive.json $D/state/
+          cd $D && git init -q -b data && git config user.name ocean-bot && git config user.email ocean-bot@users.noreply.github.com
+          git add -A && git commit -qm "données $(date -u +%Y-%m-%dT%H:%MZ)"
+          git push -qf "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" data
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
       - name: Publier les rapports
         if: always()
         run: |
           git config user.name "ocean-bot"
           git config user.email "ocean-bot@users.noreply.github.com"
           git add data/v1/collect/status.json docs/quality/COLLECT_REPORT.md
-          git add data/v1/engines/status.json docs/quality/ENGINES_REPORT.md 2>/dev/null || true
+          git add data/v1/engines/status.json docs/quality/ENGINES_REPORT.md docs/quality/VERIFY_REPORT.md 2>/dev/null || true
           git diff --cached --quiet && exit 0
-          git commit -qm "collecte : $(date -u +%Y-%m-%dT%H:%MZ)"
+          git commit -qm "rapports : $(date -u +%Y-%m-%dT%H:%MZ)"
           for i in 1 2 3; do
             git push -q origin HEAD:main && exit 0
-            git pull -q --rebase -X theirs origin main || { git rebase --abort; git reset -q --soft origin/main; git commit -qm "collecte : $(date -u +%Y-%m-%dT%H:%MZ)"; }
+            git pull -q --rebase -X theirs origin main || { git rebase --abort; git reset -q --soft origin/main; git commit -qm "rapports : $(date -u +%Y-%m-%dT%H:%MZ)"; }
             sleep $((i * 5))
           done
-          echo "::warning::rapport non publié"
+          echo "::warning::rapports non publiés"
+
+  # Site : nécessite GitHub Pages activé (Réglages → Pages → Source : GitHub Actions)
+  deploy:
+    needs: pipeline
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - id: deploy
+        uses: actions/deploy-pages@v4

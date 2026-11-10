@@ -1,0 +1,2 @@
+{ "name": "OCEAN — glisse, Golfe du Lion", "short_name": "OCEAN", "start_url": "./", "display": "standalone", "background_color": "#F8F9F7", "theme_color": "#192E37", "lang": "fr",
+  "icons": [{ "src": "icon.svg", "sizes": "any", "type": "image/svg+xml" }] }
