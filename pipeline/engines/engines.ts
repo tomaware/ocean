@@ -2,7 +2,14 @@
 // Aucune formule n'est réécrite : on appelle les moteurs de référence (legacy/) avec des entrées reconstruites.
 import type { CollectBundle, ForecastBlock, ObservationBlock, Registry } from '../../src/types/contracts.ts';
 import { collectPlan, DownwindEngine as D, SurfEngine as E } from '../collect/points.ts';
-import { legacyBuoyObs, legacyMarine, legacySuperPrevision, legacyWind } from './adapters.ts';
+import { legacyBuoyObs, legacyCopernicusRaw, legacyMarine, legacySuperPrevision, legacyWind } from './adapters.ts';
+import { COPERNICUS_MAX_AGE_H } from '../collect/copernicus.ts';
+
+/** = collector/build.js de Super Prévi Surf : extrait Copernicus utilisé s'il a moins de 30 h. */
+export function copernicusFor(raw: { generated?: string; points?: unknown } | null, now: number) {
+  if (!raw || !raw.points || !raw.generated) return null;
+  return (now - Date.parse(raw.generated)) / 3600e3 < COPERNICUS_MAX_AGE_H ? E.parseCopernicus(raw) : null;
+}
 import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
@@ -27,7 +34,7 @@ export function inputsFromBundle(bundle: CollectBundle, registry: Registry, live
   const models = E.OM_WIND_MODELS as Record<string, string>;
   const dwWindIds = plan.engineWind.map((p) => p.id).filter((id) => !id.startsWith('surf_'));
   return {
-    surf: { spots: surfDoc.spots, buoys: surfDoc.buoys, marine: E.mergeMarine(om, null), wind: legacyWind(windB, surfDoc.spots.map((s: { id: string }) => s.id), models, 'surf_'), buoyObs, now, cfg: {}, days: SURF_DAYS },
+    surf: { spots: surfDoc.spots, buoys: surfDoc.buoys, marine: E.mergeMarine(om, copernicusFor(legacyCopernicusRaw(fc(bundle, 'copernicus-medwav')), now)), wind: legacyWind(windB, surfDoc.spots.map((s: { id: string }) => s.id), models, 'surf_'), buoyObs, now, cfg: {}, days: SURF_DAYS },
     downwind: { runs: runsDoc.runs, buoys: runsDoc.buoys, marine: E.mergeMarine(om), wind: legacyWind(windB, dwWindIds, models), buoyObs, now, cfg: {}, hours: DOWNWIND_HOURS,
       superPrev: legacySuperPrevision(fc(bundle, 'super-prevision'), registry, live) },
   };
@@ -35,9 +42,9 @@ export function inputsFromBundle(bundle: CollectBundle, registry: Registry, live
 
 /**
  * Chemin de référence (golden) : exactement ce que font les builds des apps actuelles, à partir des réponses
- * brutes de la même exécution (parseurs des moteurs, pas ceux d'OCEAN). Copernicus est exclu des deux côtés.
+ * brutes de la même exécution (parseurs des moteurs, pas ceux d'OCEAN), Copernicus compris (même règle des 30 h).
  */
-export function inputsLegacy(raw: { marine: unknown; wind: unknown; candhis: Record<string, any[]>; superSpots: unknown; live: unknown }, registry: Registry, now: number): EngineInputs {
+export function inputsLegacy(raw: { marine: unknown; wind: unknown; candhis: Record<string, any[]>; superSpots: unknown; live: unknown; copernicus?: any }, registry: Registry, now: number): EngineInputs {
   const plan = collectPlan(registry);
   const om = E.parseOpenMeteoMarine(raw.marine, plan.marine.map((p) => p.id));
   const windAll = E.parseOpenMeteoWind(raw.wind, plan.engineWind.map((p) => p.id));
@@ -47,18 +54,21 @@ export function inputsLegacy(raw: { marine: unknown; wind: unknown; candhis: Rec
   Object.keys(raw.candhis || {}).forEach((c) => { buoyObs[c] = raw.candhis[c].filter((o) => o.hs != null); });
   const sp = raw.superSpots as { spots?: unknown } | null;
   return {
-    surf: { spots: surfDoc.spots, buoys: surfDoc.buoys, marine: E.mergeMarine(om, null), wind: surfWind, buoyObs, now, cfg: {}, days: SURF_DAYS },
+    surf: { spots: surfDoc.spots, buoys: surfDoc.buoys, marine: E.mergeMarine(om, copernicusFor(raw.copernicus ?? null, now)), wind: surfWind, buoyObs, now, cfg: {}, days: SURF_DAYS },
     downwind: { runs: runsDoc.runs, buoys: runsDoc.buoys, marine: E.mergeMarine(om), wind: windAll, buoyObs, now, cfg: {}, hours: DOWNWIND_HOURS,
       superPrev: sp && sp.spots ? { spots: sp.spots, live: raw.live } : null },
   };
 }
+
+export const usesCopernicus = (marine: Record<string, { series: { models: Record<string, unknown> }[] }>) =>
+  Object.values(marine ?? {}).some((p) => p.series.some((x) => 'copernicus' in x.models));
 
 export function runEngines(inp: EngineInputs) {
   const surf = E.run(inp.surf);
   const downwind = D.run(inp.downwind);
   return {
     surf, downwind,
-    surfJSON: E.toForecastJSON(surf, { sources: { pipeline: 'ocean', copernicus: null } }),
+    surfJSON: E.toForecastJSON(surf, { sources: { pipeline: 'ocean', copernicus: usesCopernicus(inp.surf.marine) ? { used: true } : null } }),
     downwindJSON: D.toJSON(downwind, { pipeline: 'ocean' }),
   };
 }

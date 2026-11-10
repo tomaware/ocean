@@ -8,6 +8,7 @@ import { collectOpenMeteo, ENGINE_WIND_MODELS, MARINE_VARS, marineUrl, SPOT_WIND
 import { collectCandhis } from './candhis.ts';
 import { collectSuperPrevision } from './superprevision.ts';
 import { collectMetar } from './metar.ts';
+import { collectCopernicus, COPERNICUS_MAX_AGE_H } from './copernicus.ts';
 import { coverage, coverageSuper, fidelityMarine, fidelityWind, freshness, hourlyGrid, modelAvailability, privacy } from './checks.ts';
 
 const OUT = new URL('../../data/v1/collect/', import.meta.url);
@@ -50,6 +51,17 @@ async function main(): Promise<void> {
     forecasts.push(marine.block);
     keepPrivate('raw-open-meteo-marine.json', marine.json);
     checks.push(fidelityMarine(marine.json, plan.marine, marine.block), hourlyGrid(marine.block, now), coverage(marine.block, 'wave_height', now), modelAvailability(marine.block, 'wave_height', now));
+  }
+  const cop = await step('copernicus-medwav', () => collectCopernicus(), status, (r) => ({ ...r.stats, points: r.stats.points ?? 0 }));
+  if (cop) {
+    forecasts.push(cop.block);
+    keepPrivate('raw-copernicus.json', cop.raw);
+    checks.push({ id: 'fraicheur-copernicus', ok: cop.ageH < COPERNICUS_MAX_AGE_H,
+      detail: `extrait de ${cop.ageH.toFixed(1)} h (${Object.keys(cop.block.values).length} points, ${cop.block.times.length} h)${cop.ageH < COPERNICUS_MAX_AGE_H ? '' : ' : trop vieux, ignoré par les moteurs'} (seuil ${COPERNICUS_MAX_AGE_H} h)` });
+    if (marine) {
+      const miss = Object.keys(cop.block.values).filter((id) => !marine.block.values[id]);
+      checks.push({ id: 'points-copernicus', ok: miss.length === 0, detail: miss.length ? 'points Copernicus inconnus de la collecte : ' + miss.join(', ') : 'tous les points Copernicus correspondent à des points vagues de la collecte' });
+    }
   }
   const wind = await step('open-meteo-vent-moteurs', () => collectOpenMeteo('open-meteo-vent-moteurs', windUrl(plan.engineWind, ENGINE_WIND_MODELS), plan.engineWind, WIND_VARS, ENGINE_WIND_MODELS), status, (r) => span(r.block));
   if (wind) {

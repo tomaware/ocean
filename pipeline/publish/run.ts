@@ -36,7 +36,7 @@ function main(): void {
     checks: checks.map((c) => ({ id: c.id, ok: c.ok, detail: c.detail })),
     disciplines: {
       wing: { available: !!wing.available, source: 'Vent corrigé de la super prévision (modèles pondérés par leur erreur aux balises)', note: 'Note wing v' + wing.version },
-      surf: { available: true, source: 'Moteur Super Prévi Surf : 5 modèles de vagues recalés sur les bouées Candhis, vent AROME / ECMWF', note: 'Copernicus pas encore inclus' },
+      surf: { available: true, source: surf.sources?.copernicus ? 'Moteur Super Prévi Surf : 6 modèles de vagues dont Copernicus Med-WAV (4,2 km), recalés sur les bouées Candhis ; vent AROME / ECMWF' : 'Moteur Super Prévi Surf : 5 modèles de vagues recalés sur les bouées Candhis, vent AROME / ECMWF (Copernicus indisponible pour cette mise à jour)', note: surf.sources?.copernicus ? 'Generated using E.U. Copernicus Marine Service Information' : 'Copernicus absent ou trop ancien' },
       downwind: { available: true, source: 'Moteur downwind : vent AROME / ECMWF recalé sur la super prévision, houle au large (5 modèles)', note: '' },
     },
     rules: { session: 'au moins 2 h d’affilée à 5/10 ou plus, de jour', labels: { top: 'Ça envoie (≥ 7)', ok: 'Ça se tente (5 à 7)', no: 'Non (< 5)' } },

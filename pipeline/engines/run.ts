@@ -5,7 +5,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import type { Check, CollectBundle } from '../../src/types/contracts.ts';
 import { loadRegistry } from '../collect/points.ts';
-import { compareOutputs, inputsFromBundle, inputsLegacy, runEngines } from './engines.ts';
+import { compareOutputs, inputsFromBundle, inputsLegacy, runEngines, usesCopernicus } from './engines.ts';
 import { label, wingForecast } from './wing.ts';
 
 const ROOT = new URL('../../', import.meta.url);
@@ -35,7 +35,7 @@ async function main(): Promise<void> {
   const checks: Check[] = [];
 
   const ocean = runEngines(inputsFromBundle(bundle, registry, live, now));
-  const raw = { marine: readPrivate('raw-open-meteo-marine.json'), wind: readPrivate('raw-open-meteo-vent-moteurs.json'), candhis: readPrivate('raw-candhis.json') ?? {}, superSpots: readPrivate('raw-super-prevision-spots.json'), live };
+  const raw = { marine: readPrivate('raw-open-meteo-marine.json'), wind: readPrivate('raw-open-meteo-vent-moteurs.json'), candhis: readPrivate('raw-candhis.json') ?? {}, superSpots: readPrivate('raw-super-prevision-spots.json'), live, copernicus: readPrivate('raw-copernicus.json') };
   let golden: ReturnType<typeof compareOutputs> | null = null;
   if (raw.marine && raw.wind) {
     golden = compareOutputs(ocean, runEngines(inputsLegacy(raw, registry, now)));
@@ -63,7 +63,9 @@ async function main(): Promise<void> {
   checks.push(privacyEngines(surfText + dwText, live, [(process.env.SUPER_PREVISION_URL ?? '').trim()]));
 
   mkdirSync(OUT, { recursive: true });
-  const prov = { generatedAt: now, collect: 'data/v1/collect/bundle.json', engines: { surf: 'super-previ-surf surf-engine.js (legacy, non modifié)', downwind: 'downwind-foil downwind-engine.js v1.1 (legacy, non modifié)' }, note: 'Prévisions calculées ; Copernicus non inclus à ce stade (M2).' };
+  const copUsed = usesCopernicus(inputsFromBundle(bundle, registry, live, now).surf.marine);
+  const prov = { generatedAt: now, collect: 'data/v1/collect/bundle.json', engines: { surf: 'super-previ-surf surf-engine.js (legacy, non modifié)', downwind: 'downwind-foil downwind-engine.js v1.1 (legacy, non modifié)' }, note: copUsed ? 'Prévisions calculées ; vagues surf avec Copernicus Med-WAV (E.U. Copernicus Marine Service).' : 'Prévisions calculées ; Copernicus absent ou trop ancien pour cette exécution.' };
+  checks.push({ id: 'copernicus-surf', ok: copUsed, detail: copUsed ? 'Copernicus Med-WAV inclus dans le moteur surf (comme l’app en service)' : 'Copernicus non utilisé (extrait absent ou de plus de 30 h)' });
   writeFileSync(new URL('surf.json', OUT), JSON.stringify({ provenance: prov, ...ocean.surfJSON }));
   writeFileSync(new URL('downwind.json', OUT), JSON.stringify({ provenance: prov, ...ocean.downwindJSON }));
   writeFileSync(new URL('wing.json', OUT), JSON.stringify(wing));
@@ -128,7 +130,7 @@ function report(now: number, checks: Check[], o: ReturnType<typeof runEngines>, 
     const rows = x.hours.filter((h) => h.day && h.t >= now && new Date(h.t).getUTCHours() % 2 === 0);
     s += `**${x.name}** — ` + (rows.map((h) => `${d(h.t)} ${Math.round(h.kn ?? 0)} (${h.gust === null ? '—' : Math.round(h.gust)}) ${h.dir === null ? '?' : DIR[Math.round(h.dir / 22.5) % 16]} ${h.sector ?? ''} **${h.scores.intermediaire}**${h.limit.intermediaire ? ' ' + h.limit.intermediaire : ''}`).join(' · ') || 'aucune heure') + `\n\n`;
   }
-  s += `\nÀ ce stade (M2) : Copernicus n'est pas inclus (les apps actuelles l'utilisent quand il est frais) ; la note wing (v1.0, validée le 10/11) part du vent corrigé de la super prévision ; pas de note kite (décision de Tom).\n`;
+  s += `\nCopernicus Med-WAV est inclus pour le surf quand l'extrait a moins de 30 h (même règle que l'app en service) ; la note wing (v1.0, validée le 10/11) part du vent corrigé de la super prévision ; pas de note kite (décision de Tom).\n`;
   return s;
 }
 

@@ -298,7 +298,7 @@ export function Profile({ d }: { d: AllData }) {
       <Section title="À propos">
         <div class="card stack">
           <a href="#/fiabilite" class="row"><ShieldCheck size={16} /> Fiabilité des prévisions et sources</a>
-          <span class="faint">OCEAN · données : Open-Meteo (Météo-France, ECMWF, DWD, NOAA), bouées Candhis – Cerema (licence Etalab), METAR (NOAA), super prévision vent. Fond de carte © OpenStreetMap.</span>
+          <span class="faint">OCEAN · données : Open-Meteo (Météo-France, ECMWF, DWD, NOAA), Copernicus Marine Med-WAV (generated using E.U. Copernicus Marine Service Information), bouées Candhis – Cerema (licence Etalab), METAR (NOAA), super prévision vent. Fond de carte © OpenStreetMap.</span>
         </div>
       </Section>
     </>

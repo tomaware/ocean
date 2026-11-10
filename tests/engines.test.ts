@@ -4,7 +4,8 @@ import { collectPlan, loadRegistry } from '../pipeline/collect/points.ts';
 import { parseOpenMeteo, MARINE_VARS, WAVE_MODELS, WIND_VARS, ENGINE_WIND_MODELS } from '../pipeline/collect/openmeteo.ts';
 import { parseCandhisHistory } from '../pipeline/collect/candhis.ts';
 import { parseSuperPrevision, privateLive } from '../pipeline/collect/superprevision.ts';
-import { compareOutputs, inputsFromBundle, inputsLegacy, runEngines } from '../pipeline/engines/engines.ts';
+import { compareOutputs, inputsFromBundle, inputsLegacy, runEngines, usesCopernicus } from '../pipeline/engines/engines.ts';
+import { parseCopernicus, CMEMS_VARS } from '../pipeline/collect/copernicus.ts';
 import { privacyEngines } from '../pipeline/engines/run.ts';
 import type { CollectBundle, CollectPoint } from '../src/types/contracts.ts';
 
@@ -54,9 +55,17 @@ function fixture() {
   const w = parseOpenMeteo(wraw, plan.engineWind, WIND_VARS, ENGINE_WIND_MODELS, 'open-meteo-vent-moteurs', '', NOW);
   const c = parseCandhisHistory(candhis, registry, NOW, NOW - 30 * 86400e3);
   const sp = parseSuperPrevision(spRaw, registry, NOW);
-  const bundle = { version: 1, generatedAt: NOW, points: [], forecasts: [m.block, w.block, sp.block], observations: [c.block], status: [], checks: [] } as unknown as CollectBundle;
+  // Copernicus Med-WAV, format publié par Super Prévi Surf (heures ISO « Z », variables CMEMS), décalé de 9 h
+  const copRaw = { generated: new Date(NOW - 5 * H).toISOString(), points: {} as Record<string, Record<string, unknown>> };
+  for (const id of ['carnon', 'palavas', 'buoy_03001']) {
+    const p: Record<string, unknown> = { time: Array.from({ length: 200 }, (_, k) => new Date(T0 + (9 + k) * H).toISOString().replace('.000Z', 'Z')), lat: 43.5, lon: 4 };
+    for (const v of CMEMS_VARS) p[v] = Array.from({ length: 200 }, (_, k) => Math.round((/^VMDR/.test(v) ? 140 + (k % 30) : /^VT/.test(v) ? 5 + (k % 40) / 10 : 0.4 + (k % 50) / 40) * 1000) / 1000);
+    copRaw.points[id] = p;
+  }
+  const cop = parseCopernicus(copRaw, NOW);
+  const bundle = { version: 1, generatedAt: NOW, points: [], forecasts: [m.block, w.block, sp.block, cop.block], observations: [c.block], status: [], checks: [] } as unknown as CollectBundle;
   const live = privateLive(spRaw);
-  return { bundle, live, raw: { marine: mraw, wind: wraw, candhis, superSpots: { spots: spRaw.spots }, live } };
+  return { bundle, live, raw: { marine: mraw, wind: wraw, candhis, superSpots: { spots: spRaw.spots }, live, copernicus: copRaw } };
 }
 
 test('golden : moteurs alimentés par la collecte = moteurs alimentés comme aujourd’hui (écart 0)', () => {
@@ -91,4 +100,31 @@ test('sorties : spots et parcours notés, aucune valeur privée publiée', () =>
   const txt = JSON.stringify(o.surfJSON) + JSON.stringify(o.downwindJSON);
   assert.ok(privacyEngines(txt, f.live, []).ok);
   assert.ok(!privacyEngines(txt + String(f.live.spots['135-la-grande-motte'].t), f.live, []).ok, 'fuite détectée');
+});
+
+test('Copernicus : inclus pour le surf comme dans l’app en service (même résultat), ignoré au-delà de 30 h', () => {
+  const f = fixture();
+  const inp = inputsFromBundle(f.bundle, registry, f.live, NOW);
+  assert.ok(usesCopernicus(inp.surf.marine), 'Copernicus utilisé');
+  assert.ok(!usesCopernicus(inp.downwind.marine), 'downwind inchangé (sans Copernicus, comme l’app en service)');
+  const a = runEngines(inp), b = runEngines(inputsLegacy(f.raw, registry, NOW));
+  const g = compareOutputs(a, b);
+  assert.equal(g.surf.max, 0, g.surf.detail);
+  const sans = runEngines(inputsFromBundle({ ...f.bundle, forecasts: f.bundle.forecasts.filter((x) => x.id !== 'copernicus-medwav') }, registry, f.live, NOW));
+  assert.ok(compareOutputs(a, sans).surf.max > 0, 'Copernicus change bien la prévision surf');
+  const old = runEngines(inputsLegacy({ ...f.raw, copernicus: { ...f.raw.copernicus, generated: new Date(NOW - 31 * H).toISOString() } }, registry, NOW));
+  assert.equal(compareOutputs(sans, old).surf.max, 0, 'extrait de plus de 30 h ignoré');
+});
+
+test('Copernicus : normalisation (heures ISO, bornes), erreurs détectées', () => {
+  const t0 = Date.UTC(2026, 10, 10, 0);
+  const raw = { generated: '2026-11-10T09:25:49Z', points: { carnon: { time: ['2026-11-10T00:00:00Z', '2026-11-10T01:00:00Z'], VHM0: [0.5, 99], VMDR: [120, 400], VTPK: [6, null] } } };
+  const r = parseCopernicus(raw, t0 + 10 * H);
+  assert.deepEqual(r.block.times, [t0, t0 + H]);
+  assert.deepEqual(r.block.values.carnon.copernicus.VHM0, [0.5, null]);
+  assert.deepEqual(r.block.values.carnon.copernicus.VMDR, [120, null]);
+  assert.equal(r.stats.rejected, 2); assert.equal(r.stats.missing, 1);
+  assert.ok(Math.abs(r.ageH - (10 * H - 9 * H - 25 * 60e3 - 49e3) / H) < 1e-6);
+  assert.throws(() => parseCopernicus({ generated: raw.generated, points: {} }, t0));
+  assert.throws(() => parseCopernicus({ generated: raw.generated, points: { a: { time: ['2026-11-10T00:00:00Z'] }, b: { time: ['2026-11-10T01:00:00Z'] } } }, t0));
 });

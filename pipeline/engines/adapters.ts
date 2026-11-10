@@ -75,3 +75,11 @@ export function legacySuperPrevision(block: ForecastBlock | undefined, registry:
   }
   return { spots, live: live ?? null };
 }
+
+/** Copernicus au format brut lu par SurfEngine.parseCopernicus (variables CMEMS, temps en ms). */
+export function legacyCopernicusRaw(block: ForecastBlock | undefined) {
+  if (!block) return null;
+  const points: Record<string, Record<string, unknown>> = {};
+  for (const [id, byModel] of Object.entries(block.values)) points[id] = { time: block.times.slice(), ...byModel.copernicus };
+  return { generated: new Date(block.provenance.issuedAt ?? block.provenance.fetchedAt).toISOString(), points };
+}
