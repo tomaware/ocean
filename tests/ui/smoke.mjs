@@ -50,6 +50,7 @@ for (const [name, opt] of [['mobile', { ...devices['iPhone 13'], locale: 'fr-FR'
         const bars = await p.locator('.notecard .scorebars rect.b-good, .notecard .scorebars rect.b-mid, .notecard .scorebars rect.b-bad').count();
         if (bb && bars) {
           const bar = p.locator('.notecard .scorebars rect.b-good, .notecard .scorebars rect.b-mid, .notecard .scorebars rect.b-bad').first();
+          await p.locator('.notecard .scorebars').scrollIntoViewIfNeeded();   // titres longs : le graphique peut être sous la ligne de flottaison
           const rb = await bar.boundingBox();
           if (name === 'mobile' || name === 'sombre') await p.mouse.click(rb.x + rb.width / 2, rb.y + rb.height - 2); else await p.mouse.move(rb.x + rb.width / 2, rb.y + rb.height - 2);
           await p.waitForTimeout(150);
