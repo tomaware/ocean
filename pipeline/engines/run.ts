@@ -122,6 +122,12 @@ function report(now: number, checks: Check[], o: ReturnType<typeof runEngines>, 
   for (const w of o.downwindJSON.best.slice(0, 5)) s += `| ${d(w.start)} → ${d(w.end)} | ${w.from} → ${w.to} | ${w.mean} | ${w.peak} |\n`;
   s += `\n## Wing foil — sessions 2H (niveau intermédiaire, vent corrigé de la super prévision)\n\n| Spot | Créneaux |\n|---|---|\n`;
   for (const x of wing.spots) s += `| ${x.name} | ${x.sessions.intermediaire.map((w) => `${d(w.start)} → ${d(w.end)} : ${label(w.peak)} (moy. ${w.mean}, pic ${w.peak})`).join(' ; ') || 'aucun'} |\n`;
+  s += `\n### Détail (toutes les 2 h de jour, intermédiaire)\n\nVent en nœuds (rafales) · d'où il vient · secteur · note · ce qui limite.\n\n`;
+  const DIR = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSO', 'SO', 'OSO', 'O', 'ONO', 'NO', 'NNO'];
+  for (const x of wing.spots) {
+    const rows = x.hours.filter((h) => h.day && h.t >= now && new Date(h.t).getUTCHours() % 2 === 0);
+    s += `**${x.name}** — ` + (rows.map((h) => `${d(h.t)} ${Math.round(h.kn ?? 0)} (${h.gust === null ? '—' : Math.round(h.gust)}) ${h.dir === null ? '?' : DIR[Math.round(h.dir / 22.5) % 16]} ${h.sector ?? ''} **${h.scores.intermediaire}**${h.limit.intermediaire ? ' ' + h.limit.intermediaire : ''}`).join(' · ') || 'aucune heure') + `\n\n`;
+  }
   s += `\nÀ ce stade (M2) : Copernicus n'est pas inclus (les apps actuelles l'utilisent quand il est frais) ; la note wing (v1.0, validée le 10/11) part du vent corrigé de la super prévision ; pas de note kite (décision de Tom).\n`;
   return s;
 }
