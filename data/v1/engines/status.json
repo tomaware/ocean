@@ -1,5 +1,5 @@
 {
- "generatedAt": 1794269714055,
+ "generatedAt": 1794269760558,
  "checks": [
   {
    "id": "golden-surf",
@@ -29,7 +29,7 @@
   {
    "id": "ecart-prod-surf",
    "ok": true,
-   "detail": "notes surf OCEAN vs app en service (calcul prod. 35 min avant, prod avec Copernicus) : médiane 0.20, 90 % ≤ 1.30, max 4.60 sur 1328 heures"
+   "detail": "notes surf OCEAN vs app en service (calcul prod. 36 min avant, prod avec Copernicus) : médiane 0.20, 90 % ≤ 1.30, max 4.60 sur 1328 heures"
   },
   {
    "id": "ecart-prod-downwind",
