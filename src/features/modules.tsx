@@ -61,7 +61,7 @@ function Prevision({ d, now, disc, spots, L, query }: { d: AllData; now: number;
     if (ss.length) return { session: true, hours: ss.reduce((a, s) => a + s.hours, 0), peak: Math.max(...ss.map((s) => s.peak)), text: '' };
     // pas de session : case vide (demande de Tom, 10/11 : « autant rien mettre ») ; « — » seulement sans prévision
     const s = series[sp.id];
-    const has = !!s && s.times.some((t, i) => dayKey(t) === k && s.day[i]);
+    const has = !!s && s.times.some((t) => dayKey(t) === k);   // nuit déjà tombée : case vide, pas « — »
     return { session: false, hours: 0, peak: null, text: has ? '' : '—' };
   };
   const selSpot = sel ? spots.find((s) => s.id === sel.spot) : null;

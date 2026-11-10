@@ -160,36 +160,6 @@
       "notes": "Orientation proposée à partir de guides de spots (10/11) ; à confirmer par Tom."
     },
     {
-      "id": "almanarre",
-      "name": "Almanarre (Hyères)",
-      "kind": "spot",
-      "geometry": {
-        "lat": 43.065,
-        "lon": 6.115
-      },
-      "disciplines": [
-        "wing"
-      ],
-      "waterBody": "sea",
-      "orientation": {
-        "seaward": 245,
-        "confidence": "low",
-        "source": "plage ouest du tombolo, orientée OSO ; O et SO favorables, vent d’est listé mais de terre ici : à confirmer"
-      },
-      "windStations": {
-        "windsUp": "2-almanarre-salin-des-pesquiers",
-        "metar": "LFTH"
-      },
-      "legacy": {
-        "superPrevisionVent": "2-almanarre-salin-des-pesquiers"
-      },
-      "confidence": "medium",
-      "sources": [
-        "super-prevision-vent.gs v3.4 (SPOTS)"
-      ],
-      "notes": "Orientation proposée à partir de guides de spots (10/11) ; à confirmer par Tom."
-    },
-    {
       "id": "berre-jai",
       "name": "Étang de Berre (Le Jaï)",
       "kind": "spot",
@@ -226,6 +196,36 @@
         "vvanat.fr : plage du Jaï, wingfoil"
       ],
       "notes": "Ajouté le 10/11 à la demande de Tom. Pas dans la super prévision : vent = meilleur modèle aux mesures de Marignane (LFML) sur 3 jours, non corrigé. Orientation à confirmer."
+    },
+    {
+      "id": "almanarre",
+      "name": "Almanarre (Hyères)",
+      "kind": "spot",
+      "geometry": {
+        "lat": 43.065,
+        "lon": 6.115
+      },
+      "disciplines": [
+        "wing"
+      ],
+      "waterBody": "sea",
+      "orientation": {
+        "seaward": 245,
+        "confidence": "low",
+        "source": "plage ouest du tombolo, orientée OSO ; O et SO favorables, vent d’est listé mais de terre ici : à confirmer"
+      },
+      "windStations": {
+        "windsUp": "2-almanarre-salin-des-pesquiers",
+        "metar": "LFTH"
+      },
+      "legacy": {
+        "superPrevisionVent": "2-almanarre-salin-des-pesquiers"
+      },
+      "confidence": "medium",
+      "sources": [
+        "super-prevision-vent.gs v3.4 (SPOTS)"
+      ],
+      "notes": "Orientation proposée à partir de guides de spots (10/11) ; à confirmer par Tom."
     },
     {
       "id": "carnon",
