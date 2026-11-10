@@ -1,11 +1,11 @@
 {
- "generatedAt": 1794311190885,
+ "generatedAt": 1794311342056,
  "status": [
   {
    "id": "open-meteo-marine",
    "ok": true,
    "message": "ok",
-   "durationMs": 1146,
+   "durationMs": 1358,
    "points": 19,
    "models": [
     "meteofrance_wave",
@@ -24,7 +24,7 @@
    "id": "copernicus-medwav",
    "ok": true,
    "message": "ok",
-   "durationMs": 186,
+   "durationMs": 143,
    "points": 13,
    "models": [
     "copernicus"
@@ -39,7 +39,7 @@
    "id": "open-meteo-vent-moteurs",
    "ok": true,
    "message": "ok",
-   "durationMs": 487,
+   "durationMs": 662,
    "points": 79,
    "models": [
     "meteofrance_seamless",
@@ -55,7 +55,7 @@
    "id": "open-meteo-vent-spots",
    "ok": true,
    "message": "ok",
-   "durationMs": 96,
+   "durationMs": 102,
    "points": 9,
    "models": [
     "meteofrance_arome_france_hd",
@@ -76,7 +76,7 @@
    "id": "super-prevision",
    "ok": true,
    "message": "ok",
-   "durationMs": 1805,
+   "durationMs": 1494,
    "points": 6,
    "models": [
     "super-prevision"
@@ -91,34 +91,34 @@
    "id": "candhis",
    "ok": true,
    "message": "ok",
-   "durationMs": 297,
+   "durationMs": 249,
    "points": 5,
    "models": [],
    "values": 34314,
    "missing": 3645,
    "rejected": 0,
    "lastObservationAgeMin": {
-    "03001": 77,
-    "03404": 77,
-    "01102": 1307,
-    "01101": 77,
-    "06601": 29117
+    "03001": 79,
+    "03404": 79,
+    "01102": 1309,
+    "01101": 79,
+    "06601": 29119
    }
   },
   {
    "id": "metar",
    "ok": true,
    "message": "ok",
-   "durationMs": 328,
+   "durationMs": 508,
    "points": 3,
    "models": [],
    "values": 1200,
    "missing": 454,
    "rejected": 0,
    "lastObservationAgeMin": {
-    "LFMT": 17,
-    "LFMP": 17,
-    "LFTH": 17
+    "LFMT": 19,
+    "LFMP": 19,
+    "LFTH": 19
    }
   }
  ],
@@ -146,7 +146,7 @@
   {
    "id": "fraicheur-copernicus",
    "ok": true,
-   "detail": "extrait de 1.8 h (13 points, 267 h) (seuil 30 h)"
+   "detail": "extrait de 1.9 h (13 points, 267 h) (seuil 30 h)"
   },
   {
    "id": "points-copernicus",
@@ -196,12 +196,12 @@
   {
    "id": "fraicheur-candhis",
    "ok": true,
-   "detail": "03001 77 min · 03404 77 min · 01101 77 min (seuil 180 min)"
+   "detail": "03001 79 min · 03404 79 min · 01101 79 min (seuil 180 min)"
   },
   {
    "id": "fraicheur-metar",
    "ok": true,
-   "detail": "LFMT 17 min · LFMP 17 min · LFTH 17 min (seuil 120 min)"
+   "detail": "LFMT 19 min · LFMP 19 min · LFTH 19 min (seuil 120 min)"
   },
   {
    "id": "confidentialite",
