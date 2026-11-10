@@ -1,17 +1,17 @@
 # Rapport de collecte (① COLLECTE)
 
-Généré le 2026-11-10 00:16 UTC par `pipeline/collect/run.ts` (GitHub Actions, toutes les heures).
+Généré le 2026-11-10 00:20 UTC par `pipeline/collect/run.ts` (GitHub Actions, toutes les heures).
 
 ## Sources
 
 | Source | État | Points | Modèles | Valeurs | Manquantes | Rejetées | Période | Durée |
 |---|---|---|---|---|---|---|---|---|
-| open-meteo-marine | ✅ | 19 | meteofrance_wave, ecmwf_wam025, ewam, gwam, ncep_gfswave025 | 426360 | 207670 | 0 | 2026-11-07 00:00 UTC → 2026-11-17 23:00 UTC | 0.9 s |
-| open-meteo-vent-moteurs | ✅ | 79 | meteofrance_seamless, ecmwf_ifs025 | 125136 | 22515 | 0 | 2026-11-07 00:00 UTC → 2026-11-17 23:00 UTC | 0.9 s |
+| open-meteo-marine | ✅ | 19 | meteofrance_wave, ecmwf_wam025, ewam, gwam, ncep_gfswave025 | 426360 | 207670 | 0 | 2026-11-07 00:00 UTC → 2026-11-17 23:00 UTC | 1.4 s |
+| open-meteo-vent-moteurs | ✅ | 79 | meteofrance_seamless, ecmwf_ifs025 | 125136 | 22515 | 0 | 2026-11-07 00:00 UTC → 2026-11-17 23:00 UTC | 0.6 s |
 | open-meteo-vent-spots | ✅ | 9 | meteofrance_arome_france_hd, meteofrance_arome_france, icon_d2, ecmwf_ifs025, icon_eu, meteofrance_arpege_europe, gfs_seamless | 45936 | 14280 | 0 | 2026-11-07 00:00 UTC → 2026-11-17 23:00 UTC | 0.1 s |
 | super-prevision | ✅ | 6 | super-prevision | 376 | 0 | 0 | 2026-11-10 05:00 UTC → 2026-11-13 20:00 UTC | 1.5 s |
 | candhis | ✅ | 5 | — | 34326 | 3662 | 0 | — | 0.1 s |
-| metar | ✅ | 3 | — | 1200 | 457 | 0 | — | 0.2 s |
+| metar | ✅ | 3 | — | 1200 | 457 | 0 | — | 0.5 s |
 
 ## Contrôles
 
@@ -29,8 +29,8 @@ Généré le 2026-11-10 00:16 UTC par `pipeline/collect/run.ts` (GitHub Actions,
 | couverture-open-meteo-vent-spots | ✅ | 9 points, 48 h à venir dans la grille ; tous complets (≥ 90 % sur 48 h) |
 | modeles-open-meteo-vent-spots | ✅ | wind_speed_10m sur 48 h : meteofrance_arome_france_hd 94 % · meteofrance_arome_france 94 % · icon_d2 42 % · ecmwf_ifs025 100 % · icon_eu 100 % · meteofrance_arpege_europe 100 % · gfs_seamless 100 % |
 | couverture-super-prevision | ✅ | 6 spots sur 6 ; 32 heures de jour dans les 48 h à venir |
-| fraicheur-candhis | ✅ | 03001 46 min · 03404 46 min · 01101 46 min (seuil 180 min) |
-| fraicheur-metar | ✅ | LFMT 16 min · LFMP 16 min · LFTH 16 min (seuil 120 min) |
+| fraicheur-candhis | ✅ | 03001 51 min · 03404 51 min · 01101 51 min (seuil 180 min) |
+| fraicheur-metar | ✅ | LFMT 21 min · LFMP 21 min · LFTH 21 min (seuil 120 min) |
 | confidentialite | ✅ | aucun relevé Winds-Up, aucune clé, aucune URL privée dans les données publiées |
 
 Unités stockées : m/s, m, s, degrés, °C ; heures UTC. Les relevés Winds-Up ne sont jamais collectés ici (mode perso uniquement).
