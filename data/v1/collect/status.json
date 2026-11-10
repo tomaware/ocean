@@ -1,11 +1,11 @@
 {
- "generatedAt": 1794326840732,
+ "generatedAt": 1794328149691,
  "status": [
   {
    "id": "open-meteo-marine",
    "ok": true,
    "message": "ok",
-   "durationMs": 890,
+   "durationMs": 1266,
    "points": 19,
    "models": [
     "meteofrance_wave",
@@ -15,7 +15,7 @@
     "ncep_gfswave025"
    ],
    "values": 426360,
-   "missing": 199918,
+   "missing": 197638,
    "rejected": 0,
    "first": 1794009600000,
    "last": 1794956400000
@@ -24,7 +24,7 @@
    "id": "copernicus-medwav",
    "ok": true,
    "message": "ok",
-   "durationMs": 153,
+   "durationMs": 197,
    "points": 13,
    "models": [
     "copernicus"
@@ -39,7 +39,7 @@
    "id": "open-meteo-vent-moteurs",
    "ok": true,
    "message": "ok",
-   "durationMs": 456,
+   "durationMs": 556,
    "points": 79,
    "models": [
     "meteofrance_seamless",
@@ -55,7 +55,7 @@
    "id": "open-meteo-meteo",
    "ok": true,
    "message": "ok",
-   "durationMs": 90,
+   "durationMs": 132,
    "points": 17,
    "models": [
     "best_match"
@@ -70,7 +70,7 @@
    "id": "open-meteo-vent-spots",
    "ok": true,
    "message": "ok",
-   "durationMs": 67,
+   "durationMs": 108,
    "points": 9,
    "models": [
     "meteofrance_arome_france_hd",
@@ -82,7 +82,7 @@
     "gfs_seamless"
    ],
    "values": 45936,
-   "missing": 12156,
+   "missing": 12120,
    "rejected": 0,
    "first": 1794009600000,
    "last": 1794956400000
@@ -91,49 +91,49 @@
    "id": "super-prevision",
    "ok": true,
    "message": "ok",
-   "durationMs": 1234,
+   "durationMs": 1495,
    "points": 6,
    "models": [
     "super-prevision"
    ],
-   "values": 372,
+   "values": 366,
    "missing": 0,
    "rejected": 0,
-   "first": 1794322800000,
+   "first": 1794326400000,
    "last": 1794657600000
   },
   {
    "id": "candhis",
    "ok": true,
    "message": "ok",
-   "durationMs": 489,
+   "durationMs": 363,
    "points": 5,
    "models": [],
    "values": 34338,
    "missing": 3650,
    "rejected": 0,
    "lastObservationAgeMin": {
-    "03001": 37,
-    "03404": 37,
-    "01102": 1567,
-    "01101": 37,
-    "06601": 29377
+    "03001": 59,
+    "03404": 59,
+    "01102": 1589,
+    "01101": 59,
+    "06601": 29399
    }
   },
   {
    "id": "metar",
    "ok": true,
    "message": "ok",
-   "durationMs": 200,
+   "durationMs": 393,
    "points": 3,
    "models": [],
    "values": 1200,
    "missing": 451,
    "rejected": 0,
    "lastObservationAgeMin": {
-    "LFMT": 7,
-    "LFMP": 7,
-    "LFTH": 7
+    "LFMT": 29,
+    "LFMP": 29,
+    "LFTH": 29
    }
   }
  ],
@@ -141,7 +141,7 @@
   {
    "id": "fidelite-vagues",
    "ok": true,
-   "detail": "127167 valeurs comparées au parseur du moteur surf, 0 écart(s)"
+   "detail": "128307 valeurs comparées au parseur du moteur surf, 0 écart(s)"
   },
   {
    "id": "grille-open-meteo-marine",
@@ -161,7 +161,7 @@
   {
    "id": "fraicheur-copernicus",
    "ok": true,
-   "detail": "extrait de 0.3 h (13 points, 261 h) (seuil 30 h)"
+   "detail": "extrait de 0.7 h (13 points, 261 h) (seuil 30 h)"
   },
   {
    "id": "points-copernicus",
@@ -206,7 +206,7 @@
   {
    "id": "modeles-open-meteo-vent-spots",
    "ok": true,
-   "detail": "wind_speed_10m sur 48 h : meteofrance_arome_france_hd 98 % · meteofrance_arome_france 98 % · icon_d2 41 % · ecmwf_ifs025 100 % · icon_eu 100 % · meteofrance_arpege_europe 100 % · gfs_seamless 100 %"
+   "detail": "wind_speed_10m sur 48 h : meteofrance_arome_france_hd 98 % · meteofrance_arome_france 98 % · icon_d2 44 % · ecmwf_ifs025 100 % · icon_eu 100 % · meteofrance_arpege_europe 100 % · gfs_seamless 100 %"
   },
   {
    "id": "couverture-super-prevision",
@@ -216,12 +216,12 @@
   {
    "id": "fraicheur-candhis",
    "ok": true,
-   "detail": "03001 37 min · 03404 37 min · 01101 37 min (seuil 180 min)"
+   "detail": "03001 59 min · 03404 59 min · 01101 59 min (seuil 180 min)"
   },
   {
    "id": "fraicheur-metar",
    "ok": true,
-   "detail": "LFMT 7 min · LFMP 7 min · LFTH 7 min (seuil 120 min)"
+   "detail": "LFMT 29 min · LFMP 29 min · LFTH 29 min (seuil 120 min)"
   },
   {
    "id": "confidentialite",
