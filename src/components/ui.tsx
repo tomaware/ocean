@@ -2,7 +2,7 @@ import type { ComponentChildren } from 'preact';
 import { Route, Star, Waves, Wind } from 'lucide-preact';
 import type { Discipline, Session } from '../services/data';
 import { DISC_LABEL, LEVEL_LABEL } from '../services/data';
-import { labelOf, n1, span, toneOf } from '../services/format';
+import { hh, labelOf, n1, span, toneOf } from '../services/format';
 import { toggleFavorite, usePrefs } from '../services/prefs';
 
 export function Badge({ score, size }: { score: number | null | undefined; size?: 'lg' }) {
@@ -38,16 +38,17 @@ export function Seg<T extends string>({ value, options, onChange, label }: { val
   );
 }
 
-export function SessionRow({ s, now, showSpot = true }: { s: Session; now: number; showSpot?: boolean }) {
+// compact : liste d'un seul module, déjà groupée par jour et filtrée par niveau → heures seules, sans icône ni niveau
+export function SessionRow({ s, now, showSpot = true, compact = false }: { s: Session; now: number; showSpot?: boolean; compact?: boolean }) {
   return (
-    <a class="session" href={`#/spot/${s.spot}`}>
-      <DiscIcon d={s.discipline} />
+    <a class={`session${compact ? ' compact' : ''}`} href={`#/spot/${s.spot}`}>
+      {!compact && <DiscIcon d={s.discipline} />}
       <div class="stack" style={{ gap: '2px', minWidth: 0 }}>
         <div class="row" style={{ gap: '6px' }}>
           {showSpot && <strong>{s.spotName}</strong>}
-          <span class="faint">{span(s.start, s.end, now)}</span>
+          <span class="faint">{compact ? `${hh(s.start)} – ${hh(s.end)} · ${s.hours} h` : span(s.start, s.end, now)}</span>
         </div>
-        <span class="small muted">{s.text}{s.level !== 'tous' ? ` · ${LEVEL_LABEL[s.level].toLowerCase()}` : ''}</span>
+        <span class="small muted">{s.text}{!compact && s.level !== 'tous' ? ` · ${LEVEL_LABEL[s.level].toLowerCase()}` : ''}</span>
         {s.why && <span class="faint">Limite : {s.why}</span>}
       </div>
       <Badge score={s.peak} />

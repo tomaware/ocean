@@ -3,16 +3,16 @@
 ## Pour qui
 Tout le monde (app publique), plus un **mode perso** pour Tom (relevés Winds-Up en direct, lus depuis son appareil seulement).
 
-## Navigation (5 onglets)
-| Onglet | Rôle | Écran |
+## Navigation : 3 onglets en haut, un par module (demande de Tom, 10/11)
+| Onglet | Module | Contenu |
 |---|---|---|
-| Accueil | « Où et quand aller à l'eau ? » : la meilleure session à venir par discipline (wing, surf, downwind, pas de classement entre elles, D-15), puis les prochaines sessions (sur les favoris s'il y en a) | `#/` |
-| Spots | Carte + liste des 17 spots et parcours, filtre par discipline, étoile favori | `#/spots` |
-| Prévisions | Choix du spot, puis fiche spot | `#/previsions`, `#/spot/<id>` |
-| Sessions | Toutes les sessions 2H à venir, par jour, filtres discipline / favoris | `#/sessions` |
-| Profil | Niveau par discipline, favoris, thème, mode perso, lien vers Fiabilité | `#/profil`, `#/fiabilite` |
+| **WIND** | Wing foil (vent corrigé par la super prévision) | niveau, meilleure session à venir, sessions 2H par jour, carte + liste des 6 spots, relevés en direct (mode perso) |
+| **VAGUE** | Surf (vagues à la côte, Copernicus + 5 modèles recalés aux bouées) | meilleure session, sessions 2H par jour, carte + liste des 8 spots |
+| **HOULE** | Downwind (vent + houle au large) | niveau, meilleure session, sessions 2H par jour, carte + 3 parcours |
 
-Mobile : barre d'onglets en bas. Ordinateur : barre latérale.
+Adresses : `#/wind`, `#/vague`, `#/houle`, fiche `#/spot/<id>` (l'onglet de son module reste actif), `#/profil` (icône en haut à droite), `#/fiabilite`. Les anciennes adresses (`#/`, `#/spots`, `#/sessions`, `#/previsions`) mènent à WIND.
+
+Mobile : barre du haut collante, icône + nom pour chaque onglet. Ordinateur : même barre, onglets centrés.
 
 ## Trois niveaux de lecture (fiche spot)
 1. **Synthèse** : sessions 2H du spot + frise jour par jour (une barre par heure, couleur = note).

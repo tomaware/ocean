@@ -3,8 +3,8 @@
 import { createRequire } from 'node:module';
 const { chromium, devices } = createRequire(import.meta.url)('playwright');   // installé à part (CI : npm i --no-save playwright)
 const base = process.argv[2] ?? 'http://localhost:4173';
-const routes = [['', 'Où et quand aller'], ['spots', 'Spots'], ['previsions', 'Prévisions'], ['spot/port-camargue', 'Sessions 2H'], ['spot/carnon', 'Jour par jour'],
-  ['spot/plagesud-grandemotte', 'Jour par jour'], ['sessions', 'Sessions 2H'], ['profil', 'Mode perso'], ['fiabilite', 'Fiabilité']];
+const routes = [['', 'Où naviguer en wing'], ['wind', 'Où naviguer en wing'], ['vague', 'Où surfer'], ['houle', 'Quel downwind'], ['spot/port-camargue', 'Jour par jour'],
+  ['spot/carnon', 'Jour par jour'], ['spot/plagesud-grandemotte', 'Jour par jour'], ['sessions', 'Où naviguer en wing'], ['profil', 'Mode perso'], ['fiabilite', 'Fiabilité']];
 const errs = [];
 const b = await chromium.launch();
 // langue fixée (fr-FR) ; un 3e passage sans langue fixée vérifie que l'app survit à une langue système invalide
@@ -23,6 +23,8 @@ for (const [name, opt] of [['mobile', { ...devices['iPhone 13'], locale: 'fr-FR'
       const over = await p.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
       if (over > 1) errs.push(`${name} #/${r} (${reading}) : débordement horizontal de ${over} px`);
       if (await p.locator('.notice.warn').filter({ hasText: 'Données indisponibles' }).count()) errs.push(`${name} #/${r} : données indisponibles`);
+      const tabs = await p.locator('.tabs a').allInnerTexts();
+      if (tabs.map((x) => x.trim()).join(',') !== 'WIND,VAGUE,HOULE') errs.push(`${name} #/${r} : onglets ${tabs.join(',')}`);
     }
   }
   await ctx.close();

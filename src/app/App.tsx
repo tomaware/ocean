@@ -1,15 +1,17 @@
 import { useEffect, useState } from 'preact/hooks';
-import { CalendarClock, ChartLine, House, MapPin, User } from 'lucide-preact';
-import { useData } from '../services/data';
-import { Forecasts, Home, Profile, Reliability, Sessions, SpotPage, Spots } from '../features/pages';
+import { Route as RouteIcon, User, Waves, Wind } from 'lucide-preact';
+import { spotDiscipline, useData } from '../services/data';
+import { Module, MODULES, moduleOf, Profile, Reliability, SpotPage } from '../features/pages';
 
-type Route = { name: string; id?: string; query: URLSearchParams };
+type Route = { name: string; id?: string };
 function parse(): Route {
-  const [path, q] = (location.hash.replace(/^#/, '') || '/').split('?');
+  const [path] = (location.hash.replace(/^#/, '') || '/').split('?');
   const parts = path.split('/').filter(Boolean);
-  return { name: parts[0] ?? 'accueil', id: parts[1], query: new URLSearchParams(q ?? '') };
+  const name = parts[0] ?? 'wind';
+  // anciennes adresses (accueil, spots, prévisions, sessions) → WIND
+  return { name: ['accueil', 'spots', 'previsions', 'sessions'].includes(name) ? 'wind' : name, id: parts[1] };
 }
-const TITLES: Record<string, string> = { accueil: 'Accueil', spots: 'Spots', previsions: 'Prévisions', spot: 'Prévisions', sessions: 'Sessions', profil: 'Profil', fiabilite: 'Fiabilité' };
+const ICONS = { wind: Wind, vague: Waves, houle: RouteIcon } as const;
 
 export function App() {
   const [route, setRoute] = useState(parse());
@@ -21,25 +23,30 @@ export function App() {
     const iv = setInterval(() => setNow(Date.now()), 60e3);
     return () => { removeEventListener('hashchange', on); clearInterval(iv); };
   }, []);
-  useEffect(() => { document.title = `${TITLES[route.name] ?? 'OCEAN'} · OCEAN`; }, [route.name]);
-  const tab = route.name === 'spot' ? 'previsions' : route.name === 'fiabilite' ? 'profil' : route.name;
-  const items: [string, string, any][] = [['accueil', 'Accueil', House], ['spots', 'Spots', MapPin], ['previsions', 'Prévisions', ChartLine], ['sessions', 'Sessions', CalendarClock], ['profil', 'Profil', User]];
+  const spot = route.name === 'spot' && data ? data.spots.find((s) => s.id === route.id) : null;
+  const tab = spot ? moduleOf(spotDiscipline(spot)).slug : route.name;
+  const mod = MODULES.find((m) => m.slug === tab);
+  useEffect(() => { document.title = `${spot ? spot.name : mod ? mod.tab : route.name === 'fiabilite' ? 'Fiabilité' : 'Profil'} · OCEAN`; }, [tab, spot?.id]);
+
   let page;
   if (error) page = <div class="notice warn">Données indisponibles ({error}). Réessaie dans quelques minutes.</div>;
   else if (!data) page = <><div class="skeleton" /><div class="skeleton" /></>;
-  else if (route.name === 'spots') page = <Spots d={data} now={now} />;
   else if (route.name === 'spot' && route.id) page = <SpotPage d={data} id={route.id} now={now} />;
-  else if (route.name === 'previsions') page = <Forecasts d={data} now={now} />;
-  else if (route.name === 'sessions') page = <Sessions d={data} now={now} query={route.query} />;
   else if (route.name === 'profil') page = <Profile d={data} />;
   else if (route.name === 'fiabilite') page = <Reliability d={data} now={now} />;
-  else page = <Home d={data} now={now} />;
+  else page = <Module key={(mod ?? MODULES[0]).disc} d={data} now={now} disc={(mod ?? MODULES[0]).disc} />;
   return (
     <div class="shell">
-      <nav class="nav" aria-label="Navigation principale">
-        <span class="brand"><img src="./icon.svg" width="28" height="28" alt="" /> OCEAN</span>
-        {items.map(([k, l, I]) => <a key={k} href={`#/${k === 'accueil' ? '' : k}`} aria-current={tab === k ? 'page' : undefined}><I size={20} aria-hidden="true" /><span>{l}</span></a>)}
-      </nav>
+      <header class="topbar">
+        <a class="brand" href="#/wind" aria-label="OCEAN, accueil"><img src="./icon.svg" width="26" height="26" alt="" /><span>OCEAN</span></a>
+        <nav class="tabs" aria-label="Modules">
+          {MODULES.map((m) => {
+            const I = ICONS[m.slug as keyof typeof ICONS];
+            return <a key={m.slug} href={`#/${m.slug}`} aria-current={tab === m.slug ? 'page' : undefined}><I size={18} aria-hidden="true" /><span>{m.tab}</span></a>;
+          })}
+        </nav>
+        <a class="me" href="#/profil" aria-label="Profil et réglages" aria-current={tab === 'profil' || tab === 'fiabilite' ? 'page' : undefined}><User size={20} /></a>
+      </header>
       <main class="main" id="contenu">{page}</main>
     </div>
   );

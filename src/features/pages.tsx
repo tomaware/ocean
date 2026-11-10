@@ -11,7 +11,6 @@ import { Chart } from '../components/Chart';
 import { SpotMap } from '../components/SpotMap';
 import { seriesFor } from './series';
 
-const DISCS: Discipline[] = ['wing', 'surf', 'downwind'];
 const levelFor = (prefs: ReturnType<typeof usePrefs>, d: Discipline): Level => prefs.levels[d];
 const matches = (s: Session, prefs: ReturnType<typeof usePrefs>) => s.level === 'tous' || s.level === levelFor(prefs, s.discipline);
 const upcoming = (d: AllData, now: number) => d.sessions.sessions.filter((s) => s.end > now);
@@ -51,68 +50,72 @@ function LiveBox({ live, spot }: { live: Live[] | null; spot?: string }) {
   );
 }
 
-// ------------------------------------------------------------------ Accueil
-export function Home({ d, now }: { d: AllData; now: number }) {
+// ------------------------------------------------------------------ Modules WIND / VAGUE / HOULE
+export const MODULES: { slug: string; disc: Discipline; tab: string; title: string; sub: string }[] = [
+  { slug: 'wind', disc: 'wing', tab: 'WIND', title: 'Où naviguer en wing ?', sub: 'Wing foil · vent corrigé par la super prévision, du Barcarès à Hyères' },
+  { slug: 'vague', disc: 'surf', tab: 'VAGUE', title: 'Où surfer ?', sub: 'Surf · vagues à la côte, recalées sur les bouées, de Perafita à Carnon' },
+  { slug: 'houle', disc: 'downwind', tab: 'HOULE', title: 'Quel downwind ?', sub: 'Downwind wing foil · vent + houle au large, Frontignan → Espiguette' },
+];
+export const moduleOf = (disc: Discipline) => MODULES.find((m) => m.disc === disc)!;
+
+export function Module({ d, now, disc }: { d: AllData; now: number; disc: Discipline }) {
   const prefs = usePrefs();
-  const live = useLive(d.spots.filter((s) => s.disciplines.includes('wing')).map((s) => s.id));
-  const favs = d.spots.filter((s) => prefs.favorites.includes(s.id));
-  const next = upcoming(d, now).filter((s) => matches(s, prefs) && (!favs.length || prefs.favorites.includes(s.spot))).slice(0, 8);
+  const m = moduleOf(disc);
+  const L = levelFor(prefs, disc);
+  const [onlyFav, setOnlyFav] = useState(false);
+  const spots = d.spots.filter((s) => spotDiscipline(s) === disc);
+  const live = useLive(disc === 'wing' ? spots.map((s) => s.id) : []);
+  const best = useMemo(() => bestScoreBySpot(d, prefs, now), [d, prefs, now]);
+  const top = d.sessions.best[L]?.[disc] ?? null;
+  const list = upcoming(d, now).filter((s) => s.discipline === disc && matches(s, prefs) && (!onlyFav || prefs.favorites.includes(s.spot)));
+  const byDay = new Map<string, Session[]>();
+  list.forEach((s) => { const k = dayKey(s.start); if (!byDay.has(k)) byDay.set(k, []); byDay.get(k)!.push(s); });
+  const meta = d.meta.disciplines[disc];
   return (
     <>
       <header class="page-head">
-        <span class="eyebrow">Golfe du Lion · Perpignan → Almanarre</span>
-        <h1>Où et quand aller à l’eau ?</h1>
-        <Freshness d={d} now={now} />
-      </header>
-      <LiveBox live={live.live} />
-      <div class="grid cols-3">
-        {DISCS.map((disc) => {
-          const L = levelFor(prefs, disc);
-          const best = d.sessions.best[L]?.[disc] ?? null;
-          return (
-            <a key={disc} class="card link" href={best ? `#/spot/${best.spot}` : `#/sessions?d=${disc}`}>
-              <div class="row between"><div class="row"><DiscIcon d={disc} /><strong>{DISC_LABEL[disc]}</strong></div><span class="faint">{disc === 'surf' ? 'tous niveaux' : LEVEL_LABEL[L].toLowerCase()}</span></div>
-              {best ? (
-                <>
-                  <div class="row between"><span class="big">{best.spotName}</span><Badge score={best.peak} size="lg" /></div>
-                  <span class="muted">{span(best.start, best.end, now)}</span>
-                  <span class="small">{best.text}</span>
-                </>
-              ) : <span class="muted">Pas de session 2H dans les prochains jours.</span>}
-            </a>
-          );
-        })}
-      </div>
-      <Section title={favs.length ? 'Prochaines sessions sur tes spots' : 'Prochaines sessions'} aside={<a href="#/sessions" class="small">Tout voir</a>}>
-        <div class="card">
-          {next.length ? <div class="list">{next.map((s) => <SessionRow key={s.id} s={s} now={now} />)}</div> : <div class="empty">Rien de bon en vue pour l’instant.</div>}
+        <span class="eyebrow">{m.tab} · {DISC_LABEL[disc]}</span>
+        <h1>{m.title}</h1>
+        <span class="muted">{m.sub}</span>
+        <div class="row between"><Freshness d={d} now={now} />
+          {disc !== 'surf' && <Seg<Level> label={`Niveau ${DISC_LABEL[disc]}`} value={L} onChange={(v) => setPrefs((p) => ({ ...p, levels: { ...p.levels, [disc]: v } }))} options={LEVELS.map((l) => [l, LEVEL_LABEL[l]] as [Level, string])} />}
         </div>
-      </Section>
-      <p class="faint">Une session = au moins 2 h d’affilée à 5/10 ou plus, de jour. Les notes ne se comparent pas d’une discipline à l’autre.</p>
-    </>
-  );
-}
-
-// ------------------------------------------------------------------ Spots
-export function Spots({ d, now }: { d: AllData; now: number }) {
-  const prefs = usePrefs();
-  const [disc, setDisc] = useState<'all' | Discipline>('all');
-  const best = useMemo(() => bestScoreBySpot(d, prefs, now), [d, prefs, now]);
-  const list = d.spots.filter((s) => disc === 'all' || spotDiscipline(s) === disc);
-  return (
-    <>
-      <header class="page-head"><h1>Spots</h1><span class="muted">{d.spots.length} spots et parcours, de la Côte Vermeille à Hyères.</span></header>
-      <Seg label="Discipline" value={disc} onChange={setDisc} options={[['all', 'Tous'], ['wing', 'Wing'], ['surf', 'Surf'], ['downwind', 'Downwind']]} />
-      <SpotMap spots={list} best={best} />
-      <div class="card"><div class="list">
-        {list.map((s) => (
-          <a key={s.id} class="session" href={`#/spot/${s.id}`}>
-            <DiscIcon d={spotDiscipline(s)} />
-            <div class="stack" style={{ gap: '2px' }}><strong>{s.name}</strong><span class="faint">{DISC_LABEL[spotDiscipline(s)]}{s.waterBody === 'lagoon' ? ' · étang' : ''}</span></div>
-            <div class="row"><Badge score={best[s.id] ?? null} /><Fav id={s.id} name={s.name} /></div>
-          </a>
+      </header>
+      {!meta.available && <div class="notice warn">Prévision indisponible pour cette mise à jour : {meta.note || meta.source}</div>}
+      <LiveBox live={live.live} />
+      <a class="card link" href={top ? `#/spot/${top.spot}` : '#'}>
+        <span class="eyebrow">Meilleure session à venir{disc === 'surf' ? '' : ` · ${LEVEL_LABEL[L].toLowerCase()}`}</span>
+        {top ? (
+          <>
+            <div class="row between"><span class="big">{top.spotName}</span><Badge score={top.peak} size="lg" /></div>
+            <span class="muted">{span(top.start, top.end, now)}</span>
+            <span class="small">{top.text}</span>
+            {top.why && <span class="faint">Limite : {top.why}</span>}
+          </>
+        ) : <span class="muted">Pas de session 2H dans les prochains jours.</span>}
+      </a>
+      <Section title="Sessions 2H" aside={<Seg label="Spots" value={onlyFav ? 'fav' : 'all'} onChange={(v) => setOnlyFav(v === 'fav')} options={[['all', 'Tous'], ['fav', 'Favoris']]} />}>
+        {byDay.size === 0 && <div class="card empty">Aucune session en vue{onlyFav ? ' sur tes favoris' : ''}.</div>}
+        {[...byDay.values()].map((arr) => (
+          <div key={arr[0].id} class="stack">
+            <h3>{dayLabel(arr[0].start, now)}</h3>
+            <div class="card"><div class="list">{arr.map((s) => <SessionRow key={s.id} s={s} now={now} compact />)}</div></div>
+          </div>
         ))}
-      </div></div>
+      </Section>
+      <Section title="Spots">
+        <SpotMap spots={spots} best={best} />
+        <div class="card"><div class="list">
+          {spots.map((s) => (
+            <a key={s.id} class="session" href={`#/spot/${s.id}`}>
+              <DiscIcon d={disc} />
+              <div class="stack" style={{ gap: '2px' }}><strong>{s.name}</strong><span class="faint">{s.waterBody === 'lagoon' ? 'étang' : DISC_LABEL[disc]}</span></div>
+              <div class="row"><Badge score={best[s.id] ?? null} /><Fav id={s.id} name={s.name} /></div>
+            </a>
+          ))}
+        </div></div>
+      </Section>
+      <p class="faint">Session 2H = au moins 2 h d’affilée à 5/10 ou plus, de jour. Source : {meta.source}.</p>
     </>
   );
 }
@@ -120,7 +123,7 @@ export function Spots({ d, now }: { d: AllData; now: number }) {
 // ------------------------------------------------------------------ Prévisions (un spot)
 export function SpotPage({ d, id, now }: { d: AllData; id: string; now: number }) {
   const spot = d.spots.find((s) => s.id === id);
-  if (!spot) return <div class="empty">Spot inconnu. <a href="#/spots">Voir la liste</a></div>;
+  if (!spot) return <div class="empty">Spot inconnu. <a href="#/wind">Retour</a></div>;
   return <SpotView key={spot.id} d={d} spot={spot} now={now} />;
 }
 
@@ -142,7 +145,7 @@ function SpotView({ d, spot, now }: { d: AllData; spot: PublicSpot; now: number 
   return (
     <>
       <header class="page-head">
-        <a href="#/spots" class="small">← Spots</a>
+        <a href={`#/${moduleOf(disc).slug}`} class="small">← {moduleOf(disc).tab}</a>
         <div class="row between">
           <div class="row"><DiscIcon d={disc} size={20} /><h1>{spot.name}</h1><Fav id={spot.id} name={spot.name} /></div>
           <Freshness d={d} now={now} />
@@ -212,51 +215,6 @@ function SpotView({ d, spot, now }: { d: AllData; spot: PublicSpot; now: number 
   );
 }
 
-// ------------------------------------------------------------------ Prévisions (choix du spot)
-export function Forecasts({ d, now }: { d: AllData; now: number }) {
-  const prefs = usePrefs();
-  const best = bestScoreBySpot(d, prefs, now);
-  const groups = DISCS.map((disc) => ({ disc, spots: d.spots.filter((s) => spotDiscipline(s) === disc).sort((a, b) => (prefs.favorites.includes(b.id) ? 1 : 0) - (prefs.favorites.includes(a.id) ? 1 : 0)) }));
-  return (
-    <>
-      <header class="page-head"><h1>Prévisions</h1><span class="muted">Choisis un spot : notes heure par heure, conditions, et le détail pour les experts.</span></header>
-      <div class="grid cols-3">
-        {groups.map((g) => (
-          <div key={g.disc} class="card">
-            <div class="row"><DiscIcon d={g.disc} /><strong>{DISC_LABEL[g.disc]}</strong></div>
-            <div class="list">{g.spots.map((s) => <a key={s.id} href={`#/spot/${s.id}`} class="row between" style={{ textDecoration: 'none', color: 'inherit' }}><span>{s.name}</span><Badge score={best[s.id] ?? null} /></a>)}</div>
-          </div>
-        ))}
-      </div>
-    </>
-  );
-}
-
-// ------------------------------------------------------------------ Sessions
-export function Sessions({ d, now, query }: { d: AllData; now: number; query: URLSearchParams }) {
-  const prefs = usePrefs();
-  const [disc, setDisc] = useState<'all' | Discipline>((query.get('d') as Discipline) ?? 'all');
-  const [onlyFav, setOnlyFav] = useState(false);
-  const list = upcoming(d, now).filter((s) => matches(s, prefs) && (disc === 'all' || s.discipline === disc) && (!onlyFav || prefs.favorites.includes(s.spot)));
-  const byDay = new Map<string, Session[]>();
-  list.forEach((s) => { const k = dayKey(s.start); if (!byDay.has(k)) byDay.set(k, []); byDay.get(k)!.push(s); });
-  return (
-    <>
-      <header class="page-head"><h1>Sessions 2H</h1><span class="muted">Au moins 2 h d’affilée à 5/10 ou plus, de jour, à ton niveau (réglable dans Profil).</span></header>
-      <div class="row">
-        <Seg label="Discipline" value={disc} onChange={setDisc} options={[['all', 'Toutes'], ['wing', 'Wing'], ['surf', 'Surf'], ['downwind', 'Downwind']]} />
-        <Seg label="Spots" value={onlyFav ? 'fav' : 'all'} onChange={(v) => setOnlyFav(v === 'fav')} options={[['all', 'Tous les spots'], ['fav', 'Mes favoris']]} />
-      </div>
-      {byDay.size === 0 && <div class="card empty">Aucune session en vue avec ces filtres.</div>}
-      {[...byDay.values()].map((arr) => (
-        <Section key={arr[0].id} title={dayLabel(arr[0].start, now)}>
-          <div class="card"><div class="list">{arr.map((s) => <SessionRow key={s.id} s={s} now={now} />)}</div></div>
-        </Section>
-      ))}
-    </>
-  );
-}
-
 // ------------------------------------------------------------------ Profil
 export function Profile({ d }: { d: AllData }) {
   const prefs = usePrefs();
@@ -277,7 +235,7 @@ export function Profile({ d }: { d: AllData }) {
       <Section title="Mes spots favoris">
         <div class="card">
           {prefs.favorites.length ? <div class="list">{prefs.favorites.map((id) => d.spots.find((s) => s.id === id)).filter(Boolean).map((s) => <div key={s!.id} class="row between"><a href={`#/spot/${s!.id}`}>{s!.name}</a><Fav id={s!.id} name={s!.name} /></div>)}</div>
-            : <span class="muted">Ajoute des spots avec l’étoile, sur la page Spots.</span>}
+            : <span class="muted">Ajoute des spots avec l’étoile, dans WIND, VAGUE ou HOULE.</span>}
         </div>
       </Section>
       <Section title="Affichage">
