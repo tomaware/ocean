@@ -6,9 +6,10 @@ export type Col = { key: string; label: string; num?: boolean; fmt: (r: any) => 
 export type Series = {
   discipline: Discipline; times: number[]; score: (number | null)[]; day: boolean[]; rows: any[]; cols: Col[];
   lines: { label: string; values: (number | null)[]; color: string; unit: string; scale?: string; dash?: number[] }[];
-  levels: boolean; source: string; extra: { label: string; value: string }[];
+  levels: boolean; source: string; extra: { label: string; value: string }[]; notice?: string | null;
 };
 
+const MODEL: Record<string, string> = { meteofrance_arome_france_hd: 'AROME HD', meteofrance_arome_france: 'AROME', meteofrance_seamless: 'Météo-France', ecmwf_ifs025: 'ECMWF', icon_d2: 'ICON-D2', icon_eu: 'ICON-EU', icon_seamless: 'ICON', gfs_seamless: 'GFS', ukmo_seamless: 'UKMO', meteofrance_arpege_europe: 'ARPEGE' };
 const SECTOR: Record<string, string> = { onshore: 'de mer', 'side-on': 'side-on', side: 'side-shore', 'side-off': 'side-off', offshore: 'de terre', closed: 'plan d’eau', avoid: 'déconseillé' };
 const SHORE: Record<string, string> = { on: 'de mer', sideon: 'side-on', side: 'side-shore', sideoff: 'side-off', off: 'de terre' };
 
@@ -31,7 +32,8 @@ export function seriesFor(d: AllData, spot: PublicSpot, disc: Discipline, level:
         { label: 'Vent', values: hours.map((h: any) => h.kn), color: '#256D70', unit: 'nd' },
         { label: 'Rafales', values: hours.map((h: any) => h.gust), color: '#256D70', unit: 'nd', dash: [4, 4] },
       ],
-      source: d.meta.disciplines.wing.source,
+      source: w.source?.kind === 'forecast' ? w.source.note : d.meta.disciplines.wing.source,
+      notice: w.source?.kind === 'forecast' ? `Pas dans la super prévision : vent prévu par ${MODEL[w.source.model] ?? w.source.model}, le modèle le plus juste à Marignane ces 3 derniers jours, non corrigé.` : null,
       extra: [
         { label: 'Orientation', value: spot.orientation?.seaward != null ? `plage ouverte vers ${n0(spot.orientation.seaward)}° (${compass(spot.orientation.seaward)})` : 'plan d’eau fermé' },
         { label: 'Confiance orientation', value: ({ low: 'faible, à confirmer', medium: 'moyenne', high: 'élevée' } as Record<string, string>)[spot.orientation?.confidence] ?? '—' },

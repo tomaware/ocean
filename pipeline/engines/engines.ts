@@ -1,7 +1,7 @@
 // ② ANALYSE — moteurs existants (surf, downwind) alimentés par la collecte commune.
 // Aucune formule n'est réécrite : on appelle les moteurs de référence (legacy/) avec des entrées reconstruites.
 import type { CollectBundle, ForecastBlock, ObservationBlock, Registry } from '../../src/types/contracts.ts';
-import { collectPlan, DownwindEngine as D, SurfEngine as E } from '../collect/points.ts';
+import { collectPlan, DownwindEngine as D, SURF_BUOYS, SurfEngine as E, surfSpotsOf } from '../collect/points.ts';
 import { legacyBuoyObs, legacyCopernicusRaw, legacyMarine, legacySuperPrevision, legacyWind } from './adapters.ts';
 import { COPERNICUS_MAX_AGE_H } from '../collect/copernicus.ts';
 
@@ -13,7 +13,6 @@ export function copernicusFor(raw: { generated?: string; points?: unknown } | nu
 import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
-const surfDoc = require('../../legacy/super-previ-surf/engine/spots.json');
 const runsDoc = require('../../legacy/downwind-foil/engine/runs.json');
 
 export const SURF_DAYS = 7;          // = super-previ-surf collector/build.js
@@ -34,7 +33,7 @@ export function inputsFromBundle(bundle: CollectBundle, registry: Registry, live
   const models = E.OM_WIND_MODELS as Record<string, string>;
   const dwWindIds = plan.engineWind.map((p) => p.id).filter((id) => !id.startsWith('surf_'));
   return {
-    surf: { spots: surfDoc.spots, buoys: surfDoc.buoys, marine: E.mergeMarine(om, copernicusFor(legacyCopernicusRaw(fc(bundle, 'copernicus-medwav')), now)), wind: legacyWind(windB, surfDoc.spots.map((s: { id: string }) => s.id), models, 'surf_'), buoyObs, now, cfg: {}, days: SURF_DAYS },
+    surf: { spots: surfSpotsOf(registry), buoys: SURF_BUOYS, marine: E.mergeMarine(om, copernicusFor(legacyCopernicusRaw(fc(bundle, 'copernicus-medwav')), now)), wind: legacyWind(windB, surfSpotsOf(registry).map((s) => s.id), models, 'surf_'), buoyObs, now, cfg: {}, days: SURF_DAYS },
     downwind: { runs: runsDoc.runs, buoys: runsDoc.buoys, marine: E.mergeMarine(om), wind: legacyWind(windB, dwWindIds, models), buoyObs, now, cfg: {}, hours: DOWNWIND_HOURS,
       superPrev: legacySuperPrevision(fc(bundle, 'super-prevision'), registry, live) },
   };
@@ -49,12 +48,12 @@ export function inputsLegacy(raw: { marine: unknown; wind: unknown; candhis: Rec
   const om = E.parseOpenMeteoMarine(raw.marine, plan.marine.map((p) => p.id));
   const windAll = E.parseOpenMeteoWind(raw.wind, plan.engineWind.map((p) => p.id));
   const surfWind: Record<string, unknown> = {};
-  for (const s of surfDoc.spots) surfWind[s.id] = windAll['surf_' + s.id];
+  for (const s of surfSpotsOf(registry)) surfWind[s.id] = windAll['surf_' + s.id];
   const buoyObs: Record<string, unknown[]> = {};
   Object.keys(raw.candhis || {}).forEach((c) => { buoyObs[c] = raw.candhis[c].filter((o) => o.hs != null); });
   const sp = raw.superSpots as { spots?: unknown } | null;
   return {
-    surf: { spots: surfDoc.spots, buoys: surfDoc.buoys, marine: E.mergeMarine(om, copernicusFor(raw.copernicus ?? null, now)), wind: surfWind, buoyObs, now, cfg: {}, days: SURF_DAYS },
+    surf: { spots: surfSpotsOf(registry), buoys: SURF_BUOYS, marine: E.mergeMarine(om, copernicusFor(raw.copernicus ?? null, now)), wind: surfWind, buoyObs, now, cfg: {}, days: SURF_DAYS },
     downwind: { runs: runsDoc.runs, buoys: runsDoc.buoys, marine: E.mergeMarine(om), wind: windAll, buoyObs, now, cfg: {}, hours: DOWNWIND_HOURS,
       superPrev: sp && sp.spots ? { spots: sp.spots, live: raw.live } : null },
   };

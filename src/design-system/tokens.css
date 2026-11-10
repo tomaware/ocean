@@ -23,6 +23,8 @@
   --c-bad: #E5655B; --c-mid: #F2C94C; --c-good: #3FBF7F; --c-best: #17804F;
   --c-night: #F2F3F0; --c-night-bar: #D6DCD6;
   --c-star: #E0A100; --c-star-off: #D6DCD6;
+  /* code couleur des étoiles (Tom, 10/11) : 1 ★ vert, 2 ★ orange, 3 ★ violet « légendaire » */
+  --c-k1: #23A26A; --c-k2: #EE7F1B; --c-k3: #8A4FD8; --c-k0: #D6DCD6;
   --c-wave: #7CC3D6;
   /* anciens noms (graphiques uPlot, carte) */
   --c-score-0: #D6DCD6; --c-score-5: #F2C94C; --c-score-7: #3FBF7F; --c-score-9: #17804F;
@@ -50,7 +52,7 @@
     --c-top: #F6B49C; --c-top-soft: #3A2219; --c-ok: #F0C46A; --c-ok-soft: #3A2E14; --c-no: #A9B6B5; --c-no-soft: #22343A;
     --c-warn: #F29B8C; --c-warn-soft: #3D2320; --c-focus: #75CDC5;
     --c-bad: #E26A5E; --c-mid: #E9C14E; --c-good: #4CC38A; --c-best: #2FA36B; --c-night: #1A2D33; --c-night-bar: #33494F;
-    --c-star: #FFC94D; --c-star-off: #33494F; --c-wave: #3E8FB0;
+    --c-star: #FFC94D; --c-star-off: #33494F; --c-wave: #3E8FB0; --c-k1: #4CC38A; --c-k2: #F5A04A; --c-k3: #B38BF5; --c-k0: #3A5258;
     --c-score-0: #33494F; --c-score-5: #E9C14E; --c-score-7: #4CC38A; --c-score-9: #2FA36B;
     --shadow: none; --map-filter: brightness(.8) invert(1) hue-rotate(180deg) contrast(.85) saturate(.6);
     color-scheme: dark;
@@ -62,7 +64,7 @@
   --c-top: #F6B49C; --c-top-soft: #3A2219; --c-ok: #F0C46A; --c-ok-soft: #3A2E14; --c-no: #A9B6B5; --c-no-soft: #22343A;
   --c-warn: #F29B8C; --c-warn-soft: #3D2320; --c-focus: #75CDC5;
   --c-bad: #E26A5E; --c-mid: #E9C14E; --c-good: #4CC38A; --c-best: #2FA36B; --c-night: #1A2D33; --c-night-bar: #33494F;
-  --c-star: #FFC94D; --c-star-off: #33494F; --c-wave: #3E8FB0;
+  --c-star: #FFC94D; --c-star-off: #33494F; --c-wave: #3E8FB0; --c-k1: #4CC38A; --c-k2: #F5A04A; --c-k3: #B38BF5; --c-k0: #3A5258;
   --c-score-0: #33494F; --c-score-5: #E9C14E; --c-score-7: #4CC38A; --c-score-9: #2FA36B;
   --shadow: none; --map-filter: brightness(.8) invert(1) hue-rotate(180deg) contrast(.85) saturate(.6);
   color-scheme: dark;

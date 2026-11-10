@@ -14,7 +14,7 @@ export const starsOf = (s: number | null | undefined) => (s === null || s === un
 export function Stars({ score, size = 'md' }: { score: number | null | undefined; size?: 'sm' | 'md' | 'lg' | 'xl' }) {
   const k = starsOf(score);
   return (
-    <span class={`stars ${size}`} role="img" aria-label={`${k} étoile${k > 1 ? 's' : ''} sur 3${score == null ? '' : ` (note ${n1(score)}/10)`}`} title={score == null ? '' : `note ${n1(score)}/10`}>
+    <span class={`stars ${size} k${k}`} role="img" aria-label={`${k} étoile${k > 1 ? 's' : ''} sur 3${score == null ? '' : ` (note ${n1(score)}/10)`}`} title={score == null ? '' : `note ${n1(score)}/10`}>
       {[0, 1, 2].map((i) => <span key={i} class={i < k ? 'on' : 'off'}>★</span>)}
     </span>
   );
@@ -116,6 +116,8 @@ export function WindTable({ d, spot, s, picks, showDays, picked, onPick }: { d: 
           {!surf && <tr class="wg-v"><th>Vent nd</th>{picks.map((p) => <td key={p.t} class={sep(p.t)} style={windColor(row(p.i).kn)}>{n0(row(p.i).kn)}</td>)}</tr>}
           {!surf && <tr class="wg-v"><th>Rafales</th>{picks.map((p) => <td key={p.t} class={sep(p.t)} style={windColor(row(p.i).gust)}>{n0(row(p.i).gust)}</td>)}</tr>}
           {!surf && <tr><th>Direction</th>{picks.map((p) => <td key={p.t} class={sep(p.t)} title={compass(dir(p.i))}><Arrow from={dir(p.i)} size={14} /></td>)}</tr>}
+          {surf && <tr class="wg-v"><th>Vent nd</th>{picks.map((p) => <td key={p.t} class={sep(p.t)} style={windColor(row(p.i).ws)} title={row(p.i).wk ?? ''}>{n0(row(p.i).ws)}</td>)}</tr>}
+          {surf && <tr><th>Direction</th>{picks.map((p) => <td key={p.t} class={sep(p.t)} title={`${compass(row(p.i).wd)}${row(p.i).wk ? ` · ${row(p.i).wk}` : ''}`}><Arrow from={row(p.i).wd} size={14} /></td>)}</tr>}
           {s.discipline !== 'wing' && <tr class="wg-bars"><th>{surf ? 'Vagues m' : 'Houle m'}</th>{picks.map((p) => { const h = waveH(p.i); return <td key={p.t} class={sep(p.t)} title={surf ? `${n1(row(p.i).lo)} à ${n1(row(p.i).hi)} m` : undefined}><span>{n1(h)}</span><div class="bar" style={{ height: `${Math.max(2, Math.round(((h ?? 0) / hMax) * 44))}px` }} /></td>; })}</tr>}
           {s.discipline !== 'wing' && <tr><th>Période s</th>{picks.map((p) => <td key={p.t} class={sep(p.t)}>{n0(waveT(p.i))}</td>)}</tr>}
           {surf && <tr><th>Houle de</th>{picks.map((p) => <td key={p.t} class={sep(p.t)} title={compass(row(p.i).dir)}><Arrow from={row(p.i).dir} size={14} /></td>)}</tr>}

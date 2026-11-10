@@ -87,3 +87,24 @@ test('wing : facteurs publiés pour expliquer la note (affichage seul, la note n
     assert.ok(Math.abs(10 * x.f[0] * x.f[1] * x.f[2] - x.score) <= 0.1, `${kn} nd × ${g} de ${dir}° (${L}) : ${x.f} → ${x.score}`);
   }
 });
+
+test('wing : étang de Berre hors super prévision → modèle le plus juste à Marignane, provenance « forecast », jamais mélangé (D-22)', () => {
+  const t0 = Date.UTC(2026, 10, 10, 11);
+  const times = [0, 1, 2].map((k) => t0 + k * 3600e3);
+  const ser = (ms: number) => ({ wind_speed_10m: [ms, ms, ms], wind_gusts_10m: [ms * 1.2, ms * 1.2, ms * 1.2], wind_direction_10m: [315, 315, 315] });
+  const alt = { id: 'open-meteo-vent-spots', kind: 'forecast', times, models: ['meteofrance_arome_france_hd', 'icon_d2'],
+    values: { 'spot_berre-jai': { meteofrance_arome_france_hd: ser(5), icon_d2: ser(10) } }, provenance: { source: 'open-meteo', fetchedAt: t0 } } as any;
+  // ICON-D2 plus juste à LFML → 10 m/s = 19,4 nd retenus
+  const w = wingForecast(undefined, registry, t0, { block: alt, ranking: { LFML: { meteofrance_arome_france_hd: { n: 40, mae: 2.1 }, icon_d2: { n: 40, mae: 1.2 } } } });
+  assert.deepEqual(w.spots.map((x) => x.id), ['berre-jai']);
+  const b = w.spots[0];
+  assert.equal((b.source as any).kind, 'forecast'); assert.equal((b.source as any).model, 'icon_d2'); assert.equal((b.source as any).ranked, true);
+  assert.deepEqual(b.hours.map((h) => h.kn), [19.4, 19.4, 19.4]);
+  assert.ok(b.hours.every((h) => h.scores.secu! > 0), 'mistral sur l’étang : naviguable');
+  // sans classement : AROME HD, signalé
+  const w2 = wingForecast(undefined, registry, t0, { block: alt });
+  assert.equal((w2.spots[0].source as any).model, 'meteofrance_arome_france_hd'); assert.equal((w2.spots[0].source as any).ranked, false);
+  // vent de SE (pousse vers le large de l'étang) : secteur déconseillé
+  const se = scoreHour(18, 20, 150, true, registry.spots.find((s) => s.id === 'berre-jai')!, 'secu');
+  assert.equal(se.score, 6); assert.match(String(se.limit), /déconseillée/);
+});

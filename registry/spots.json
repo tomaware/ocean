@@ -190,6 +190,44 @@
       "notes": "Orientation proposée à partir de guides de spots (10/11) ; à confirmer par Tom."
     },
     {
+      "id": "berre-jai",
+      "name": "Étang de Berre (Le Jaï)",
+      "kind": "spot",
+      "geometry": {
+        "lat": 43.42,
+        "lon": 5.174
+      },
+      "disciplines": [
+        "wing"
+      ],
+      "waterBody": "lagoon",
+      "orientation": {
+        "seaward": null,
+        "avoid": [
+          [
+            110,
+            190
+          ]
+        ],
+        "confidence": "low",
+        "source": "étang, plage du Jaï orientée NO : mistral (NO) de face, O side, N bon ; SE à S = vent de terre qui pousse vers le large de l'étang (ultimatefrance.com)"
+      },
+      "windStations": {
+        "metar": "LFML"
+      },
+      "windSource": {
+        "kind": "best-model",
+        "station": "LFML"
+      },
+      "legacy": {},
+      "confidence": "low",
+      "sources": [
+        "ultimatefrance.com/kitesurfing/south-france/le-jai : meilleurs vents O, NO, N ; SE offshore ; rafales fortes",
+        "vvanat.fr : plage du Jaï, wingfoil"
+      ],
+      "notes": "Ajouté le 10/11 à la demande de Tom. Pas dans la super prévision : vent = meilleur modèle aux mesures de Marignane (LFML) sur 3 jours, non corrigé. Orientation à confirmer."
+    },
+    {
       "id": "carnon",
       "name": "Carnon",
       "kind": "spot",
@@ -230,7 +268,8 @@
       "sources": [
         "super-previ-surf engine/spots.json",
         "Surfnerd: houle SW→SE idéal S, offshore NW, 0,3–1,2 m"
-      ]
+      ],
+      "commune": "Pérols / Mauguio"
     },
     {
       "id": "palavas",
@@ -274,7 +313,8 @@
         "super-previ-surf engine/spots.json",
         "Surfnerd: offshore NW",
         "fenêtre houle = hypothèse cohérente avec l'orientation"
-      ]
+      ],
+      "commune": "Palavas-les-Flots"
     },
     {
       "id": "sete",
@@ -316,7 +356,8 @@
       "sources": [
         "super-previ-surf engine/spots.json",
         "Plages.tv: houle SE, offshore NW, onshore SE"
-      ]
+      ],
+      "commune": "Sète"
     },
     {
       "id": "vias",
@@ -358,70 +399,30 @@
       "sources": [
         "super-previ-surf engine/spots.json",
         "hypothèse d'orientation — à valider par Tom"
-      ]
+      ],
+      "commune": "Vias"
     },
     {
-      "id": "gruissan",
-      "name": "Gruissan",
+      "id": "saintes-maries",
+      "name": "Saintes-Maries-de-la-Mer",
       "kind": "spot",
       "geometry": {
-        "lat": 43.09,
-        "lon": 3.12
+        "lat": 43.448,
+        "lon": 4.43
       },
       "disciplines": [
         "surf"
       ],
       "waterBody": "sea",
       "orientation": {
-        "seaward": 110
+        "seaward": 175,
+        "confidence": "low",
+        "source": "plage Est orientée au S ; houle utile du SE au SO, idéale S ; vent offshore N à NO (surfnerd.com)"
       },
       "swellWindow": {
-        "min": 75,
-        "max": 185,
-        "ideal": 130
-      },
-      "surf": {
-        "size": {
-          "min": 0.4,
-          "ideal": 1.1,
-          "max": 1.8
-        },
-        "periodMin": 5,
-        "level": "intermédiaire",
-        "shelter": 1.0
-      },
-      "buoys": [
-        "01101",
-        "01102"
-      ],
-      "legacy": {
-        "superPreviSurf": "gruissan"
-      },
-      "confidence": "medium",
-      "sources": [
-        "super-previ-surf engine/spots.json",
-        "Surfnerd: houle E→S idéal SE, offshore W, 0,3–1,5 m"
-      ]
-    },
-    {
-      "id": "canet",
-      "name": "Canet Plage",
-      "kind": "spot",
-      "geometry": {
-        "lat": 42.7,
-        "lon": 3.04
-      },
-      "disciplines": [
-        "surf"
-      ],
-      "waterBody": "sea",
-      "orientation": {
-        "seaward": 90
-      },
-      "swellWindow": {
-        "min": 45,
-        "max": 170,
-        "ideal": 95
+        "min": 125,
+        "max": 235,
+        "ideal": 180
       },
       "surf": {
         "size": {
@@ -430,108 +431,64 @@
           "max": 1.6
         },
         "periodMin": 5,
-        "level": "intermédiaire",
+        "level": "tous niveaux (à valider)",
         "shelter": 1.0
       },
       "buoys": [
-        "01101"
+        "03001"
       ],
-      "legacy": {
-        "superPreviSurf": "canet"
-      },
-      "confidence": "high",
+      "legacy": {},
+      "commune": "Saintes-Maries-de-la-Mer",
+      "confidence": "low",
       "sources": [
-        "super-previ-surf engine/spots.json",
-        "Surfnerd: houle E→S idéal E, offshore W",
-        "Wannasurf: houle SE/E/NE",
-        "Surf-Forecast: meilleur vent W"
-      ]
+        "surfnerd.com/surf-forecast/saintes-maries : beach break sable, houle S (SE→SO), offshore NO, 0,3–1,2 m",
+        "plages.tv : Plage Est"
+      ],
+      "notes": "Ajouté le 10/11 à la demande de Tom ; réglages proposés d'après des guides de spots, à confirmer. Bouée de recalage : Espiguette (03001), à ~25 km."
     },
     {
-      "id": "paulilles",
-      "name": "Paulilles",
+      "id": "la-couronne",
+      "name": "La Couronne (Martigues)",
       "kind": "spot",
       "geometry": {
-        "lat": 42.5,
-        "lon": 3.12
+        "lat": 43.331,
+        "lon": 5.055
       },
       "disciplines": [
         "surf"
       ],
       "waterBody": "sea",
       "orientation": {
-        "seaward": 55
+        "seaward": 165,
+        "confidence": "low",
+        "source": "plage de la Couronne Vieille orientée SSE ; houle de SE (gauche puissante) à SO ; vent offshore NNO (surf-report.com)"
       },
       "swellWindow": {
-        "min": 20,
-        "max": 120,
-        "ideal": 70
+        "min": 105,
+        "max": 230,
+        "ideal": 145
       },
       "surf": {
         "size": {
-          "min": 0.4,
-          "ideal": 1.0,
-          "max": 1.8
+          "min": 0.5,
+          "ideal": 1.2,
+          "max": 2.5
         },
         "periodMin": 5,
-        "level": "à valider",
-        "shelter": 0.9
+        "level": "tous niveaux (à valider)",
+        "shelter": 1.0
       },
       "buoys": [
-        "06601",
-        "01101"
+        "03001"
       ],
-      "legacy": {
-        "superPreviSurf": "paulilles"
-      },
+      "legacy": {},
+      "commune": "Martigues",
       "confidence": "low",
       "sources": [
-        "super-previ-surf engine/spots.json",
-        "hypothèse d'orientation (baie ouverte NE) — à valider par Tom"
-      ]
-    },
-    {
-      "id": "perafita",
-      "name": "Platja de Perafita",
-      "kind": "spot",
-      "geometry": {
-        "lat": 42.43,
-        "lon": 3.17
-      },
-      "disciplines": [
-        "surf"
+        "surf-report.com : La Couronne, gauche par houle de SE, vent NNO, tient jusqu'à 2,5 m, fond de sable, rochers sur les bords",
+        "plages.tv : Plage de la Couronne Vieille"
       ],
-      "waterBody": "sea",
-      "orientation": {
-        "seaward": 80
-      },
-      "swellWindow": {
-        "min": 35,
-        "max": 145,
-        "ideal": 85
-      },
-      "surf": {
-        "size": {
-          "min": 0.4,
-          "ideal": 1.0,
-          "max": 1.8
-        },
-        "periodMin": 5,
-        "level": "à valider",
-        "shelter": 0.9
-      },
-      "buoys": [
-        "06601",
-        "01101"
-      ],
-      "legacy": {
-        "superPreviSurf": "perafita"
-      },
-      "confidence": "low",
-      "sources": [
-        "super-previ-surf engine/spots.json",
-        "hypothèse d'orientation — à valider par Tom"
-      ]
+      "notes": "Ajouté le 10/11 à la demande de Tom ; réglages à confirmer. Pas de bouée Candhis proche collectée : recalage sur Espiguette (03001), à ~75 km, donc moins sûr."
     },
     {
       "id": "frontignan-palavas",
@@ -769,6 +726,12 @@
       "name": "Toulon-Hyères",
       "lat": 43.0973,
       "lon": 6.146
+    },
+    {
+      "icao": "LFML",
+      "name": "Marseille-Marignane",
+      "lat": 43.4367,
+      "lon": 5.2153
     }
   ]
 }

@@ -161,3 +161,10 @@ Les apps actuelles restent en ligne jusqu'à ce que leur remplaçante soit véri
 ### D-21 (10/11/2026, Tom) — houle sur la carte, HOULE
 - Repère de la carte : flèche de la houle en plus du vent (« mets la houle aussi »). Pour les parcours downwind, OCEAN publie `swellDir` (direction d'où vient la mer au large, moyenne circulaire pondérée par Hs² des modèles lus par le moteur, mêmes points). Affichage seul : le moteur downwind et ses notes ne changent pas (golden inchangé). WIND : pas de données de houle collectées aux spots wing pour l'instant.
 
+### D-22 (10/11/2026, Tom) — spots, sessions VAGUE, code couleur
+- VAGUE : Gruissan, Canet, Paulilles et Perafita retirés ; **Saintes-Maries-de-la-Mer** et **La Couronne** ajoutés (réglages tirés de guides de spots, confiance faible, à confirmer ; recalage sur la bouée d'Espiguette, à ~25 km et ~75 km). Les spots surf sont désormais lus dans le registre ; pour les spots communs, réglages identiques à l'app surf en service (test). Formule du moteur surf inchangée, golden inchangé.
+- VAGUE, Sessions de 2H : demain seulement, Carnon / Palavas / Sète.
+- VAGUE, tableau heure par heure : lignes Vent (nd) et Direction rétablies entre Air et Vagues.
+- WIND : **étang de Berre (Le Jaï)** ajouté. La super prévision ne le couvre pas : vent = modèle le plus juste aux mesures METAR de Marignane (LFML, ajoutée aux stations) sur les 3 derniers jours, non corrigé, provenance affichée (« forecast ») ; jamais mélangé avec la super prévision. Formule wing inchangée. Secteur SE à S (vent qui pousse vers le large de l'étang) déconseillé, comme le nord au Ponant. Orientation à confirmer.
+- Code couleur des étoiles : 1 ★ vert, 2 ★ orange, 3 ★ violet (« légendaire ») ; les barres horaires et les cases de la Prévision 5 jours suivent le même code (gris = pas d'étoile).
+

@@ -5,7 +5,7 @@ import type { Discipline, PublicSpot } from '../services/data';
 import { spotDiscipline, spotPos } from '../services/data';
 import { labelOf, n1 } from '../services/format';
 
-const COLORS = (s: number | null) => (s === null ? '#7A898E' : s >= 7 ? '#17804F' : s >= 5 ? '#B07400' : '#7A898E');
+const COLORS = (s: number | null) => (s === null ? '#7A898E' : s >= 8.5 ? '#8A4FD8' : s >= 7 ? '#EE7F1B' : s >= 5 ? '#23A26A' : '#7A898E');
 const LETTER: Record<Discipline, string> = { wing: 'W', surf: 'S', downwind: 'D' };
 
 export function SpotMap({ spots, best, focus, height }: { spots: PublicSpot[]; best: Record<string, number | null>; focus?: string; height?: number }) {

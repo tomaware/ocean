@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
-import { collectPlan, loadRegistry, SurfEngine, DownwindEngine } from '../pipeline/collect/points.ts';
+import { collectPlan, loadRegistry, SurfEngine, DownwindEngine, surfSpotsOf } from '../pipeline/collect/points.ts';
 import { parseOpenMeteo, MARINE_VARS, WAVE_MODELS, WIND_VARS, ENGINE_WIND_MODELS, SPOT_WIND_MODELS, windUrl, marineUrl } from '../pipeline/collect/openmeteo.ts';
 import { parseCandhisHistory } from '../pipeline/collect/candhis.ts';
 import { parseSuperPrevision, compassToDeg } from '../pipeline/collect/superprevision.ts';
@@ -23,7 +23,8 @@ test('registre : identifiants uniques, géométrie et disciplines présentes', (
   for (const s of registry.spots) {
     assert.ok(s.disciplines.length > 0, s.id);
     assert.ok('lat' in s.geometry || ('path' in s.geometry && s.geometry.path.length >= 2), s.id);
-    assert.ok(Object.keys(s.legacy).length > 0, s.id + ' : lien avec l’app actuelle');
+    // spots ajoutés dans OCEAN (10/11 : Saintes-Maries, La Couronne, étang de Berre) : pas d'équivalent dans les apps actuelles
+    assert.ok(Object.keys(s.legacy).length > 0 || (s.confidence === 'low' && /Ajouté le/.test(String(s.notes))), s.id + ' : lien avec l’app actuelle');
   }
 });
 
@@ -31,8 +32,11 @@ test('registre : reprend exactement les spots, parcours et bouées des apps actu
   const surf = require('../legacy/super-previ-surf/engine/spots.json');
   const runs = require('../legacy/downwind-foil/engine/runs.json');
   const bySurf = new Map(registry.spots.filter((s) => s.legacy.superPreviSurf).map((s) => [s.legacy.superPreviSurf, s]));
+  // retirés à la demande de Tom (10/11) ; les autres spots surf de l'app actuelle sont repris à l'identique
+  const REMOVED = ['gruissan', 'canet', 'paulilles', 'perafita'];
   for (const s of surf.spots) {
     const r = bySurf.get(s.id);
+    if (REMOVED.includes(s.id)) { assert.ok(!r, 'surf retiré ' + s.id); continue; }
     assert.ok(r, 'surf ' + s.id);
     assert.deepEqual([(r!.geometry as { lat: number }).lat, (r!.geometry as { lon: number }).lon, r!.orientation?.seaward], [s.lat, s.lon, s.normal]);
   }
@@ -42,7 +46,7 @@ test('registre : reprend exactement les spots, parcours et bouées des apps actu
     assert.deepEqual((x!.geometry as { path: unknown }).path, r.path);
   }
   assert.deepEqual(registry.buoys.map((b) => b.code).sort(), surf.buoys.map((b: { code: string }) => b.code).sort());
-  const wind = registry.spots.filter((s) => s.disciplines.includes('wing')).map((s) => s.legacy.superPrevisionVent);
+  const wind = registry.spots.filter((s) => s.disciplines.includes('wing') && s.legacy.superPrevisionVent).map((s) => s.legacy.superPrevisionVent);
   assert.deepEqual(wind, ['1554-la-franqui-poste-des-coussoules', '135-la-grande-motte', '81-le-ponant', '22-port-camargue', '61-beauduc', '2-almanarre-salin-des-pesquiers']);
 });
 
@@ -51,16 +55,16 @@ test('points de collecte = exactement ceux des moteurs actuels', () => {
   const plan = collectPlan(registry);
   const surf = require('../legacy/super-previ-surf/engine/spots.json');
   const runs = require('../legacy/downwind-foil/engine/runs.json');
-  const surfPts = SurfEngine.queryPoints(surf.spots, surf.buoys, SurfEngine.mergeCfg(SurfEngine.DEFAULT_CONFIG, {}));
+  const surfPts = SurfEngine.queryPoints(surfSpotsOf(registry), surf.buoys, SurfEngine.mergeCfg(SurfEngine.DEFAULT_CONFIG, {}));
   const dwPts = DownwindEngine.queryPoints(runs.runs, runs.buoys, {});
   for (const p of [...surfPts, ...dwPts]) {
     const q = plan.marine.find((x) => x.id === p.id);
     assert.ok(q && q.lat === p.lat && q.lon === p.lon, 'mer ' + p.id);
   }
   assert.equal(plan.marine.length, new Set([...surfPts, ...dwPts].map((p: CollectPoint) => p.id)).size);
-  assert.equal(plan.windSpots.filter((p) => p.id.startsWith('spot_')).length, 6);
-  assert.deepEqual(plan.windSpots.filter((p) => p.id.startsWith('st_')).map((p) => p.id), ['st_LFMT', 'st_LFMP', 'st_LFTH']);
-  assert.ok(plan.engineWind.length >= 8 + 6 + 63 + 2);
+  assert.equal(plan.windSpots.filter((p) => p.id.startsWith('spot_')).length, 7);   // 6 spots de la super prévision + étang de Berre
+  assert.deepEqual(plan.windSpots.filter((p) => p.id.startsWith('st_')).map((p) => p.id), ['st_LFMT', 'st_LFMP', 'st_LFTH', 'st_LFML']);   // LFML : Marignane, pour l'étang de Berre
+  assert.ok(plan.engineWind.length >= 6 + 6 + 63 + 2);   // 6 spots surf (registre du 10/11)
   assert.ok(marineUrl(plan.marine).includes('past_days=3') && windUrl(plan.windSpots, SPOT_WIND_MODELS).includes('meteofrance_arome_france_hd'));
 });
 
@@ -185,4 +189,16 @@ test('confidentialité : une fuite est détectée', () => {
   assert.equal(privacy(leak, []).ok, false);
   const url = { version: 1, generatedAt: 0, points: [], forecasts: [], observations: [], status: [{ message: 'GET https://script.google.com/macros/s/X/exec?key=zz' }], checks: [] } as unknown as CollectBundle;
   assert.equal(privacy(url, []).ok, false);
+});
+
+test('spots surf lus dans le registre : réglages identiques à l’app surf en service pour les spots communs', () => {
+  const surf = require('../legacy/super-previ-surf/engine/spots.json');
+  const mine = surfSpotsOf(registry);
+  assert.deepEqual(mine.map((s) => s.id), ['carnon', 'palavas', 'sete', 'vias', 'saintes-maries', 'la-couronne']);
+  for (const s of mine) {
+    const l = surf.spots.find((x: { id: string }) => x.id === s.id);
+    if (!l) { assert.equal(s.confidence, 'low', s.id + ' : spot ajouté, à confirmer'); continue; }
+    const { sources: _a, ...a } = s; const { sources: _b, ...b } = l;
+    assert.deepEqual(a, b, s.id);
+  }
 });

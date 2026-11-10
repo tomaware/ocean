@@ -170,6 +170,7 @@ table.grid5 tbody th { text-align: left; font-size: var(--fs-sm); color: var(--c
 /* étoiles sur 3 */
 .stars { display: inline-flex; gap: 1px; line-height: 1; letter-spacing: 0; }
 .stars .on { color: var(--c-star); }
+.stars.k1 .on { color: var(--c-k1); } .stars.k2 .on { color: var(--c-k2); } .stars.k3 .on { color: var(--c-k3); }
 .stars .off { color: var(--c-star-off); }
 .stars.sm { font-size: 11px; } .stars.md { font-size: 16px; } .stars.lg { font-size: 22px; } .stars.xl { font-size: 28px; letter-spacing: 2px; }
 .badge.star-badge { background: transparent; padding: 0; gap: var(--s-2); }
@@ -218,7 +219,7 @@ table.wg.models th { font-weight: 500; }
 .scorebars-w { width: 100%; min-width: 0; }
 .scorebars { width: 100%; height: auto; display: block; overflow: visible; }
 .scorebars .z { fill: var(--c-night); }
-.scorebars .b-bad { fill: var(--c-bad); } .scorebars .b-mid { fill: var(--c-mid); } .scorebars .b-good { fill: var(--c-good); } .scorebars .b-night, .scorebars .b-none { fill: var(--c-night-bar); }
+.scorebars .b-bad { fill: var(--c-k0); } .scorebars .b-mid { fill: var(--c-k1); } .scorebars .b-good { fill: var(--c-k2); } .scorebars .b-top { fill: var(--c-k3); } .scorebars .b-night, .scorebars .b-none { fill: var(--c-night-bar); }
 .scorebars .now { stroke: var(--c-ink); stroke-width: 1.5; }
 .scorebars text { fill: var(--c-ink-3); font-size: 10px; font-family: var(--font); }
 .scorebars .now-l { fill: var(--c-ink); font-weight: 700; }

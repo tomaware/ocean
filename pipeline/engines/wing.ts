@@ -116,14 +116,43 @@ export function sessions(hours: WingHour[], L: WingLevel): WingWindow[] {
 
 export const label = (s: number | null) => (s === null ? '—' : s >= 7 ? 'Ça envoie' : s >= 5 ? 'Ça se tente' : 'Non');
 
-/** Toutes les heures de la super prévision (vent corrigé), pour les spots wing du registre. */
-export function wingForecast(block: ForecastBlock | undefined, registry: Registry, now: number) {
-  const spots = registry.spots.filter((s) => s.disciplines.includes('wing'));
-  if (!block) return { version: WING_VERSION, generatedAt: now, available: false, reason: 'super prévision absente : pas de note wing (pas de repli sur un vent brut)', spots: [] };
+/** Modèle de vent retenu pour un spot hors super prévision : le plus juste aux mesures METAR de la station (3 derniers jours). */
+export const BEST_MODEL_FALLBACK = 'meteofrance_arome_france_hd';
+export type ModelRanking = Record<string, Record<string, { n: number; mae: number }>>;   // station → modèle → erreur
+export function bestModel(station: string, ranking: ModelRanking | undefined, available: string[]): { model: string; mae: number | null; n: number; ranked: boolean } {
+  const r = Object.entries(ranking?.[station] ?? {}).filter(([m]) => available.includes(m)).sort((a, b) => a[1].mae - b[1].mae);
+  if (r.length) return { model: r[0][0], mae: r[0][1].mae, n: r[0][1].n, ranked: true };
+  return { model: available.includes(BEST_MODEL_FALLBACK) ? BEST_MODEL_FALLBACK : available[0], mae: null, n: 0, ranked: false };
+}
+type Series = { wind_speed_10m: (number | null)[]; wind_gusts_10m: (number | null)[]; wind_direction_10m: (number | null)[]; confidence?: (number | null)[] };
+
+/**
+ * Toutes les heures notées pour les spots wing du registre.
+ * Vent : la super prévision (corrigée) ; pour un spot qu'elle ne couvre pas (`windSource.kind = 'best-model'`, ex. étang de Berre,
+ * D-22), le modèle le plus juste aux mesures de la station METAR indiquée, non corrigé, avec sa provenance. Jamais de mélange.
+ */
+export function wingForecast(block: ForecastBlock | undefined, registry: Registry, now: number, alt?: { block: ForecastBlock | undefined; ranking?: ModelRanking }) {
+  const all = registry.spots.filter((s) => s.disciplines.includes('wing'));
+  const isAlt = (s: Spot) => (s.windSource as { kind?: string } | undefined)?.kind === 'best-model';
+  const spots = all.filter((s) => (isAlt(s) ? !!alt?.block : !!block));
+  if (!spots.length) return { version: WING_VERSION, generatedAt: now, available: false, reason: 'super prévision absente : pas de note wing (pas de repli sur un vent brut)', spots: [] };
   const res = spots.map((s) => {
-    const v = block.values['spot_' + s.id]?.['super-prevision'];
+    let times: number[], v: Series | undefined, source: Record<string, unknown>;
+    if (isAlt(s)) {
+      const st = String((s.windSource as { station: string }).station);
+      const vals = alt!.block!.values['spot_' + s.id] ?? {};
+      const avail = Object.keys(vals).filter((m) => (vals[m]?.wind_speed_10m ?? []).some((x) => x !== null));
+      const b = bestModel(st, alt!.ranking, avail);
+      times = alt!.block!.times; v = vals[b.model] as unknown as Series | undefined;
+      source = { kind: 'forecast', source: 'open-meteo', model: b.model, station: st, mae: b.mae, n: b.n, ranked: b.ranked, fetchedAt: alt!.block!.provenance.fetchedAt,
+        note: b.ranked ? `Vent prévu par ${b.model}, le modèle le plus juste aux mesures de ${st} sur les 3 derniers jours (erreur moyenne ${b.mae} m/s, ${b.n} mesures) ; non corrigé par la super prévision.`
+          : `Vent prévu par ${b.model} (classement aux mesures de ${st} indisponible) ; non corrigé par la super prévision.` };
+    } else {
+      times = block!.times; v = block!.values['spot_' + s.id]?.['super-prevision'] as unknown as Series | undefined;
+      source = { kind: 'corrected', source: 'super-prevision', fetchedAt: block!.provenance.fetchedAt };
+    }
     const geo = s.geometry as { lat: number; lon: number };
-    const hours: WingHour[] = block.times.map((t, i) => {
+    const hours: WingHour[] = times.map((t, i) => {
       const ms = v?.wind_speed_10m[i] ?? null, gs = v?.wind_gusts_10m[i] ?? null, dir = v?.wind_direction_10m[i] ?? null;
       const day = E.solarElevation(t, geo.lat, geo.lon) > DAYLIGHT_ELEVATION;
       const kn = ms === null ? null : Math.round(ms * MS_TO_KN * 10) / 10, gust = gs === null ? null : Math.round(gs * MS_TO_KN * 10) / 10;
@@ -136,13 +165,13 @@ export function wingForecast(block: ForecastBlock | undefined, registry: Registr
       return { t, kn, gust, dir, conf: v?.confidence?.[i] ?? null, day, sector: dir === null || !o || o.seaward == null ? null : sectorOf(dir, o.seaward).s.id, scores, limit, f };
     }).filter((h) => h.kn !== null && h.t >= now - 3 * 3600e3);
     return {
-      id: s.id, name: s.name, orientation: s.orientation, waterBody: s.waterBody, hours,
+      id: s.id, name: s.name, orientation: s.orientation, waterBody: s.waterBody, source, hours,
       sessions: Object.fromEntries(WING_LEVELS.map((L) => [L, sessions(hours, L)])) as Record<WingLevel, WingWindow[]>,
     };
   });
   return {
     version: WING_VERSION, generatedAt: now, available: true,
-    provenance: { source: 'super-prevision', kind: 'corrected', fetchedAt: block.provenance.fetchedAt, note: 'Vent corrigé par la super prévision, converti en nœuds ; note calculée par OCEAN (formule wing v' + WING_VERSION + ').' },
+    provenance: { source: 'super-prevision', kind: 'corrected', fetchedAt: block?.provenance.fetchedAt ?? null, note: 'Vent corrigé par la super prévision, converti en nœuds ; note calculée par OCEAN (formule wing v' + WING_VERSION + '). Spots hors super prévision : voir « source » de chaque spot.' },
     levels: WIND, sectors: SECTORS.map((x) => ({ id: x.id, label: x.label, upTo: x.upTo, f: x.f })),
     spots: res,
   };

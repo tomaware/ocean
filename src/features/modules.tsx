@@ -1,7 +1,7 @@
 // Onglets WIND / VAGUE / HOULE : menu des modules à droite (Meilleure session, Sessions 2H, Prévision, Spots).
 import { useMemo, useState } from 'preact/hooks';
 import type { AllData, Discipline, Level, PublicSpot, Session } from '../services/data';
-import { DISC_LABEL, distanceKm, HOME, LEVEL_LABEL, LEVELS_FOR, spotDiscipline } from '../services/data';
+import { DISC_LABEL, distanceKm, HOME, LEVEL_LABEL, LEVELS_FOR, SESSION_SPOTS, SESSION_TOMORROW_ONLY, spotDiscipline } from '../services/data';
 import { compass, dayKey, dayLabel, dayShort, hh, hourOf, n0, n1, span } from '../services/format';
 import { setPrefs, usePrefs } from '../services/prefs';
 import { useLive } from '../services/perso';
@@ -23,8 +23,8 @@ export type Sub = (typeof SUBS)[number]['id'];
 // ------------------------------------------------------------ vue d'une journée, propre à chaque onglet
 export const chipColors = (sc: number | null) =>
   sc === null ? { background: 'var(--c-surface-2)', color: 'var(--c-ink-3)' }
-  : sc >= 8.5 ? { background: 'var(--c-best)', color: '#fff' } : sc >= 7 ? { background: 'var(--c-good)', color: '#0F3322' }
-  : sc >= 5 ? { background: 'var(--c-mid)', color: '#2A1E00' } : { background: 'var(--c-surface-2)', color: 'var(--c-ink-2)' };
+  : sc >= 8.5 ? { background: 'var(--c-k3)', color: '#fff' } : sc >= 7 ? { background: 'var(--c-k2)', color: '#2A1400' }
+  : sc >= 5 ? { background: 'var(--c-k1)', color: '#06281A' } : { background: 'var(--c-surface-2)', color: 'var(--c-ink-2)' };
 
 export function DayChart({ d, spot, dayT, level, window, title }: { d: AllData; spot: PublicSpot; dayT: number; level: Level; window?: [number, number]; title?: string }) {
   const s = useMemo(() => seriesFor(d, spot, spotDiscipline(spot), level), [d, spot, level]);
@@ -40,7 +40,7 @@ export function DayChart({ d, spot, dayT, level, window, title }: { d: AllData; 
 }
 
 // ------------------------------------------------------------ PRÉVISION : grille spots × 5 jours
-const shortName = (s: PublicSpot) => s.name.replace(/\s*\(.*\)/, '').replace('Port Camargue / Espiguette', 'Espiguette').replace('La Grande-Motte', 'G-Motte').replace(/^Plage Sud/, 'P. Sud').replace(/→ La Grande-Motte$/, '→ G-Motte');
+const shortName = (s: PublicSpot) => s.name.replace(/\s*\(.*\)/, '').replace('Port Camargue / Espiguette', 'Espiguette').replace('Saintes-Maries-de-la-Mer', 'Stes-Maries').replace('La Grande-Motte', 'G-Motte').replace(/^Plage Sud/, 'P. Sud').replace(/→ La Grande-Motte$/, '→ G-Motte');
 
 function Prevision({ d, now, disc, spots, L, query }: { d: AllData; now: number; disc: Discipline; spots: PublicSpot[]; L: Level; query: URLSearchParams }) {
   const prefs = usePrefs();
@@ -67,7 +67,7 @@ function Prevision({ d, now, disc, spots, L, query }: { d: AllData; now: number;
   const selSpot = sel ? spots.find((s) => s.id === sel.spot) : null;
   return (
     <Section title="Prévision 5 jours">
-      <p class="faint">Case colorée = session 2H (nombre d’heures ; vert = bonne note, jaune = correcte). Case vide = pas de session ce jour-là. Touche une case pour le détail.</p>
+      <p class="faint">Case colorée = session 2H (nombre d’heures ; couleur = étoiles : vert ★, orange ★★, violet ★★★). Case vide = pas de session ce jour-là. Touche une case pour le détail.</p>
       <div class="card table-wrap">
         <table class="grid5">
           <thead><tr><th />{spots.map((s) => <th key={s.id} title={s.name}><strong>{shortName(s)}</strong></th>)}</tr></thead>
@@ -135,18 +135,19 @@ export function Module({ d, now, disc, sub, query }: { d: AllData; now: number; 
   const all = upcoming(d, now).filter((s) => s.discipline === disc && matches(s, prefs));
   const top = d.sessions.best[L]?.[disc] ?? null;
   const others = all.filter((s) => s.id !== top?.id).sort((a, b) => b.mean - a.mean).slice(0, 3);
-  const near = new Set(spots.filter((s) => distanceKm(s) <= HOME.radiusKm).map((s) => s.id));
+  const near = new Set(spots.filter((s) => (SESSION_SPOTS[disc] ? SESSION_SPOTS[disc]!.includes(s.id) : distanceKm(s) <= HOME.radiusKm)).map((s) => s.id));
   const far = spots.filter((s) => !near.has(s.id));
-  const list = all.filter((s) => near.has(s.spot) && (!onlyFav || prefs.favorites.includes(s.spot)));
+  const tomorrowOnly = SESSION_TOMORROW_ONLY.includes(disc);
+  const list = all.filter((s) => near.has(s.spot) && (!onlyFav || prefs.favorites.includes(s.spot)) && (!tomorrowOnly || dayKey(s.start) === dayKey(now + 86400e3)));
   const byDay = new Map<string, Session[]>();
   list.forEach((s) => { const k = dayKey(s.start); if (!byDay.has(k)) byDay.set(k, []); byDay.get(k)!.push(s); });
   const meta = d.meta.disciplines[disc];
 
   let body;
   if (sub === 'sessions') body = (
-    <Section title={`Sessions de 2H (Localisation ${HOME.name})`} aside={<Seg label="Spots" value={onlyFav ? 'fav' : 'all'} onChange={(v) => setOnlyFav(v === 'fav')} options={[['all', 'Tous'], ['fav', 'Favoris']]} />}>
-      <p class="faint">Spots à moins de {HOME.radiusKm} km de {HOME.name}{far.length ? ` (hors ${far.map((s) => s.name.replace(/\s*\(.*\)/, '')).join(', ')} : trop loin pour 2 h ; voir Prévision)` : ''}.{disc === 'wing' ? ' « Ça envoie » = au moins 4 h à plus de 20 nd.' : ''}</p>
-      {byDay.size === 0 && <div class="card empty">Aucune session en vue{onlyFav ? ' sur tes favoris' : ''}.</div>}
+    <Section title={`Sessions de 2H${tomorrowOnly ? ' demain' : ''} (Localisation ${HOME.name})`} aside={<Seg label="Spots" value={onlyFav ? 'fav' : 'all'} onChange={(v) => setOnlyFav(v === 'fav')} options={[['all', 'Tous'], ['fav', 'Favoris']]} />}>
+      <p class="faint">{tomorrowOnly ? `Demain seulement, à ${spots.filter((s) => near.has(s.id)).map((s) => s.name.replace(/\s*\(.*\)/, '')).join(', ')} ; les autres jours et spots sont dans Prévision.` : <>Spots à moins de {HOME.radiusKm} km de {HOME.name}{far.length ? ` (hors ${far.map((s) => s.name.replace(/\s*\(.*\)/, '')).join(', ')} : trop loin pour 2 h ; voir Prévision)` : ''}.{disc === 'wing' ? ' « Ça envoie » = au moins 4 h à plus de 20 nd.' : ''}</>}</p>
+      {byDay.size === 0 && <div class="card empty">Aucune session {tomorrowOnly ? 'demain' : 'en vue'}{onlyFav ? ' sur tes favoris' : ''}.</div>}
       {[...byDay.values()].map((arr) => (
         <div key={arr[0].id} class="stack">
           <h3>{dayLabel(arr[0].start, now)}</h3>

@@ -94,7 +94,7 @@ test('golden : un écart dans les entrées est détecté', () => {
 test('sorties : spots et parcours notés, aucune valeur privée publiée', () => {
   const f = fixture();
   const o = runEngines(inputsFromBundle(f.bundle, registry, f.live, NOW));
-  assert.equal(o.surfJSON.spots.length, 8);
+  assert.equal(o.surfJSON.spots.length, 6);   // registre du 10/11 : 4 spots retirés, Saintes-Maries et La Couronne ajoutés
   assert.ok(o.surfJSON.spots.every((s: { h: { score: (number | null)[] } }) => s.h.score.some((x) => x !== null)));
   assert.equal(o.downwindJSON.runs.length, 3);
   const txt = JSON.stringify(o.surfJSON) + JSON.stringify(o.downwindJSON);

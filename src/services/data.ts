@@ -9,6 +9,9 @@ export const LEVEL_LABEL: Record<Level, string> = { debutant: 'Débutant', inter
 export const LEVELS_FOR: Record<Discipline, Level[]> = { wing: ['secu', 'offshore'], downwind: ['debutant', 'intermediaire', 'confirme'], surf: [] };
 /** Sessions de 2H : spots à moins de 55 km de Montpellier (au-delà, 2 h ne valent pas le trajet). */
 export const HOME = { name: 'Montpellier', lat: 43.6108, lon: 3.8767, radiusKm: 55 };
+/** VAGUE (Tom, 10/11) : Sessions de 2H limitées à Carnon, Palavas et Sète, et au lendemain seulement (pas de prévision plus loin). */
+export const SESSION_SPOTS: Partial<Record<Discipline, string[]>> = { surf: ['carnon', 'palavas', 'sete'] };
+export const SESSION_TOMORROW_ONLY: Discipline[] = ['surf'];
 export const DISC_LABEL: Record<Discipline, string> = { wing: 'Wing foil', surf: 'Surf', downwind: 'Downwind' };
 
 export type Session = { id: string; discipline: Discipline; spot: string; spotName: string; level: Level | 'tous'; start: number; end: number; hours: number;

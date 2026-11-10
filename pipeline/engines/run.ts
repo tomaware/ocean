@@ -6,7 +6,8 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import type { Check, CollectBundle } from '../../src/types/contracts.ts';
 import { loadRegistry } from '../collect/points.ts';
 import { compareOutputs, inputsFromBundle, inputsLegacy, runEngines, usesCopernicus } from './engines.ts';
-import { label, wingForecast } from './wing.ts';
+import { label, wingForecast, type ModelRanking } from './wing.ts';
+import { verifyShortTerm } from '../verify/verify.ts';
 
 const ROOT = new URL('../../', import.meta.url);
 const OUT = new URL('data/v1/engines/', ROOT);
@@ -58,9 +59,16 @@ async function main(): Promise<void> {
   const copB = bundle.forecasts.find((f) => f.id === 'copernicus-medwav');
   checks.push(...(await vsProduction(ocean, now, copB?.provenance.issuedAt ?? null)));
 
-  const wing = wingForecast(sp, registry, now);
+  // spots hors super prévision (étang de Berre, D-22) : modèle le plus juste aux METAR des 3 derniers jours
+  const ranking = verifyShortTerm(bundle).wind as ModelRanking;
+  const wing = wingForecast(sp, registry, now, { block: bundle.forecasts.find((f) => f.id === 'open-meteo-vent-spots'), ranking });
   const nSess = wing.spots.reduce((a, x) => a + x.sessions.secu.length, 0);
-  checks.push({ id: 'sorties-wing', ok: wing.available && wing.spots.length === 6 && wing.spots.every((x) => x.hours.length > 0),
+  const nWing = registry.spots.filter((x) => x.disciplines.includes('wing')).length;
+  for (const x of wing.spots.filter((y) => (y.source as { kind: string }).kind === 'forecast')) {
+    const src = x.source as { model: string; station: string; ranked: boolean; mae: number | null; n: number };
+    checks.push({ id: 'vent-' + x.id, ok: src.ranked && x.hours.length > 0, detail: `${x.name} : ${src.model}${src.ranked ? `, le plus juste à ${src.station} (erreur ${src.mae} m/s sur ${src.n} mesures)` : ` (classement à ${src.station} indisponible)`} ; ${x.hours.length} heures ; vent non corrigé` });
+  }
+  checks.push({ id: 'sorties-wing', ok: wing.available && wing.spots.length === nWing && wing.spots.every((x) => x.hours.length > 0),
     detail: wing.available ? `${wing.spots.length} spots notés (wing v${wing.version}) ; ${nSess} session(s) 2H en mode Sécu first sur les heures prévues` : String((wing as { reason?: string }).reason) });
 
   const surfText = JSON.stringify(ocean.surfJSON), dwText = JSON.stringify(ocean.downwindJSON) + JSON.stringify(wing);

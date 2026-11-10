@@ -99,6 +99,7 @@ function SpotView({ d, spot, now }: { d: AllData; spot: PublicSpot; now: number 
         <Seg<Reading> label="Niveau de lecture" value={reading} onChange={(v) => setPrefs((p) => ({ ...p, reading: v }))} options={[['synthese', 'Synthèse'], ['detail', 'Détail'], ['expert', 'Expert']]} />
       </div>
       {disc === 'wing' && <LiveBox live={live.live} spot={spot.id} />}
+      {s?.notice && <div class="notice">{s.notice}</div>}
       {!s ? <div class="notice warn">Pas de prévision disponible pour ce spot dans la dernière mise à jour.</div> : (
         <>
           {days.length > 0 && <DayTabs s={s} days={days} value={day} now={now} onChange={(t) => { setDay(t); setPicked(null); }} />}

@@ -16,6 +16,22 @@ export function loadRegistry(path = new URL('../../registry/spots.json', import.
 
 type P = { id: string; lat: number; lon: number };
 
+/**
+ * Spots surf d'OCEAN, au format du moteur surf (legacy/super-previ-surf/engine/spots.json), lus dans le registre.
+ * Le registre est la source (Tom, 10/11 : Gruissan, Canet, Paulilles, Perafita retirés ; Saintes-Maries et La Couronne ajoutés).
+ * Pour les spots communs, les réglages sont identiques à ceux de l'app en service (vérifié par un test).
+ */
+export type SurfSpot = { id: string; name: string; commune: string; lat: number; lon: number; normal: number; swell: { min: number; max: number; ideal?: number };
+  size: { min: number; ideal: number; max: number }; periodMin: number; level: string; shelter: number; buoys: string[]; confidence: string; sources: string[] };
+export function surfSpotsOf(registry: Registry): SurfSpot[] {
+  return registry.spots.filter((s) => s.disciplines.includes('surf')).map((s) => {
+    const g = s.geometry as { lat: number; lon: number }, x = s.surf as { size: SurfSpot['size']; periodMin: number; level: string; shelter: number };
+    return { id: s.id, name: s.name, commune: String(s.commune ?? ''), lat: g.lat, lon: g.lon, normal: s.orientation!.seaward as number, swell: s.swellWindow!,
+      size: x.size, periodMin: x.periodMin, level: x.level, shelter: x.shelter, buoys: s.buoys ?? [], confidence: s.confidence, sources: s.sources };
+  });
+}
+export const SURF_BUOYS = surfSpots.buoys;
+
 function add(map: Map<string, CollectPoint>, p: P, user: string): void {
   const prev = map.get(p.id);
   if (prev) {
@@ -40,8 +56,9 @@ export function collectPlan(registry: Registry): CollectPlan {
   const wind = new Map<string, CollectPoint>();
   // Surf : points mer des spots (décalés au large par le moteur) + bouées ; vent aux coordonnées des spots
   const surfCfg = SurfEngine.mergeCfg(SurfEngine.DEFAULT_CONFIG, {});
-  (SurfEngine.queryPoints(surfSpots.spots, surfSpots.buoys, surfCfg) as P[]).forEach((p) => add(marine, p, 'surf'));
-  (surfSpots.spots as P[]).forEach((s) => add(wind, { id: 'surf_' + s.id, lat: s.lat, lon: s.lon }, 'surf'));
+  const spots = surfSpotsOf(registry);
+  (SurfEngine.queryPoints(spots, surfSpots.buoys, surfCfg) as P[]).forEach((p) => add(marine, p, 'surf'));
+  spots.forEach((s) => add(wind, { id: 'surf_' + s.id, lat: s.lat, lon: s.lon }, 'surf'));
   // Downwind : 2 points en mer par parcours + bouées ; vent sur ces points + grille de la carte + spots corrigés
   (DownwindEngine.queryPoints(downwindRuns.runs, downwindRuns.buoys, {}) as P[]).forEach((p) => add(marine, p, 'downwind'));
   (DownwindEngine.queryPoints(downwindRuns.runs, [], {}) as P[]).forEach((p) => add(wind, p, 'downwind'));

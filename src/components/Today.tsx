@@ -98,7 +98,8 @@ export function ScoreBars({ s, dayT, now, picked = null, onPick, level }: { s: S
         const i = byH.get(h);
         const night = isNight(h), sc = i === undefined ? null : s.score[i];
         const v = i === undefined || night || sc === null ? 0.4 : Math.max(0.4, sc);
-        const cls = night ? 'b-night' : i === undefined || sc === null ? 'b-none' : sc >= 7 ? 'b-good' : sc >= 5 ? 'b-mid' : 'b-bad';
+        // couleur = nombre d'étoiles : gris (aucune), vert (1), orange (2), violet (3)
+        const cls = night ? 'b-night' : i === undefined || sc === null ? 'b-none' : sc >= 8.5 ? 'b-top' : sc >= 7 ? 'b-good' : sc >= 5 ? 'b-mid' : 'b-bad';
         return (
           <g key={h}>
             <rect class={cls} x={x0 + h * bw + 1.5} y={y(v)} width={bw - 3} height={H - y(v)} rx={2} />

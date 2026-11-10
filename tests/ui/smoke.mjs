@@ -37,7 +37,7 @@ for (const [name, opt] of [['mobile', { ...devices['iPhone 13'], locale: 'fr-FR'
       // un seul tableau heure par heure pour WIND, VAGUE, HOULE (lignes propres à chacun)
       if (r === 'spot/port-camargue' && !(await p.locator('table.wg .wg-v').count())) errs.push(`${name} #/${r} : tableau du vent absent`);
       if (r === 'spot/plagesud-grandemotte' && !(await p.locator('table.wg .wg-bars').count())) errs.push(`${name} #/${r} : houle absente du tableau`);
-      if (r === 'spot/carnon' && ((await p.locator('table.wg .wg-bars td').count()) < 10 || (await p.locator('table.wg .wg-v').count()))) errs.push(`${name} #/${r} : VAGUE = même tableau que WIND, barres de vagues sans lignes vent / rafales`);
+      if (r === 'spot/carnon' && ((await p.locator('table.wg .wg-bars td').count()) < 10 || (await p.locator('table.wg th', { hasText: /^Rafales$/ }).count()) || !(await p.locator('table.wg th', { hasText: /^Vent nd$/ }).count()))) errs.push(`${name} #/${r} : VAGUE = même tableau que WIND : vagues + vent et direction, sans rafales ni pluie`);
       if (r === 'spot/port-camargue' && (await p.getByRole('rowheader', { name: 'Plage' }).count() + await p.locator('table.wg th', { hasText: /^Plage$/ }).count())) errs.push(`${name} #/${r} : ligne « Plage » encore là`);
       if (r.startsWith('spot/') && !(await p.locator('.stars').count())) errs.push(`${name} #/${r} : étoiles absentes`);
       // fiche spot au style validé le 10/11 : note du jour (24 barres), 2 cartes de conditions, boussole, critères
