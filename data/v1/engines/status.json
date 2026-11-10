@@ -1,5 +1,5 @@
 {
- "generatedAt": 1794332019125,
+ "generatedAt": 1794332294856,
  "checks": [
   {
    "id": "golden-surf",
@@ -14,7 +14,7 @@
   {
    "id": "correction-vent-downwind",
    "ok": true,
-   "detail": "2 spot(s) de recalage : La Grande-Motte 53 h (× 0.97 en moyenne) + relevé récent, Port Camargue 52 h (× 0.93 en moyenne) + relevé récent"
+   "detail": "2 spot(s) de recalage : La Grande-Motte 53 h (× 0.98 en moyenne) + relevé récent, Port Camargue 52 h (× 0.93 en moyenne) + relevé récent"
   },
   {
    "id": "sorties-surf",
@@ -34,17 +34,17 @@
   {
    "id": "ecart-prod-surf",
    "ok": true,
-   "detail": "notes surf OCEAN vs app en service (calcul prod. 41 min avant, même extrait Copernicus) : médiane 0.10, 90 % ≤ 0.70, max 1.10 sur 664 heures (max : carnon lun. 19:00, OCEAN 5.1 / prod 6.2)"
+   "detail": "notes surf OCEAN vs app en service (calcul prod. 1 min avant, même extrait Copernicus) : médiane 0.00, 90 % ≤ 0.00, max 0.00 sur 668 heures (max : carnon mar. 19:00, OCEAN 5.2 / prod 5.2)"
   },
   {
    "id": "ecart-prod-downwind",
    "ok": true,
-   "detail": "notes downwind (intermédiaire, de jour) OCEAN vs app en service (calcul prod. 22 min avant) : médiane 0.00, 90 % ≤ 0.00, max 0.50 sur 120 heures"
+   "detail": "notes downwind (intermédiaire, de jour) OCEAN vs app en service (calcul prod. 27 min avant) : médiane 0.00, 90 % ≤ 0.00, max 0.50 sur 120 heures"
   },
   {
    "id": "vent-berre-jai",
    "ok": true,
-   "detail": "Étang de Berre (Le Jaï) : meteofrance_arome_france_hd, le plus juste à LFML (erreur 1.13 m/s sur 100 mesures) ; 49 heures ; vent non corrigé"
+   "detail": "Étang de Berre (Le Jaï) : meteofrance_arome_france_hd, le plus juste à LFML (erreur 1.13 m/s sur 100 mesures) ; 177 heures ; vent non corrigé"
   },
   {
    "id": "sorties-wing",
