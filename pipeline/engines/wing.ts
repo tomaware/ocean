@@ -74,10 +74,11 @@ export function scoreHour(kn: number, gust: number | null, dir: number | null, d
   const D = dir === null ? { f: 1, label: 'direction inconnue' } : dirFactor(dir, spot, L);
   const score = Math.round(10 * V * R * D.f * 10) / 10;
   const w = WIND[L];
+  // à égalité, la direction passe en premier : « vent de terre » est plus important à lire que « trop de vent »
   const why = [
+    [D.f, D.label],
     [V, eff <= w.lo ? 'pas assez de vent' : 'trop de vent'],
     [R, 'vent rafaleux'],
-    [D.f, D.label],
   ] as [number, string][];
   const worst = why.reduce((a, b) => (b[0] < a[0] ? b : a));
   return { score, limit: worst[0] < 1 ? worst[1] : null };
