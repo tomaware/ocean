@@ -76,7 +76,7 @@ export function App() {
           <button type="button" class={`me menubtn${menu ? ' open' : ''}`} aria-expanded={menu} aria-controls="menu" aria-label="Menu : profil, widgets, avis"
             onClick={(e) => { e.stopPropagation(); setMenu(!menu); }}>{menu ? <X size={20} /> : <Menu size={20} />}</button>
           {menu && (
-            <nav id="menu" class="menu" aria-label="Menu" onClick={(e) => e.stopPropagation()}>
+            <nav id="menu" class="menu" aria-label="Menu" onClick={(e) => { e.stopPropagation(); if ((e.target as Element).closest('a')) setMenu(false); }}>
               <a href="#/profil" aria-current={route.name === 'profil' ? 'page' : undefined}><User size={18} /> Profil et réglages</a>
               <a href="#/widgets" aria-current={route.name === 'widgets' ? 'page' : undefined}><LayoutGrid size={18} /> Installer les widgets</a>
               <a href="#/avis" aria-current={route.name === 'avis' ? 'page' : undefined}><MessageSquare size={18} /> Donner un avis</a>

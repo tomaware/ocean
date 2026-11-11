@@ -95,7 +95,7 @@ for (const [name, opt] of [['mobile', { ...devices['iPhone 13'], locale: 'fr-FR'
     if (mobile) await p.locator('.menubtn').click();
     await p.locator(mobile ? '.menu' : '.side').getByRole('link', { name: link }).click();
     try { await p.getByRole('heading', { name: head }).first().waitFor({ timeout: 5000 }); } catch { errs.push(`${name} : ${head} inaccessible depuis le menu`); }
-    if (await p.locator('.menu').count()) errs.push(`${name} : menu resté ouvert après navigation`);
+    try { await p.locator('.menu').waitFor({ state: 'detached', timeout: 1500 }); } catch { errs.push(`${name} : menu resté ouvert après navigation`); }
   }
   // retour arrière : grille → case → fiche spot → « Retour » ramène à la grille avec la même case ouverte
   await p.goto(`${base}/#/wind/prevision`); await p.reload();
