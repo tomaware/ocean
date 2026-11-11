@@ -238,7 +238,7 @@ function Get-TimeText($it, [datetime]$d) {
 }
 function Get-EndText($it, [datetime]$d) {
   if ($it.allDay -or $it.start -lt $d -or $it.end -le $it.start) { return '' }
-  if ($it.end -ge $d.AddDays(1)) { return '→ demain' }
+  if ($it.end -ge $d.AddDays(1)) { return "→ $(Get-HM $it.end)" }
   Get-HM $it.end
 }
 
@@ -436,7 +436,7 @@ function New-AgendaCard($m, [string]$size) {
   [void](Add $hs (T ($m.today.ToString('MMMM yyyy', $FR)) 12 (C 'INK3') 'SemiBold'))
   # bandeau des 7 prochains jours : aujourd'hui entouré, une pastille par agenda qui a un événement ce jour-là
   $wk = Add $st (New-Box (C 'CELL') 10 (Th 4 5 4 5)); $wk.Margin = Th 0 8 0 4
-  $g = [System.Windows.Controls.UniformGrid]::new(); $g.Columns = 7; $g.Rows = 1; $wk.Child = $g
+  $g = [System.Windows.Controls.Primitives.UniformGrid]::new(); $g.Columns = 7; $g.Rows = 1; $wk.Child = $g
   foreach ($w in $m.week) {
     $c = New-Stack; [void](Set-Link $c $w.url); $c.Background = [System.Windows.Media.Brushes]::Transparent
     [void](Add $c (Center (T $w.letter 9 (C 'INK3') 'SemiBold')))
@@ -511,6 +511,7 @@ function Save-Png($el, [string]$path) {
   $fs = [IO.File]::Create($path); try { $enc.Save($fs) } finally { $fs.Close() }
 }
 if ($Capture) {
+  $ErrorActionPreference = 'Stop'   # en test, la moindre erreur d'affichage fait échouer (sinon PowerShell continue en silence)
   New-Item -ItemType Directory -Force -Path $Capture | Out-Null
   $data = if ($DataFile) { Get-Content $DataFile -Raw -Encoding UTF8 | ConvertFrom-Json } else { $null }
   $now = if ($Now) { $Now } else { Get-NowMs }
