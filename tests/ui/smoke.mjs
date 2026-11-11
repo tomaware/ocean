@@ -29,6 +29,8 @@ for (const [name, opt] of [['mobile', { ...devices['iPhone 13'], locale: 'fr-FR'
         // scripts publiés avec le site, prêts à copier ; un onglet par appareil
         try { await p.getByRole('button', { name: /Copier « OCEAN Vent »/ }).first().waitFor({ timeout: 4000 }); } catch {}
         for (const os of ['iPhone', 'Mac', 'Windows']) { await p.getByRole('button', { name: os, exact: true }).click(); if (!(await p.locator('ol.steps li').count())) errs.push(`${name} #/widgets : pas d'étapes pour ${os}`); }
+        const zip = await p.request.get(`${base}/widgets/ocean-widget-windows.zip`);
+        if (!zip.ok() || (await zip.body()).readUInt32LE(0) !== 0x04034b50) errs.push(`${name} #/widgets : widget Windows (.zip) introuvable`);
         await p.getByRole('button', { name: 'iPhone', exact: true }).click();
         if (await p.getByRole('button', { name: /Copier « OCEAN/ }).and(p.locator(':disabled')).count()) errs.push(`${name} #/widgets : scripts des widgets introuvables (dist/widgets)`);
       }

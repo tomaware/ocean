@@ -194,15 +194,29 @@ export function WidgetsPage() {
       {os === 'windows' && (
         <Section title={<span class="row"><Monitor size={18} /> Windows</span>}>
           <div class="card stack">
-            <strong>L’app OCEAN sur le bureau et la barre des tâches</strong>
+            <strong>Le widget OCEAN sur le bureau</strong>
+            <span class="small">Les cartes <b>Vent</b> (ton spot, maintenant, dans 2 h et 4 jours) et <b>Créneaux</b> (les meilleurs créneaux, ou la grille spots × 5 jours), chacune en petit, moyen ou grand. Windows 10 ou 11, rien d’autre à installer.</span>
+            <div class="row"><a class="btn primary" href="./widgets/ocean-widget-windows.zip" download><Download size={16} /> Télécharger le widget Windows (.zip)</a></div>
             <Steps>
-              <li>Ouvre OCEAN dans <b>Microsoft Edge</b> → menu <b>···</b> → <b>Applications</b> → <b>Installer ce site en tant qu’application</b> → <b>Installer</b>.</li>
-              <li>Dans la fenêtre proposée, coche <b>Épingler à la barre des tâches</b> (et au menu Démarrer, ou crée un raccourci sur le bureau).</li>
+              <li>Clic droit sur le fichier téléchargé → <b>Extraire tout…</b> → <b>Extraire</b>.</li>
+              <li>Dans le dossier extrait, double-clic sur <b>installer.cmd</b>. Si Windows affiche « Windows a protégé votre ordinateur » : <b>Informations complémentaires</b> → <b>Exécuter quand même</b>.</li>
+              <li>La fenêtre noire affiche « Terminé ! » : appuie sur une touche. Le widget apparaît en haut à droite de l’écran (<b>Windows + D</b> pour afficher le bureau) et se relance à chaque démarrage.</li>
+            </Steps>
+          </div>
+          <div class="card stack">
+            <strong>Régler le widget</strong>
+            <span class="small"><b>Clic droit</b> sur le widget : spot du vent, mode Sécu first ou OffShore, taille de chaque carte (petit, moyen, grand, masquée), spots des créneaux (tous ou proches de Montpellier), côte à côte ou l’une sous l’autre, thème, écran.</span>
+            <span class="small"><b>Glisser</b> pour le déplacer ; <b>clic</b> sur une carte, un créneau ou une case : ouvre la fiche du spot dans OCEAN, au bon jour.</span>
+            {prefs.perso.enabled && <span class="small"><b>Mode perso</b> : clic droit → <b>Brancher ma super prévision…</b> et colle ton lien privé (gardé chiffré sur le PC). Le widget affiche alors les balises Winds-Up en direct ; s’il trouve le lien de ton ancien widget Winds-Up, il le reprend tout seul.</span>}
+            <span class="faint">Pour l’enlever : double-clic sur <b>desinstaller.cmd</b> dans le même dossier.</span>
+          </div>
+          <div class="card stack">
+            <strong>L’app OCEAN dans la barre des tâches</strong>
+            <Steps>
+              <li>Ouvre OCEAN dans <b>Microsoft Edge</b> → menu <b>···</b> → <b>Applications</b> → <b>Installer ce site en tant qu’application</b> → <b>Installer</b>, puis coche <b>Épingler à la barre des tâches</b>.</li>
               <li>Avec Chrome : menu <b>⋮</b> → <b>Caster, enregistrer et partager</b> → <b>Installer la page en tant qu’application</b>.</li>
             </Steps>
-            <span class="faint">OCEAN s’ouvre dans sa propre fenêtre, toujours à jour. Pour la désinstaller : clic droit sur l’icône → Désinstaller.</span>
           </div>
-          <div class="notice">Widget Windows (vent du spot et créneaux sur le bureau) : en préparation.</div>
         </Section>
       )}
     </>

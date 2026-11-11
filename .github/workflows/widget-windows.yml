@@ -63,7 +63,7 @@ jobs:
         run: |
           if (-not (Test-Path captures)) { exit 0 }
           git config user.name "ocean-bot"; git config user.email "ocean-bot@users.noreply.github.com"
-          $tmp = Join-Path $env:RUNNER_TEMP 'cap'; Copy-Item captures $tmp -Recurse
+          $tmp = Join-Path $env:RUNNER_TEMP 'cap'; Copy-Item captures $tmp -Recurse; Remove-Item captures -Recurse -Force
           git checkout --orphan captures-tmp; git rm -rfq .
           Copy-Item "$tmp\*" . ; git add *.png
           git commit -qm "Images du widget Windows ($env:GITHUB_SHA)"

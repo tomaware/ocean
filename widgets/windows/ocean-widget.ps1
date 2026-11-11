@@ -50,6 +50,7 @@ function Stop-Widget {
 if ($Install) {
   Write-Host '=== Installation du widget OCEAN ==='
   Write-Host ''
+  $ErrorActionPreference = 'Stop'
   try {
     Stop-Widget
     New-Item -ItemType Directory -Force -Path $INSTALL_DIR | Out-Null
@@ -58,6 +59,7 @@ if ($Install) {
     Unblock-File -LiteralPath $target -ErrorAction SilentlyContinue
     Write-Host "[OK] Widget copié dans $INSTALL_DIR"
     $cmdArgs = "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -STA -File `"$target`""
+    if (-not (Test-Path $RUN_KEY)) { New-Item -Path $RUN_KEY -Force | Out-Null }
     Set-ItemProperty -Path $RUN_KEY -Name $APP_NAME -Value "`"$POWERSHELL`" $cmdArgs"
     Write-Host '[OK] Il se lancera tout seul au démarrage de Windows.'
     Start-Process -FilePath $POWERSHELL -ArgumentList $cmdArgs -WindowStyle Hidden
@@ -466,19 +468,21 @@ function New-VentCard($m, [string]$size, [double]$now) {
 }
 
 # ------------------------------------------------ Carte Créneaux
-function New-FillBrush($n) {
-  # case remplie selon les heures à 3, 2 et 1 étoiles (comme la Prévision 5 jours de l'app)
-  $tot = [math]::Max(1, [double]$n[3]); $g = [System.Windows.Media.LinearGradientBrush]::new(); $g.StartPoint = '0,0.5'; $g.EndPoint = '1,0.5'
-  $at = 0.0
+function New-Fill($n, [double]$w, [double]$h) {
+  # case remplie selon les heures à 3, 2 et 1 étoiles (comme la Prévision 5 jours de l'app) : bandes violet, orange, vert
+  $tot = [math]::Max(1, [double]$n[3]); $used = 0.0
+  $grid = [System.Windows.Controls.Grid]::new(); $grid.Width = $w; $grid.Height = $h
+  $grid.Clip = [System.Windows.Media.RectangleGeometry]::new([System.Windows.Rect]::new(0, 0, $w, $h), 6, 6)
+  $col = 0
   foreach ($k in 3, 2, 1) {
-    $w = [double]$n[$k - 1] / $tot; if ($w -le 0) { continue }
-    $col = [System.Windows.Media.ColorConverter]::ConvertFromString($FILL[$k])
-    $g.GradientStops.Add([System.Windows.Media.GradientStop]::new($col, $at)); $at = [math]::Min(1, $at + $w)
-    $g.GradientStops.Add([System.Windows.Media.GradientStop]::new($col, $at))
+    $part = [math]::Min([double]$n[$k - 1], $tot - $used); if ($part -le 0) { continue }
+    $cd = [System.Windows.Controls.ColumnDefinition]::new(); $cd.Width = [System.Windows.GridLength]::new($part, 'Star'); $grid.ColumnDefinitions.Add($cd)
+    $r = [System.Windows.Shapes.Rectangle]::new(); $r.Fill = Get-Brush $FILL[$k]
+    [System.Windows.Controls.Grid]::SetColumn($r, $col); [void]$grid.Children.Add($r)
+    $used += $part; $col++
   }
-  $cell = [System.Windows.Media.ColorConverter]::ConvertFromString($script:P.CELL)
-  $g.GradientStops.Add([System.Windows.Media.GradientStop]::new($cell, $at)); $g.GradientStops.Add([System.Windows.Media.GradientStop]::new($cell, 1))
-  $g
+  if ($used -lt $tot) { $cd = [System.Windows.Controls.ColumnDefinition]::new(); $cd.Width = [System.Windows.GridLength]::new($tot - $used, 'Star'); $grid.ColumnDefinitions.Add($cd) }
+  $grid
 }
 function New-NoCreneau($cm) {
   $d = New-Dock
@@ -535,11 +539,13 @@ function New-CreneauxCard($cm, [string]$size, [double]$now) {
     $n = Add $r (T $g.spot.short 11 (C 'INK') 'Black'); $n.Width = $nameW; $n.VerticalAlignment = 'Center'
     for ($i = 0; $i -lt $g.cells.Count; $i++) {
       $x = $g.cells[$i]
-      $cell = Add $r (New-Box $(if ($x.has) { New-FillBrush $x.n } else { C 'CELL' }) 6 $null); $cell.Width = $cw; $cell.Height = 26; $cell.Margin = Th 3 0 0 0
+      $cell = Add $r (New-Box (C 'CELL') 6 $null); $cell.Width = $cw; $cell.Height = 26; $cell.Margin = Th 3 0 0 0
       if ($x.has) {
         $cell.Tag = "$($APP_URL)#/spot/$($g.spot.id)?day=$([uri]::EscapeDataString([datetime]::ParseExact($cm.days[$i], 'yyyy-MM-dd', $INV).ToString('dd/MM/yyyy', $INV)))"
+        $layers = [System.Windows.Controls.Grid]::new(); $cell.Child = $layers
+        [void]$layers.Children.Add((New-Fill $x.n $cw 26))
         $pill = New-Box (C 'BG') 7 (Th 5 1 5 1); $pill.HorizontalAlignment = 'Center'; $pill.VerticalAlignment = 'Center'
-        $pill.Child = T $x.label 10 (C 'INK') 'Black'; $cell.Child = $pill
+        $pill.Child = T $x.label 10 (C 'INK') 'Black'; [void]$layers.Children.Add($pill)
       }
     }
   }
