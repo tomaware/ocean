@@ -172,7 +172,7 @@ Les apps actuelles restent en ligne jusqu'à ce que leur remplaçante soit véri
 - Bouton clair / sombre dans la barre du haut. « En direct » devient un module du menu de gauche (WIND). Fiabilité : mode perso seulement. Synthèse / Détail / Expert placé à côté de « Jour par jour » ; pas d'Expert pour VAGUE et HOULE ; formule retirée de l'affichage (fiche et Expert).
 - Note du jour : commentaire au survol seulement. Carte : vent en légère couleur (échelle façon Windy) et traits dans le sens du vent, légende 0–60 nd.
 - Prévision 5 jours : chaque case se remplit selon les heures de jour à 1 ★ (vert), 2 ★ (orange), 3 ★ (violet) ; le chiffre = heures au meilleur niveau. « Fiche complète » ouvre le jour cliqué.
-- HOULE, modes Sécu first / OffShore et règle des 35 nd : formule proposée, en attente de validation de Tom (aucune note downwind modifiée).
+- HOULE : Tom garde les niveaux Débutant / Intermédiaire / Confirmé (11/11) ; pas de modes Sécu first / OffShore ni de règle des 35 nd. Note downwind inchangée.
 
 ### D-24 (11/11/2026, Tom) — carte façon Windy, Sessions 2H
 - Carte de la fiche spot : champ de vent coloré (échelle Windy) et particules dans le sens du vent, à l'heure affichée (survol compris). Données : grille Open-Meteo 16 × 8 points (0,25°) de Leucate à Hyères, modèle Météo-France brut (AROME puis ARPEGE), interpolée ; affichage seul, la pastille du spot et la note gardent le vent corrigé. Pas d'API Windy / Windguru utilisable ici.
