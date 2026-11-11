@@ -260,10 +260,11 @@ function Get-CreneauxModel($data, $reg, [double]$now) {
   $onlyNear = $reg.creneauxSpots -eq 'proches'   # (PowerShell ne distingue pas $near de $NEAR)
   $spots = @($data.spots)
   if ($onlyNear) { $spots = @($spots | Where-Object { $NEAR -contains $_.id }) }
+  $i = 0   # ordre d'origine : départage les égalités (Sort-Object de PowerShell 5.1 n'est pas stable)
   $all = @(foreach ($sp in $spots) { foreach ($s in (Get-Sessions $sp $level)) { if ([double]$s.e -gt $now) {
-    [pscustomobject]@{ spot = $sp; s = [double]$s.s; e = [double]$s.e; h = $s.h; p = $s.p; kn = $s.kn; g = $s.g; dir = $s.dir; stars = (Get-Stars $s.p) } } } })
+    [pscustomobject]@{ i = ($i++); spot = $sp; s = [double]$s.s; e = [double]$s.e; h = $s.h; p = $s.p; kn = $s.kn; g = $s.g; dir = $s.dir; stars = (Get-Stars $s.p) } } } })
   # du meilleur au moins bon : étoiles, puis durée (8 h valent mieux que 2 h), puis note, puis le plus tôt
-  $list = @($all | Sort-Object -Property @{ Expression = 'stars'; Descending = $true }, @{ Expression = 'h'; Descending = $true }, @{ Expression = 'p'; Descending = $true }, @{ Expression = 's'; Descending = $false })
+  $list = @($all | Sort-Object -Property @{ Expression = 'stars'; Descending = $true }, @{ Expression = 'h'; Descending = $true }, @{ Expression = 'p'; Descending = $true }, @{ Expression = 's'; Descending = $false }, @{ Expression = 'i'; Descending = $false })
   $days = @(@($data.days)[0..4])
   $grid = @(foreach ($sp in ($spots | Select-Object -First 8)) {
     $sess = Get-Sessions $sp $level
@@ -330,9 +331,10 @@ function Get-VagueModel($surf, $spot, [double]$now) {
       cr = $(if ($ss.Count) { ($ss | ForEach-Object { Get-Span $_ }) -join ' · ' } else { 'pas de créneau' }); hours = $hours }
   })
   # meilleur créneau surf à venir, tous spots : étoiles, puis durée, puis note, puis le plus tôt
+  $i = 0
   $all = @(foreach ($sp in $surf.spots) { foreach ($x in @($sp.sessions | Where-Object { $_ })) { if ([double]$x.e -gt $now) {
-    [pscustomobject]@{ spot = $sp; s = [double]$x.s; e = [double]$x.e; h = $x.h; p = $x.p; hb = $x.hb; tp = $x.tp; ws = $x.ws; wd = $x.wd; stars = (Get-Stars $x.p) } } } })
-  $best = @($all | Sort-Object -Property @{ Expression = 'stars'; Descending = $true }, @{ Expression = 'h'; Descending = $true }, @{ Expression = 'p'; Descending = $true }, @{ Expression = 's'; Descending = $false }) | Select-Object -First 1
+    [pscustomobject]@{ i = ($i++); spot = $sp; s = [double]$x.s; e = [double]$x.e; h = $x.h; p = $x.p; hb = $x.hb; tp = $x.tp; ws = $x.ws; wd = $x.wd; stars = (Get-Stars $x.p) } } } })
+  $best = @($all | Sort-Object -Property @{ Expression = 'stars'; Descending = $true }, @{ Expression = 'h'; Descending = $true }, @{ Expression = 'p'; Descending = $true }, @{ Expression = 's'; Descending = $false }, @{ Expression = 'i'; Descending = $false }) | Select-Object -First 1
   [pscustomobject]@{ spot = $spot; now = $cur; days = $days; detail = $detail; best = $best }
 }
 
