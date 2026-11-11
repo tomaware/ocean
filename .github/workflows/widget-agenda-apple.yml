@@ -1,0 +1,40 @@
+name: Widgets Agenda Mac et iPad — tests et images
+
+# Agenda FICTIF (dépôt et images publics). Mac : rendu réel du widget Übersicht par WebKit ; iPad : simulation Scriptable.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["widgets/agenda/**", "tests/widget-agenda.test.ts", "tests/widgets/agenda-data.ts", "tests/widgets/scriptable.mjs", "tests/widgets/mac.mjs", "tests/ui/agenda-previews.mjs", ".github/workflows/widget-agenda-apple.yml"]
+
+permissions:
+  contents: write
+
+jobs:
+  apple:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env: { TZ: Europe/Paris }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - name: Tests (cœur commun, widget Mac, widget iPad)
+        run: node --test tests/widget-agenda.test.ts tests/widgets.test.ts tests/widget-mac.test.ts
+      - name: Images
+        run: |
+          npm i --no-save playwright
+          npx playwright install --with-deps webkit
+          node tests/ui/agenda-previews.mjs captures
+          test "$(ls captures/*.png | wc -l)" -ge 13
+      - name: Publier les images (branche captures-agenda-apple)
+        if: always()
+        run: |
+          [ -d captures ] || exit 0
+          git config user.name "ocean-bot"; git config user.email "ocean-bot@users.noreply.github.com"
+          cp -r captures "$RUNNER_TEMP/cap"
+          git checkout --orphan captures-agenda-apple-tmp; git rm -rfq .
+          cp "$RUNNER_TEMP"/cap/* . ; git add *.png LISEZ-MOI.txt
+          git commit -qm "Images des widgets Agenda Mac et iPad ($GITHUB_SHA)"
+          git push -fq origin HEAD:captures-agenda-apple

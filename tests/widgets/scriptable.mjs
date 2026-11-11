@@ -2,8 +2,8 @@
 // enregistrent ce que le widget affiche (textes, couleurs, tailles, liens). Sert aux tests, pas à l'iPhone.
 import { readFileSync } from 'node:fs';
 
-export function makeEnv({ family = 'small', parameter = '', inWidget = true, data, live = null, keychain = {}, alerts = [], fail = false, now = Date.now() }) {
-  const out = { widget: null, presented: null, requests: [], keychain: { ...keychain } };
+export function makeEnv({ family = 'small', parameter = '', inWidget = true, data, live = null, keychain = {}, alerts = [], fail = false, now = Date.now(), calendars = [], events = [], calendarDenied = false, query = {}, files: initFiles = {} }) {
+  const out = { widget: null, presented: null, requests: [], keychain: { ...keychain }, edited: null, between: null, files: null };
   class Color { constructor(hex, a = 1) { this.hex = hex; this.a = a; } static dynamic(l, d) { const c = new Color(l.hex); c.dark = d.hex; return c; } static white() { return new Color('#FFFFFF'); } static black() { return new Color('#000000'); } }
   class Size { constructor(w, h) { this.w = w; this.h = h; } }
   class Point { constructor(x, y) { this.x = x; this.y = y; } }
@@ -22,7 +22,17 @@ export function makeEnv({ family = 'small', parameter = '', inWidget = true, dat
     addImage(img) { if (!img?.image) throw new Error('addImage attend une image'); const x = { kind: 'image', img }; this.children.push(x); return x; }
     set size(v) { if (!(v instanceof Size) || v.w < 0 || v.h < 0 || !Number.isFinite(v.w) || !Number.isFinite(v.h)) throw new Error('size invalide'); this._size = v; } get size() { return this._size; }
   }
-  class ListWidget extends Stack { constructor() { super('widget'); this.layout = 'v'; } async presentLarge() { out.presented = this; } async presentMedium() { out.presented = this; } async presentSmall() { out.presented = this; } }
+  class ListWidget extends Stack { constructor() { super('widget'); this.layout = 'v'; } async presentLarge() { out.presented = this; } async presentMedium() { out.presented = this; } async presentSmall() { out.presented = this; } async presentExtraLarge() { out.presented = this; } }
+  // Calendriers de l'appareil (widget Agenda) : calendars = [{ identifier, title, color: '#RRGGBB' }], events = [{ …, calendar: identifier }]
+  const CAL = calendars.map((c) => ({ identifier: c.identifier, title: c.title, color: new Color(String(c.color).replace('#', '')) }));
+  CAL.forEach((c) => { c.color.hex = c.color.hex.replace('#', ''); });
+  const Calendar = { forEvents: async () => { if (calendarDenied) throw new Error('accès refusé'); return CAL; } };
+  class CalendarEvent {
+    static async between(a, b, cals) { out.between = [a.getTime(), b.getTime(), cals.length]; const ids = new Set(cals.map((c) => c.identifier));
+      return events.filter((e) => ids.has(e.calendar) && new Date(e.endDate) > a && new Date(e.startDate) < b).map((e) => ({ ...e, startDate: new Date(e.startDate), endDate: new Date(e.endDate), calendar: CAL.find((c) => c.identifier === e.calendar) })); }
+    async presentEdit() { out.edited = this; }
+  }
+  const SFSymbol = { named: (n) => ({ name: n, image: { image: true, symbol: n }, applyFont() {} }) };
   class Request {
     constructor(url) { this.url = url; }
     async loadJSON() {
@@ -32,7 +42,7 @@ export function makeEnv({ family = 'small', parameter = '', inWidget = true, dat
       return JSON.parse(JSON.stringify(data));
     }
   }
-  const files = {};
+  const files = { ...initFiles }; out.files = files;
   const FileManager = { local: () => ({ documentsDirectory: () => '/docs', joinPath: (a, b) => `${a}/${b}`, writeString: (p, s) => { files[p] = s; }, readString: (p) => files[p], fileExists: (p) => p in files }) };
   const Keychain = { contains: (k) => k in out.keychain, get: (k) => out.keychain[k], set: (k, v) => { out.keychain[k] = v; }, remove: (k) => { delete out.keychain[k]; } };
   let ai = 0;
@@ -43,8 +53,9 @@ export function makeEnv({ family = 'small', parameter = '', inWidget = true, dat
     textFieldValue(i) { return this.fields[i]; }
   }
   const globals = { Color, Size, Point, Rect, Path, DrawContext, Font, ListWidget, Request, FileManager, Keychain, Alert,
-    args: { widgetParameter: parameter || null }, config: { widgetFamily: family, runsInWidget: inWidget, runsInApp: !inWidget },
-    Script: { setWidget: (w) => { out.widget = w; }, complete: () => {} } };
+    Calendar, CalendarEvent, SFSymbol,
+    args: { widgetParameter: parameter || null, queryParameters: query }, config: { widgetFamily: family, runsInWidget: inWidget, runsInApp: !inWidget },
+    Script: { setWidget: (w) => { out.widget = w; }, complete: () => {}, name: () => 'Agenda' } };
   return { globals, out, now };
 }
 

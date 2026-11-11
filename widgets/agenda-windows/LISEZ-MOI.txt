@@ -20,7 +20,7 @@ Contenu du dossier :
   - installer.cmd        le script d'installation
   - desinstaller.cmd     pour tout enlever
   - agenda-widget.ps1    le widget
-  - agenda-google.gs     le script Google qui lit tes agendas (version 2)
+  - agenda-google.gs     le script Google qui lit tes agendas (version 3)
   - LISEZ-MOI.txt        ce fichier
 
 
@@ -64,15 +64,15 @@ UTILISATION
   - Hors ligne, le widget garde les derniers événements et l'indique.
 
 
-LE SCRIPT GOOGLE (version 2, recommandée)
+LE SCRIPT GOOGLE (version 3, recommandée)
 -----------------------------------------
 
 Ton script actuel marche déjà avec ce widget, mais il n'envoie que les
-agendas cochés dans Google Agenda, et seulement 7 jours. La version 2
+agendas cochés dans Google Agenda, et seulement 7 jours. La version 3
 (agenda-google.gs) envoie tous tes agendas, cochés ou non, et jusqu'à
 14 jours : tu choisis alors tout depuis le widget.
 
-Pour passer à la version 2, sur script.google.com, avec
+Pour passer à la version 3, sur script.google.com, avec
 thomas@band-originale.com, dans ton projet « Widget agenda » :
   1. Note ta ligne « const KEY = '…' » (ta clé secrète).
   2. Sélectionne tout (Ctrl + A), colle le contenu de agenda-google.gs,

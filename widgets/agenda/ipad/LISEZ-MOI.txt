@@ -1,0 +1,52 @@
+WIDGET AGENDA POUR iPAD (Scriptable)
+====================================
+
+Tes calendriers de l'iPad sur l'écran d'accueil, dans la charte des widgets
+OCEAN. Le widget lit directement les calendriers synchronisés sur l'iPad
+(Réglages → Calendrier → Comptes : Google BO, Google perso, iCloud…) :
+rien à brancher, les changements apparaissent tout de suite.
+Marche aussi sur iPhone.
+
+Tailles :
+  - Petit : la date et les deux prochains événements.
+  - Moyen : la date à gauche, les trois prochains à droite.
+  - Grand : la date, la semaine (pastilles par calendrier), les événements.
+  - Très grand (iPad) : la semaine, aujourd'hui à gauche, la suite à droite.
+
+Un widget iPad ne peut ni se déplacer librement ni ouvrir un panneau :
+iPadOS choisit la place (grille de l'écran d'accueil) et la taille.
+
+
+INSTALLATION
+------------
+
+1. Installe l'app gratuite Scriptable (App Store), si ce n'est pas fait.
+2. Copie « Agenda.js » dans le dossier Scriptable d'iCloud Drive
+   (app Fichiers → iCloud Drive → Scriptable), ou dans Scriptable :
+   + → colle le contenu → renomme le script « Agenda ».
+3. Ouvre « Agenda » dans Scriptable (▶︎) : autorise l'accès aux calendriers.
+   Le menu des réglages s'ouvre.
+4. Écran d'accueil : appui long → Modifier → Ajouter un widget → Scriptable
+   → choisis la taille → Ajouter. Appui long sur le widget → Modifier le
+   widget → Script : « Agenda ».
+
+
+RÉGLAGES (ouvre « Agenda » dans Scriptable)
+-------------------------------------------
+
+  - Calendriers affichés : touche un calendrier pour l'afficher ou le
+    masquer (il reste connecté).
+  - Ordre des calendriers : touche un calendrier pour le monter d'un rang.
+  - Calendrier par défaut : celui du bouton + (nouvel événement).
+  - Période : aujourd'hui, 3 jours, 7 jours ou prochains événements.
+  - Événements passés : estompés ou masqués.
+  - Ouvrir les événements dans : Calendrier ou Google Agenda.
+  - Aperçu du widget.
+
+Parameter du widget (facultatif, appui long → Modifier le widget) :
+« jour », « 3 », « 7 » ou « prochains » pour donner à ce widget-là une
+autre période que les autres.
+
+Toucher un événement l'ouvre à sa date ; + ouvre l'éditeur d'événement de
+l'iPad dans ton calendrier par défaut. Mise à jour à chaque début ou fin
+d'événement, et au moins toutes les 15 minutes (selon iPadOS).

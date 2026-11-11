@@ -1,0 +1,70 @@
+WIDGET AGENDA POUR MAC (Übersicht)
+==================================
+
+Tes événements Google Agenda sur le bureau, dans la charte du widget OCEAN :
+en-tête avec la date, semaine du lundi au dimanche (pastilles de couleur
+quand un calendrier a des événements), événements regroupés par jour.
+
+Contenu du dossier :
+  - installer.command    installe Übersicht (si besoin) et le widget
+  - desinstaller.command retire le widget
+  - Agenda.jsx           le widget
+  - agenda-google.gs     le script Google qui lit tes agendas (version 3)
+  - LISEZ-MOI.txt        ce fichier
+
+
+INSTALLATION (environ 1 minute)
+-------------------------------
+
+1. Décompresse le .zip, puis CLIC DROIT sur « installer.command » → Ouvrir.
+   (Un double-clic simple est bloqué par macOS la première fois.)
+2. Le lien de ton script Google est repris de ton ancien widget agenda s'il
+   est installé ; sinon colle-le quand le Terminal le demande. Il est rangé
+   dans le trousseau du Mac, jamais dans le widget.
+3. L'installateur propose de mettre l'ancien widget agenda à la Corbeille
+   (sinon tu aurais deux agendas sur le bureau).
+
+
+UTILISATION
+-----------
+
+  - Glisser l'en-tête : déplace le widget.
+  - Tirer le coin en bas à droite : redimensionne (la largeur choisit le
+    format Compact, Standard ou Étendu). Double-clic sur le coin : taille
+    par défaut. La liste défile à la molette.
+  - ‹ › : semaine précédente / suivante (de la semaine dernière à dans
+    4 semaines). Clic sur un jour : la liste commence ce jour-là.
+    « Aujourd'hui » pour revenir.
+  - Clic sur un événement : son détail (horaire et durée, calendrier, lieu,
+    invités, récurrence, notes) et « Ouvrir dans Google Agenda ».
+  - + : nouvel événement dans Google Agenda, le jour choisi, dans ton
+    calendrier par défaut.
+  - ⚙ : le panneau Calendriers
+      cocher / décocher chaque calendrier (il reste connecté),
+      glisser ≡ pour changer l'ordre, ★ = calendrier par défaut,
+      Période (aujourd'hui, 3 jours, 7 jours, prochains événements),
+      Format, Événements passés (estompés ou masqués), Thème,
+      Actualiser, changer le lien du script.
+  - Mise à jour toutes les 5 minutes. Hors ligne, le widget garde les
+    derniers événements et l'indique en bas.
+  - Position, taille et réglages sont retenus.
+
+
+LE SCRIPT GOOGLE (version 3)
+----------------------------
+
+Le widget marche avec ton script actuel, mais la version 3 envoie en plus
+les agendas décochés dans Google, les lieux, notes, invités, récurrences et
+le lien direct de chaque événement, et les semaines passées / suivantes.
+
+Sur script.google.com (compte thomas@band-originale.com), projet
+« Widget agenda » : remplace tout le code par agenda-google.gs en gardant
+TA ligne « const KEY = … », Ctrl/Cmd + S, exécute « test », puis
+Déployer → Gérer les déploiements → crayon → Nouvelle version → Déployer.
+Le lien ne change pas.
+
+
+DÉSINSTALLATION
+---------------
+
+Clic droit sur « desinstaller.command » → Ouvrir.
