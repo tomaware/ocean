@@ -101,8 +101,10 @@ async function loadLive(spot, data, now) {
       for (const x of Object.values((j && j.spots) || {})) {
         const n = norm(x.nom);
         if (!(n === spot.id || n.startsWith(spot.id + "-") || n.includes(spot.id))) continue;
-        if (x.panne) return { panne: true, src: "balise" };
-        if (Number.isFinite(x.t) && now - x.t < LIVE_MAX_MIN * 60000) return { t: x.t, kn: x.v, gust: x.max ?? null, dir: fromText(x.o), dirTxt: x.o, src: "balise" };
+        const abo = !!j.connecte;   // relevés de ton abonnement Winds-Up (sinon pages publiques, 2 h de retard)
+        if (x.panne) return { panne: true, src: "balise", abo };
+        if (Number.isFinite(x.t) && now - x.t < LIVE_MAX_MIN * 60000) return { t: x.t, kn: x.v, gust: x.max ?? null, dir: fromText(x.o), dirTxt: x.o, src: "balise", abo };
+        if (Number.isFinite(x.t)) return { stale: true, t: x.t, abo };   // balise trop vieille : prévision affichée
       }
     } catch (e) { /* hors ligne : on passe à la suite */ }
   }
@@ -160,16 +162,26 @@ function model(data, spot, level, live, now) {
       stars: up.reduce((b, x) => Math.max(b, x.stars), 0), kn: max ? max.kn : null, dir: max ? max.dir : null, gust: gmax,
       cr: ss.length ? ss.map((x) => `${new Date(x.s).getHours()}–${new Date(x.e).getHours()} h`).join(" · ") : "pas de créneau", hours };
   });
-  return { detail, rows, now: live && !live.panne ? live : nowRow ? { t: nowRow.t, kn: nowRow.kn, gust: nowRow.gust, dir: nowRow.dir, dirTxt: compass(nowRow.dir), src: "prévu" } : null,
+  return { spot, stale: live && live.stale ? live.t : null, detail, rows, now: live && !live.panne && !live.stale ? live : nowRow ? { t: nowRow.t, kn: nowRow.kn, gust: nowRow.gust, dir: nowRow.dir, dirTxt: compass(nowRow.dir), src: "prévu" } : null,
     panne: live && live.panne, in2: twoRow, days, next };
 }
 
 // ------------------------------------------------------------------ mises en page
+/** D'où vient le vent affiché en grand : balise Winds-Up (abonnement ou pages publiques), Marignane, ou prévision (Tom, 11/11). */
+const srcText = (m, now, short) => {
+  if (m.panne) return "balise en panne";
+  if (!m.now) return "pas de vent";
+  if (m.now.src === "balise") { const k = m.now.abo ? "abonné" : "public"; return short ? `● ${k} · ${ago(m.now.t, now)}` : `● Winds-Up ${k} · ${ago(m.now.t, now)}`; }
+  if (m.now.src === "Marignane") return short ? `● ${ago(m.now.t, now)}` : `● Marignane · ${ago(m.now.t, now)}`;
+  if (m.stale != null) return short ? `prévision (balise ${ago(m.stale, now)})` : `prévision · balise il y a ${ago(m.stale, now)}`;
+  return short ? "prévision" : m.spot && m.spot.source === "corrected" ? "prévision corrigée" : "prévision";
+};
+
 function header(w, spot, m, now, big) {
   const top = w.addStack(); top.centerAlignContent();
   text(top, big ? spot.name : spot.short, F.h(big ? 15 : 14), INK, { scale: 0.7 });
   top.addSpacer();
-  const src = m.panne ? "balise en panne" : !m.now ? "pas de vent" : m.now.src === "prévu" ? "prévu" : `● ${m.now.src === "balise" ? "balise" : "Marignane"} · ${ago(m.now.t, now)}`;
+  const src = srcText(m, now, !big);
   text(top, src, F.b(10), m.now && m.now.src !== "prévu" ? LIVE : INK3);
 }
 function bigNow(stack, m, size) {
@@ -202,7 +214,7 @@ function medium(w, data, spot, m, now) {
   const row = w.addStack(); row.spacing = 10;
   const left = row.addStack(); left.layoutVertically(); left.size = new Size(108, 0);
   text(left, spot.short, F.h(14), INK, { scale: 0.7 });
-  text(left, m.panne ? "balise en panne" : !m.now ? "pas de vent" : m.now.src === "prévu" ? "prévu" : `● ${ago(m.now.t, now)}`, F.b(10), m.now && m.now.src !== "prévu" ? LIVE : INK3);
+  text(left, srcText(m, now, true), F.b(10), m.now && m.now.src !== "prévu" ? LIVE : INK3, { scale: 0.7 });
   left.addSpacer(); bigNow(left, m, 38); left.addSpacer();
   text(left, `${m.now && m.now.gust != null ? `raf. ${Math.round(m.now.gust)} · ` : ""}2 h : ${m.in2 ? Math.round(m.in2.kn) : "–"}`, F.r(11), INK2, { scale: 0.7 });
   const right = row.addStack(); right.spacing = 4; dayCols(right, m, 50);
@@ -237,8 +249,6 @@ function large(w, data, spot, m, now) {
     w.addSpacer(2);
     text(w, `Créneau : ${d.cr}`, F.s(11), INK2, { scale: 0.7 });
   }
-  w.addSpacer();
-  text(w, "nœuds · rafales · direction · étoiles (vert ★, orange ★★, violet ★★★)", F.r(9), INK3, { scale: 0.7 });
 }
 function lock(w, family, spot, m) {
   const k = m.now ? Math.round(m.now.kn) : "–", dir = m.now ? m.now.dirTxt || compass(m.now.dir) : "";

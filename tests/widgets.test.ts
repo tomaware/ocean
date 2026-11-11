@@ -30,7 +30,7 @@ test('widget Vent : chaque taille s’affiche, spot par défaut La Grande-Motte,
     assert.ok(o.widget, family);
     if (family !== 'accessoryCircular') assert.match(t, /G-Motte|La Grande-Motte/, family);   // le rond n'a la place que pour le vent
     assert.match(t, /\b12\b/, `${family} : vent de 10 h (12 nd) attendu — ${t}`);
-    if (family === 'small' || family === 'medium') assert.match(t, /prévu/, family);
+    if (family === 'small' || family === 'medium') assert.match(t, /prévision/, family);
     if (family === 'medium') assert.match(t, /Auj\..*Jeu\..*Ven\..*Sam\./, family);
     if (family === 'large') {                                         // grand : aujourd'hui et demain heure par heure (7 h → 21 h)
       assert.match(t, /Aujourd'hui \| mercredi 11 .*max 16 nd NO · raf\. 22.*Créneau : 13–16 h.*Demain \| jeudi 12 .*Créneau : pas de créneau/, t);
@@ -47,11 +47,18 @@ test('widget Vent : spot et mode par Parameter, balise en direct, mesure publiqu
   const live = { spots: { '61-beauduc': { nom: 'Beauduc', t: NOW - 6 * 60e3, v: 23, o: 'SE', max: 29 } } };
   o = await run(VENT, { family: 'small', parameter: 'beauduc', data: DATA, live, keychain: { 'ocean.superprevision': 'https://script.google.com/x/exec?key=k' }, now: NOW });
   const t = texts(o.widget).join(' | ');
-  assert.match(t, /\b23\b/); assert.match(t, /balise · 6 min/); assert.match(t, /max 29/);
+  assert.match(t, /\b23\b/); assert.match(t, /● public · 6 min/); assert.match(t, /max 29/);
   assert.ok(o.requests.some((u: string) => u.endsWith('&action=live')));
   // Le Jaï : mesure de Marignane publiée par OCEAN
   o = await run(VENT, { family: 'small', parameter: 'Le Jaï', data: DATA, now: NOW });
-  assert.match(texts(o.widget).join(' | '), /Marignane · 25 min/);
+  assert.match(texts(o.widget).join(' | '), /● 25 min/);
+  o = await run(VENT, { family: 'large', parameter: 'Le Jaï', data: DATA, now: NOW });
+  assert.match(texts(o.widget).join(' | '), /● Marignane · 25 min/);
+  // abonnement Winds-Up connecté : « Winds-Up abonné » ; balise trop vieille : prévision, avec l'âge de la balise
+  o = await run(VENT, { family: 'large', parameter: 'beauduc', data: DATA, live: { connecte: true, spots: { '61-beauduc': { nom: 'Beauduc', t: NOW - 6 * 60e3, v: 23, o: 'SE' } } }, keychain: { 'ocean.superprevision': 'https://script.google.com/x/exec?key=k' }, now: NOW });
+  assert.match(texts(o.widget).join(' | '), /● Winds-Up abonné · 6 min/);
+  o = await run(VENT, { family: 'large', parameter: 'beauduc', data: DATA, live: { connecte: true, spots: { '61-beauduc': { nom: 'Beauduc', t: NOW - 3 * 3600e3, v: 30, o: 'SE' } } }, keychain: { 'ocean.superprevision': 'https://script.google.com/x/exec?key=k' }, now: NOW });
+  assert.match(texts(o.widget).join(' | '), /prévision · balise il y a 3 h 00/);
 });
 
 test('widget Vent : hors ligne → dernières données gardées ; jamais de données → message clair', async () => {

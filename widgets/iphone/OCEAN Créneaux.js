@@ -164,7 +164,6 @@ function large(w, data, list, cfg, now) {
     text(l, `${c.spot.short} · ${dayLabel(dayKey(c.s), now)} ${span(c)} · ${c.kn ?? "–"} nd ${compass(c.dir)}`, F.b(12), INK, { scale: 0.6 });
   } else text(w, "Pas de créneau dans les 5 jours", F.s(12), INK2);
   w.addSpacer();
-  text(w, "vert ★ · orange ★★ · violet ★★★ (part des heures de jour)", F.r(9), INK3);
 }
 function lock(w, family, list, now) {
   const c = list[0];

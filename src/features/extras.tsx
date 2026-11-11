@@ -164,7 +164,7 @@ export function WidgetsPage() {
             </table>
             <span class="small">Pour changer le spot de tous tes widgets d’un coup : ouvre « OCEAN Vent » dans Scriptable (▶︎) → <b>Choisir le spot</b>.</span>
             {prefs.perso.enabled && <span class="small"><b>Mode perso</b> : ▶︎ → <b>Brancher ma super prévision</b> et colle ton lien privé. Il reste dans le trousseau de l’iPhone ; le widget affiche alors les balises Winds-Up en direct.</span>}
-            <span class="faint">Sans balise, le widget affiche la prévision de l’heure, marquée « prévu ». iOS rafraîchit les widgets environ tous les quarts d’heure, parfois moins souvent.</span>
+            <span class="faint">En haut à droite : « ● Winds-Up abonné · 6 min » quand le vent vient de la balise, « prévision corrigée » sinon (vent prévu pour l’heure). iOS rafraîchit les widgets environ tous les quarts d’heure, parfois moins souvent.</span>
           </div>
         </Section>
       )}

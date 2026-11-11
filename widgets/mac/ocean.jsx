@@ -69,7 +69,9 @@ export function liveFor(spot, data, live, now) {
     const n = norm(x.nom);
     if (!(n === spot.id || n.startsWith(spot.id + "-") || n.includes(spot.id))) continue;
     if (x.panne) return { panne: true };
-    if (Number.isFinite(x.t) && now - x.t < LIVE_MAX_MIN * 60000) return { t: x.t, kn: x.v, gust: x.max ?? null, dir: fromText(x.o), dirTxt: x.o, src: "balise" };
+    const abo = !!live.connecte;
+    if (Number.isFinite(x.t) && now - x.t < LIVE_MAX_MIN * 60000) return { t: x.t, kn: x.v, gust: x.max ?? null, dir: fromText(x.o), dirTxt: x.o, src: "balise", abo };
+    if (Number.isFinite(x.t)) return { stale: true, t: x.t, abo };
   }
   const o = data.obs && data.obs[spot.id];
   if (o && now - o.t < LIVE_MAX_MIN * 60000) return { t: o.t, kn: o.kn, gust: o.gust, dir: o.dir, dirTxt: compass(o.dir), src: "Marignane" };
@@ -97,8 +99,8 @@ export function ventModel(data, spot, level, live, now) {
       kn: max ? max.kn : null, dir: max ? max.dir : null, gust: up.reduce((g, x) => (x.gust != null && (g == null || x.gust > g) ? x.gust : g), null),
       cr: ss.length ? ss.map(span).join(" · ") : "pas de créneau", hours };
   });
-  const nowV = live && !live.panne ? live : cur ? { t: cur.t, kn: cur.kn, gust: cur.gust, dir: cur.dir, dirTxt: compass(cur.dir), src: "prévu" } : null;
-  return { spot, now: nowV, panne: !!(live && live.panne), in2: near(now + 2 * 3600e3), days, detail };
+  const nowV = live && !live.panne && !live.stale ? live : cur ? { t: cur.t, kn: cur.kn, gust: cur.gust, dir: cur.dir, dirTxt: compass(cur.dir), src: "prévu" } : null;
+  return { spot, now: nowV, panne: !!(live && live.panne), stale: live && live.stale ? live.t : null, in2: near(now + 2 * 3600e3), days, detail };
 }
 export function creneauxModel(data, level, onlyNear, now) {
   const spots = onlyNear ? data.spots.filter((s) => NEAR.includes(s.id)) : data.spots;
@@ -150,7 +152,14 @@ const Arrow = ({ from, size = 13 }) => (from == null ? <span style={{ width: siz
 const Stars = ({ k, size = 11, all = true }) => (
   <span className="stars" style={{ fontSize: size }}>{k > 0 && <span className={`k${k}`}>{"★".repeat(k)}</span>}{all && k < 3 && <span className="off">{"★".repeat(3 - k)}</span>}</span>);
 const Card = ({ size, url, children }) => <div className={`card ${size}`} onClick={open(url)}>{children}</div>;
-const srcText = (m, now, short) => (m.panne ? "balise en panne" : !m.now ? "pas de vent" : m.now.src === "prévu" ? "prévu" : short ? `● ${ago(m.now.t, now)}` : `● ${m.now.src === "balise" ? "balise" : "Marignane"} · ${ago(m.now.t, now)}`);
+const srcText = (m, now, short) => {
+  if (m.panne) return "balise en panne";
+  if (!m.now) return "pas de vent";
+  if (m.now.src === "balise") { const k = m.now.abo ? "abonné" : "public"; return short ? `● ${k} · ${ago(m.now.t, now)}` : `● Winds-Up ${k} · ${ago(m.now.t, now)}`; }
+  if (m.now.src === "Marignane") return short ? `● ${ago(m.now.t, now)}` : `● Marignane · ${ago(m.now.t, now)}`;
+  if (m.stale != null) return short ? `prévision (balise ${ago(m.stale, now)})` : `prévision · balise il y a ${ago(m.stale, now)}`;
+  return short ? "prévision" : m.spot && m.spot.source === "corrected" ? "prévision corrigée" : "prévision";
+};
 const Big = ({ m, size }) => (
   <div className="big"><span style={{ fontSize: size }}>{m.now ? r(m.now.kn) : "–"}</span>
     <span className="bigside">{m.now && <Arrow from={m.now.dir} size={Math.round(size / 2.2)} />}<b>nd {m.now ? m.now.dirTxt || compass(m.now.dir) : ""}</b></span></div>);
@@ -163,7 +172,7 @@ function HourGrid({ hours, rows }) {
 function VentCard({ m, size, now }) {
   const live = m.now && m.now.src !== "prévu";
   if (size === "petit") return <Card size={size} url={link(m.spot.id)}>
-    <div className="row"><b className="t14">{m.spot.short}</b><span className={`src${live ? " live" : ""}`}>{srcText(m, now)}</span></div>
+    <div className="row"><b className="t14">{m.spot.short}</b><span className={`src${live ? " live" : ""}`}>{srcText(m, now, true)}</span></div>
     <Big m={m} size={44} /><div className="ink2">{gustText(m) || " "}</div>
     <div className="row"><span className="ink2 sb12">Dans 2 h {m.in2 ? r(m.in2.kn) : "–"}</span><Stars k={m.days[0] ? m.days[0].stars : 0} size={12} /></div></Card>;
   if (size === "moyen") return <Card size={size} url={link(m.spot.id)}><div className="hrow">
@@ -178,8 +187,7 @@ function VentCard({ m, size, now }) {
       <div className="row dh"><span><b className="t13">{d.label}</b> <span className="ink3 s11">{d.date}</span> {d.stars > 0 && <Stars k={d.stars} all={false} />}</span>
         {d.kn != null && <span className="s11"><b>max {r(d.kn)} nd {compass(d.dir)}</b><span className="ink2">{d.gust != null ? ` · raf. ${r(d.gust)}` : ""}</span></span>}</div>
       <HourGrid hours={d.hours} rows={(x) => x.has && <span className="frag"><Num kn={x.kn} w={19} h={18} size={11} /><span className="ink2 s9">{r(x.gust)}</span><Arrow from={x.dir} size={11} /></span>} />
-      <div className="ink2 sb11 cr">Créneau : {d.cr}</div></div>)}
-    <div className="legend">nœuds · rafales · direction · étoiles (vert ★, orange ★★, violet ★★★)</div></Card>;
+      <div className="ink2 sb11 cr">Créneau : {d.cr}</div></div>)}</Card>;
 }
 function CreneauxCard({ cm, size, now }) {
   const c = cm.list[0];
@@ -205,8 +213,7 @@ function CreneauxCard({ cm, size, now }) {
       <tbody>{cm.days.map((d, i) => <tr key={d}><th>{i === 0 ? "Auj." : cap(new Date(d + "T12:00:00").toLocaleDateString("fr-FR", { weekday: "short", day: "numeric" }).replace(".", ""))}</th>
         {cm.grid.map((g) => { const x = g.cells[i]; return <td key={g.spot.id}>{x.has
           ? <span className="fill" onClick={open(link(g.spot.id, new Date(d + "T12:00:00").getTime()))} style={{ background: `linear-gradient(to right, ${FILL[3]} 0 ${(x.n[2] / x.n[3]) * 100}%, ${FILL[2]} 0 ${((x.n[2] + x.n[1]) / x.n[3]) * 100}%, ${FILL[1]} 0 ${((x.n[2] + x.n[1] + x.n[0]) / x.n[3]) * 100}%, transparent 0)` }}><i>{x.label}</i></span>
-          : <span className="kn">{x.kn != null ? r(x.kn) : ""}</span>}</td>; })}</tr>)}</tbody></table>
-    <div className="legend">case : heures au meilleur niveau (vert ★, orange ★★, violet ★★★) ; sinon vent max du jour</div></Card>;
+          : <span className="kn">{x.kn != null ? r(x.kn) : ""}</span>}</td>; })}</tr>)}</tbody></table></Card>;
 }
 function VagueNow({ m, size }) {
   const n = m.now;
@@ -230,8 +237,7 @@ function VagueCard({ m, size, now }) {
         <span className="ink2 s8">{x.tp ?? ""}</span><Num kn={x.ws} w={18} h={14} size={9} /><Arrow from={x.wd} size={9} /></span>} />
       <div className="ink2 sb11 cr">Créneau : {d.cr}</div></div>; })}
     {m.best && <div className="bestline" onClick={open(link(m.best.spot.id, m.best.s))}><span className="eyebrow">MEILLEUR CRÉNEAU SURF</span>
-      <div><Stars k={m.best.stars} size={12} all={false} /> <b className="s12">{m.best.spot.short} · {when(m.best, now)} · {m1(m.best.hb)} m · {m.best.tp ?? "–"} s</b></div></div>}
-    <div className="legend">vagues m · période s · vent nd · étoiles (vert ★, orange ★★, violet ★★★)</div></Card>;
+      <div><Stars k={m.best.stars} size={12} all={false} /> <b className="s12">{m.best.spot.short} · {when(m.best, now)} · {m1(m.best.hb)} m · {m.best.tp ?? "–"} s</b></div></div>}</Card>;
 }
 
 // ------------------------------------------------------------------ données (dernières gardées si hors ligne)
@@ -272,7 +278,7 @@ const STYLE = `
 .ocean.ligne { flex-direction:row; align-items:flex-start; }
 .card { box-sizing:border-box; background:var(--bg); border:1px solid var(--line); border-radius:22px; padding:14px 14px 12px; box-shadow:0 6px 22px rgba(0,0,0,.22); cursor:pointer;
   display:flex; flex-direction:column; justify-content:space-between; gap:4px; }
-.card.petit { width:170px; min-height:170px; } .card.moyen { width:364px; min-height:170px; } .card.grand { width:364px; min-height:382px; justify-content:flex-start; }
+.card.petit { width:170px; min-height:170px; } .card.moyen { width:364px; min-height:170px; } .card.grand { width:364px; min-height:330px; justify-content:flex-start; }
 .row { display:flex; justify-content:space-between; align-items:center; gap:6px; } .hrow { display:flex; gap:4px; height:100%; }
 .left { width:112px; margin-right:8px; display:flex; flex-direction:column; justify-content:space-between; }
 .t12{font-size:12px;font-weight:800} .t13{font-size:13px;font-weight:800} .t14{font-size:14px;font-weight:800} .t15{font-size:15px;font-weight:800} .t18{font-size:18px;font-weight:800} .t19{font-size:19px;font-weight:800}

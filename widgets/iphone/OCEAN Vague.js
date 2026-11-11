@@ -203,7 +203,6 @@ function large(w, data, spot, m, now) {
     const l = box.addStack(); l.spacing = 4; if (b.stars) text(l, "★".repeat(b.stars), F.b(12), STAR[b.stars]);
     text(l, `${b.spot.short} · ${when(b, now)} · ${m1(b.hb)} m · ${b.tp ?? "–"} s`, F.b(12), INK, { scale: 0.6 });
   }
-  text(w, "vagues m · période s · vent nd · étoiles (vert ★, orange ★★, violet ★★★)", F.r(9), INK3, { scale: 0.7 });
 }
 function lock(w, family, spot, m) {
   const n = m.now, h = n ? `${m1(n.lo)}–${m1(n.hi)} m` : "–";

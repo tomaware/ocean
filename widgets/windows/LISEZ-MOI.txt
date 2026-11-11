@@ -50,15 +50,18 @@ UTILISATION
   - Glisser : déplace le widget (la position est retenue).
   - Clic droit : tous les réglages
       Spot du vent, Mode (Sécu first / OffShore),
-      Carte Vent et Carte Créneaux (petit, moyen, grand, masquée),
+      Carte Vent, Carte Créneaux et Carte Vague (petit, moyen, grand, masquée),
+      Spot de la vague,
       Spots des créneaux (tous, ou proches de Montpellier),
       Disposition (côte à côte, l'une sous l'autre),
       Thème (comme Windows, clair, sombre), Écran,
       Remettre en haut à droite, Actualiser, Quitter.
   - Les prévisions se mettent à jour toutes les 15 minutes (OCEAN
     publie une nouvelle prévision chaque heure).
-  - « prévu » : vent prévu pour l'heure (pas de balise) ;
-    « ● … min » : vent mesuré (âge de la mesure).
+  - « ● Winds-Up abonné · 6 min » : vent mesuré par la balise (ton abonnement ;
+    « public » si la connexion à Winds-Up échoue : 2 h de retard) ;
+  - « prévision corrigée » : pas de balise, vent prévu pour l'heure ;
+  - « prévision · balise il y a 2 h » : la balise est trop vieille (plus de 1 h 30).
   - Hors ligne, le widget garde les dernières données et l'indique.
 
 

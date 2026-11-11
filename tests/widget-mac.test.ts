@@ -24,7 +24,7 @@ test('widget Mac : aucun secret ni lien privé dans le fichier ; lien de la supe
 
 test('widget Mac : mêmes vents, étoiles et créneaux que les widgets iPhone et Windows', async () => {
   let { t } = await show({ CARTE_VENT: '"moyen"', CARTE_CRENEAUX: '"moyen"' });
-  assert.match(t, /G-Motte \| prévu \| 12 \| nd NO/);
+  assert.match(t, /G-Motte \| prévision \| 12 \| nd NO/);
   assert.match(t, /Auj\. .*Jeu\. .*Ven\. .*Sam\./);
   assert.match(t, /Beauduc \| Ven\. 9–17 h \| 24 nd SE .*G-Motte .*Ven\. 9–17 h .*G-Motte .*Auj\. 13–16 h/);
   ({ t } = await show({ CARTE_VENT: '"grand"', CARTE_CRENEAUX: '"grand"' }));
@@ -32,9 +32,11 @@ test('widget Mac : mêmes vents, étoiles et créneaux que les widgets iPhone et
   assert.match(t, /MEILLEUR CRÉNEAU \| 8h \| Vendredi 13 · 9 h – 17 h \| Beauduc/);
   assert.match(t, /Ven 13 .*4h/);                                           // grille : Beauduc vendredi, 4 h à 3 étoiles
   ({ t } = await show({ CARTE_VENT: '"petit"', CARTE_CRENEAUX: '"masque"', SPOT: '"beauduc"' }, out({ spots: { '61-beauduc': { nom: 'Beauduc', t: NOW - 6 * 60e3, v: 23, o: 'SE', max: 29 } } })));
-  assert.match(t, /Beauduc \| ● balise · 6 min \| 23 \| nd SE \| max 29 nd/);
+  assert.match(t, /Beauduc \| ● public · 6 min \| 23 \| nd SE \| max 29 nd/);
   ({ t } = await show({ CARTE_VENT: '"petit"', CARTE_CRENEAUX: '"masque"', SPOT: '"le-jai"' }));
-  assert.match(t, /● Marignane · 25 min \| 14/);
+  assert.match(t, /● 25 min \| 14/);
+  ({ t } = await show({ CARTE_VENT: '"grand"', CARTE_CRENEAUX: '"masque"', SPOT: '"beauduc"' }, out({ connecte: true, spots: { '61-beauduc': { nom: 'Beauduc', t: NOW - 6 * 60e3, v: 23, o: 'SE' } } })));
+  assert.match(t, /● Winds-Up abonné · 6 min/); assert.doesNotMatch(t, /nœuds · rafales/);   // plus de légende
   ({ t } = await show({ CARTE_VENT: '"masque"', CARTE_CRENEAUX: '"petit"', CRENEAUX_SPOTS: '"proches"', MODE: '"offshore"' }));
   assert.doesNotMatch(t, /Beauduc/);
 });

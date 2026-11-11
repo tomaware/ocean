@@ -40,6 +40,7 @@ test('widget Windows : carte Vent par défaut (La Grande-Motte), prévision de l
   const m = model();
   assert.equal(m.vent.spot, 'la-grande-motte'); assert.equal(m.vent.short, 'G-Motte'); assert.equal(m.vent.level, 'secu');
   assert.deepEqual(m.vent.now, { kn: 12, gust: 18, dir: 'NO', src: 'prévu' });
+  assert.equal(m.vent.label, 'prévision corrigée');                        // vent corrigé par la super prévision, pas de balise
   assert.equal(m.vent.in2, 16);                                             // 12 h : renfort de midi
   assert.deepEqual(m.vent.days.map((d: any) => d.label), ['Auj.', 'Jeu.', 'Ven.', 'Sam.']);
   assert.deepEqual(m.vent.days.map((d: any) => d.cr), ['13–16 h', '—', '9–17 h', '—']);
@@ -79,12 +80,17 @@ test('widget Windows : réglages (spot, OffShore, proches) et vent en direct', {
   assert.ok(!m.creneaux.list.some((c: any) => c.spot === 'Beauduc')); assert.equal(m.creneaux.label, 'Sécu first · proches');
   m = model({ spot: 'le-jai' });                                             // mesure publique de Marignane publiée par OCEAN
   assert.deepEqual(m.vent.now, { kn: 14, gust: 18, dir: 'NO', src: 'Marignane' });
+  assert.equal(m.vent.label, '● Marignane · 25 min');
   m = model({ spot: 'beauduc' }, { spots: { '61-beauduc': { nom: 'Beauduc', t: NOW - 6 * 60e3, v: 23, o: 'SE', max: 29 } } });
   assert.deepEqual(m.vent.now, { kn: 23, gust: 29, dir: 'SE', src: 'balise' });
+  assert.equal(m.vent.label, '● Winds-Up public · 6 min'); assert.equal(m.vent.labelShort, '● public · 6 min');
+  m = model({ spot: 'beauduc' }, { connecte: true, spots: { '61-beauduc': { nom: 'Beauduc', t: NOW - 6 * 60e3, v: 23, o: 'SE', max: 29 } } });
+  assert.equal(m.vent.label, '● Winds-Up abonné · 6 min');
   m = model({ spot: 'beauduc' }, { spots: { '61-beauduc': { nom: 'Beauduc', panne: true } } });
   assert.equal(m.vent.panne, true); assert.equal(m.vent.now.src, 'prévu');
   m = model({ spot: 'beauduc' }, { spots: { '61-beauduc': { nom: 'Beauduc', t: NOW - 3 * 3600e3, v: 30, o: 'SE' } } });
   assert.equal(m.vent.now.src, 'prévu');                                     // balise trop vieille
+  assert.equal(m.vent.label, 'prévision · balise il y a 3 h 00'); assert.equal(m.vent.labelShort, 'prévision (balise 3 h 00)');
 });
 
 test('widget Windows : carte Vague, mêmes règles que le widget iPhone « OCEAN Vague »', { skip: !hasPwsh && 'pwsh absent' }, () => {

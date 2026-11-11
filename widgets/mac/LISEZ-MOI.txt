@@ -62,7 +62,10 @@ Réinstaller une nouvelle version garde tes réglages.
 
 Clic sur une carte : ouvre OCEAN (fiche du spot, au bon jour pour un créneau).
 Les prévisions sont relues toutes les 5 minutes (OCEAN publie chaque heure).
-« prévu » : vent prévu pour l'heure ; « ● … min » : vent mesuré.
+« ● Winds-Up abonné · 6 min » : vent mesuré par la balise (ton abonnement ;
+« public » si la connexion à Winds-Up échoue : pages publiques, 2 h de retard) ;
+« prévision corrigée » : pas de balise, vent prévu pour l'heure (corrigé par la
+super prévision) ; « prévision · balise il y a 2 h » : la balise est trop vieille.
 Hors ligne, le widget garde les dernières données et l'indique.
 
 

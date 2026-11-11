@@ -183,10 +183,12 @@ function Get-Live($spot, $data, $superLive, [double]$now) {
     foreach ($p in $superLive.spots.PSObject.Properties) {
       $x = $p.Value; $n = Get-Norm $x.nom
       if (-not ($n -eq $spot.id -or $n.StartsWith($spot.id + '-') -or $n.Contains($spot.id))) { continue }
-      if ($x.panne) { return [pscustomobject]@{ panne = $true; src = 'balise' } }
+      $abo = [bool]$superLive.connecte          # relevés de ton abonnement (sinon pages publiques, 2 h de retard)
+      if ($x.panne) { return [pscustomobject]@{ panne = $true; src = 'balise'; abo = $abo } }
       if ($null -ne $x.t -and ($now - [double]$x.t) -lt $LIVE_MAX_MIN * 60000) {
-        return [pscustomobject]@{ t = [double]$x.t; kn = $x.v; gust = $x.max; dir = (Get-FromText $x.o); dirTxt = [string]$x.o; src = 'balise'; panne = $false }
+        return [pscustomobject]@{ t = [double]$x.t; kn = $x.v; gust = $x.max; dir = (Get-FromText $x.o); dirTxt = [string]$x.o; src = 'balise'; panne = $false; abo = $abo }
       }
+      if ($null -ne $x.t) { return [pscustomobject]@{ stale = $true; t = [double]$x.t; panne = $false; abo = $abo } }   # balise trop vieille : prévision affichée
     }
   }
   $o = $null
@@ -197,6 +199,17 @@ function Get-Live($spot, $data, $superLive, [double]$now) {
   $null
 }
 
+<# D'où vient le vent affiché en grand (Tom, 11/11 : « pourquoi prévu ? ») :
+   balise Winds-Up de ton abonnement / pages publiques, mesure de Marignane, ou prévision (corrigée par la super prévision). #>
+function Get-SrcText($m, [double]$now, [switch]$Short) {
+  if ($m.panne) { return 'balise en panne' }
+  if (-not $m.now) { return 'pas de vent' }
+  if ($m.now.src -eq 'balise') { $k = if ($m.now.abo) { 'abonné' } else { 'public' }; if ($Short) { return "● $k · $(Get-Ago $m.now.t $now)" }; return "● Winds-Up $k · $(Get-Ago $m.now.t $now)" }
+  if ($m.now.src -eq 'Marignane') { if ($Short) { return "● $(Get-Ago $m.now.t $now)" }; return "● Marignane · $(Get-Ago $m.now.t $now)" }
+  if ($null -ne $m.stale) { if ($Short) { return "prévision (balise $(Get-Ago $m.stale $now))" }; return "prévision · balise il y a $(Get-Ago $m.stale $now)" }
+  if ($Short) { return 'prévision' }
+  if ($m.spot.source -eq 'corrected') { 'prévision corrigée' } else { 'prévision' }
+}
 function Get-VentModel($data, $spot, [string]$level, $live, [double]$now) {
   $L = if ($level -eq 'offshore') { 6 } else { 5 }
   $rows = @(foreach ($h in $spot.hours) { [pscustomobject]@{ t = [double]$h[0]; kn = $h[1]; gust = $h[2]; dir = $h[3]; day = [bool]$h[4]; score = $h[$L] } })
@@ -226,7 +239,7 @@ function Get-VentModel($data, $spot, [string]$level, $live, [double]$now) {
       cr = $(if ($ss.Count) { Get-Span $ss[0] } else { '—' }); strip = $strip }
   })
   $nowV = $null
-  if ($live -and -not $live.panne) { $nowV = $live }
+  if ($live -and -not $live.panne -and -not $live.stale) { $nowV = $live }
   elseif ($cur) { $nowV = [pscustomobject]@{ t = $cur.t; kn = $cur.kn; gust = $cur.gust; dir = $cur.dir; dirTxt = (Get-Compass $cur.dir); src = 'prévu'; panne = $false } }
   # grand format : aujourd'hui et demain heure par heure, 7 h → 21 h (Tom, 11/11 : « juste le jour même et le lendemain, avec plus de détail »)
   $k0 = if ((To-Local $now).Hour -ge 21) { 1 } else { 0 }        # après 21 h : demain et après-demain
@@ -251,7 +264,7 @@ function Get-VentModel($data, $spot, [string]$level, $live, [double]$now) {
       stars = $best; kn = $(if ($max) { $max.kn } else { $null }); dir = $(if ($max) { $max.dir } else { $null }); gust = $gmax
       cr = $(if ($ss.Count) { ($ss | ForEach-Object { Get-Span $_ }) -join ' · ' } else { 'pas de créneau' }); hours = $hours }
   })
-  [pscustomobject]@{ spot = $spot; level = $level; now = $nowV; panne = [bool]($live -and $live.panne); in2 = $in2; days = $days; detail = $detail
+  [pscustomobject]@{ spot = $spot; level = $level; now = $nowV; panne = [bool]($live -and $live.panne); stale = $(if ($live -and $live.stale) { $live.t } else { $null }); in2 = $in2; days = $days; detail = $detail
     next = @($rows | Where-Object { $_.t -ge $now - 3600000 } | Select-Object -First 12) }
 }
 
@@ -350,7 +363,7 @@ if ($Model) {
   $cm = Get-CreneauxModel $data $script:reg $now
   $out = [pscustomobject]@{
     vent = [pscustomobject]@{ spot = $vm.spot.id; short = $vm.spot.short; level = $vm.level
-      now = $(if ($vm.now) { [pscustomobject]@{ kn = $vm.now.kn; gust = $vm.now.gust; dir = $vm.now.dirTxt; src = $vm.now.src } } else { $null })
+      now = $(if ($vm.now) { [pscustomobject]@{ kn = $vm.now.kn; gust = $vm.now.gust; dir = $vm.now.dirTxt; src = $vm.now.src } } else { $null }); label = (Get-SrcText $vm $now); labelShort = (Get-SrcText $vm $now -Short)
       panne = $vm.panne; in2 = $(if ($vm.in2) { $vm.in2.kn } else { $null })
       days = @($vm.days | ForEach-Object { [pscustomobject]@{ label = $_.label; stars = $_.stars; kn = $_.kn; cr = $_.cr; strip = ($_.strip -join ',') } })
       next = @($vm.next | ForEach-Object { Get-Hour $_.t })
@@ -402,7 +415,7 @@ $PALETTES = @{
 $FILL = @{ 1 = '#23A26A'; 2 = '#EE7F1B'; 3 = '#8A4FD8' }   # remplissage des cases : couleurs fixes, lisibles dans les deux thèmes
 $SCALE = @(@(5, '#FFFFFF', '#3E5157'), @(8, '#DDF3FA', '#152B33'), @(11, '#A9E3EE', '#152B33'), @(14, '#7FDDB0', '#0F3322'), @(17, '#B5EA62', '#21360A'),
   @(20, '#F2EC4E', '#383300'), @(23, '#FFC94D', '#3A2700'), @(26, '#FFA04A', '#3A1A00'), @(30, '#F66A4B', '#FFFFFF'), @(999, '#D9386E', '#FFFFFF'))
-$SIZES = @{ petit = @(170, 170); moyen = @(364, 170); grand = @(364, 382) }
+$SIZES = @{ petit = @(170, 170); moyen = @(364, 170); grand = @(364, 330) }   # grand : hauteur selon le contenu (sans légende)
 
 function Test-WindowsDark {
   try { (Get-ItemPropertyValue 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize' -Name AppsUseLightTheme -ErrorAction Stop) -eq 0 }
@@ -467,13 +480,6 @@ function New-CellNum($kn, [double]$w, [double]$h, [double]$size) {
 function Center($el) { if ($null -ne $el) { $el.HorizontalAlignment = 'Center' }; $el }
 
 # ------------------------------------------------ Carte Vent
-function Get-SrcText($m, [double]$now, [switch]$Short) {
-  if ($m.panne) { return 'balise en panne' }
-  if (-not $m.now) { return 'pas de vent' }
-  if ($m.now.src -eq 'prévu') { return 'prévu' }
-  if ($Short) { return "● $(Get-Ago $m.now.t $now)" }
-  "● $(if ($m.now.src -eq 'balise') { 'balise' } else { 'Marignane' }) · $(Get-Ago $m.now.t $now)"
-}
 function Get-SrcBrush($m) { if ($m.now -and $m.now.src -ne 'prévu') { C 'LIVE' } else { C 'INK3' } }
 function New-BigNow($m, [double]$size) {
   $s = New-Stack 'Horizontal'
@@ -492,7 +498,7 @@ function New-VentCard($m, [string]$size, [double]$now) {
   $root = New-Dock
   if ($size -eq 'petit') {
     $top = Add $root (Dock (New-Dock) 'Top')
-    [void](Add $top (Dock (T (Get-SrcText $m $now) 10 (Get-SrcBrush $m) 'Bold') 'Right'))
+    [void](Add $top (Dock (T (Get-SrcText $m $now -Short) 10 (Get-SrcBrush $m) 'Bold') 'Right'))
     [void](Add $top (T $spot.short 14 (C 'INK') 'Black'))
     $bottom = Add $root (Dock (New-Dock) 'Bottom')
     [void](Add $bottom (Dock (New-Stars $(if ($m.days.Count) { $m.days[0].stars } else { 0 }) 12) 'Right'))
@@ -567,7 +573,6 @@ function New-VentCard($m, [string]$size, [double]$now) {
     }
     $cr = Add $st (T "Créneau : $($d.cr)" 11 (C 'INK2') 'SemiBold'); $cr.Margin = Th 2 3 0 0
   }
-  $lg = Add $st (T 'nœuds · rafales · direction · étoiles (vert ★, orange ★★, violet ★★★)' 9 (C 'INK3')); $lg.Margin = Th 0 6 0 0
   return $root
 }
 
@@ -676,7 +681,6 @@ function New-CreneauxCard($cm, [string]$size, [double]$now) {
       }
     }
   }
-  $lg = Add $st (T 'case : heures au meilleur niveau (vert ★, orange ★★, violet ★★★) ; sinon vent max du jour' 9 (C 'INK3')); $lg.Margin = Th 0 4 0 0; $lg.TextWrapping = 'Wrap'
   $st
 }
 
@@ -771,7 +775,6 @@ function New-VagueCard($m, [string]$size, [double]$now) {
     if ($b.stars) { $sx = Add $l (New-Stars $b.stars 12 $false); $sx.Margin = Th 0 0 4 0 }
     [void](Add $l (T "$($b.spot.short) · $(Get-CreneauWhen $b $now) · $(Get-M1 $b.hb) m · $($b.tp) s" 12 (C 'INK') 'Bold'))
   }
-  [void](Add $st (T 'vagues m · période s · vent nd · étoiles (vert ★, orange ★★, violet ★★★)' 9 (C 'INK3')))
   $st
 }
 
