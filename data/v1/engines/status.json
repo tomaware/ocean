@@ -1,5 +1,5 @@
 {
- "generatedAt": 1794415349707,
+ "generatedAt": 1794418679753,
  "checks": [
   {
    "id": "golden-surf",
@@ -14,7 +14,7 @@
   {
    "id": "correction-vent-downwind",
    "ok": true,
-   "detail": "2 spot(s) de recalage : La Grande-Motte 90 h (× 1 en moyenne) + relevé récent, Port Camargue 91 h (× 1 en moyenne)"
+   "detail": "2 spot(s) de recalage : La Grande-Motte 89 h (× 1.01 en moyenne) + relevé récent, Port Camargue 89 h (× 0.99 en moyenne)"
   },
   {
    "id": "sorties-surf",
@@ -34,12 +34,12 @@
   {
    "id": "ecart-prod-surf",
    "ok": true,
-   "detail": "notes surf OCEAN vs app en service (calcul prod. 51 min avant, même extrait Copernicus) : médiane 0.30, 90 % ≤ 1.20, max 7.20 sur 664 heures (max : palavas jeu. 10:00, OCEAN 0 / prod 7.2)"
+   "detail": "notes surf OCEAN vs app en service (calcul prod. 43 min avant, même extrait Copernicus) : médiane 0.10, 90 % ≤ 0.20, max 1.60 sur 664 heures (max : vias mar. 16:00, OCEAN 4.4 / prod 6)"
   },
   {
    "id": "ecart-prod-downwind",
    "ok": true,
-   "detail": "notes downwind (intermédiaire, de jour) OCEAN vs app en service (calcul prod. 31 min avant) : médiane 0.00, 90 % ≤ 0.00, max 7.80 sur 117 heures"
+   "detail": "notes downwind (intermédiaire, de jour) OCEAN vs app en service (calcul prod. 21 min avant) : médiane 0.00, 90 % ≤ 0.00, max 1.40 sur 120 heures"
   },
   {
    "id": "sorties-wing",
