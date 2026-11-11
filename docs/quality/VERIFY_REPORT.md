@@ -1,6 +1,6 @@
 # Remise en question (③)
 
-Généré le 2026-11-11 18:26 UTC par `pipeline/verify/run.ts`.
+Généré le 2026-11-11 18:29 UTC par `pipeline/verify/run.ts`.
 
 Erreur = prévu − mesuré. Vent en m/s aux stations METAR (aéroports), vagues : hauteur significative en m aux bouées Candhis. « courtTerme » = modèles sur les 3 derniers jours (pas une vraie prévision) ; « archive » = prévisions réellement émises N h avant.
 
