@@ -143,8 +143,8 @@
       "waterBody": "sea",
       "orientation": {
         "seaward": 250,
-        "confidence": "low",
-        "source": "golfe de Beauduc ouvert à l’OSO ; spot donné « tous vents » (ultimatefrance.com) : orientation à confirmer"
+        "confidence": "high",
+        "source": "golfe de Beauduc ouvert à l’OSO ; spot donné « tous vents » (ultimatefrance.com) ; confirmée par Tom le 11/11/2026"
       },
       "windStations": {
         "windsUp": "61-beauduc",
@@ -157,7 +157,7 @@
       "sources": [
         "super-prevision-vent.gs v3.4 (SPOTS)"
       ],
-      "notes": "Orientation proposée à partir de guides de spots (10/11) ; à confirmer par Tom."
+      "notes": "Orientation proposée à partir de guides de spots (10/11) ; confirmée par Tom le 11/11/2026."
     },
     {
       "id": "le-jai",
@@ -179,8 +179,8 @@
             190
           ]
         ],
-        "confidence": "low",
-        "source": "étang, plage du Jaï orientée NO : mistral (NO) de face, O side, N bon ; SE à S = vent de terre qui pousse vers le large de l'étang (ultimatefrance.com)"
+        "confidence": "high",
+        "source": "étang, plage du Jaï orientée NO : mistral (NO) de face, O side, N bon ; SE à S = vent de terre qui pousse vers le large de l'étang (ultimatefrance.com) ; confirmée par Tom le 11/11/2026"
       },
       "windStations": {
         "windsUp": "26-le-jai",
@@ -200,7 +200,7 @@
         "vvanat.fr : plage du Jaï, wingfoil",
         "winds-up.com/spot/26-le-jai : balise Winds-Up du Jaï (Tom, 10/11)"
       ],
-      "notes": "Ajouté le 10/11 à la demande de Tom (étang de Berre), nommé « Le Jaï ». Tant que la super prévision ne couvre pas ce spot : vent = meilleur modèle aux mesures de Marignane (LFML) sur 3 jours, non corrigé ; dès qu'elle le couvre, vent corrigé de la super prévision. Orientation à confirmer."
+      "notes": "Ajouté le 10/11 à la demande de Tom (étang de Berre), nommé « Le Jaï ». Tant que la super prévision ne couvre pas ce spot : vent = meilleur modèle aux mesures de Marignane (LFML) sur 3 jours, non corrigé ; dès qu'elle le couvre, vent corrigé de la super prévision. Orientation confirmée par Tom le 11/11/2026."
     },
     {
       "id": "almanarre",
@@ -216,8 +216,8 @@
       "waterBody": "sea",
       "orientation": {
         "seaward": 245,
-        "confidence": "low",
-        "source": "plage ouest du tombolo, orientée OSO ; O et SO favorables, vent d’est listé mais de terre ici : à confirmer"
+        "confidence": "high",
+        "source": "plage ouest du tombolo, orientée OSO ; O et SO favorables, vent d’est listé mais de terre ici ; confirmée par Tom le 11/11/2026"
       },
       "windStations": {
         "windsUp": "2-almanarre-salin-des-pesquiers",
@@ -230,7 +230,7 @@
       "sources": [
         "super-prevision-vent.gs v3.4 (SPOTS)"
       ],
-      "notes": "Orientation proposée à partir de guides de spots (10/11) ; à confirmer par Tom."
+      "notes": "Orientation proposée à partir de guides de spots (10/11) ; confirmée par Tom le 11/11/2026."
     },
     {
       "id": "carnon",
@@ -421,8 +421,8 @@
       "waterBody": "sea",
       "orientation": {
         "seaward": 175,
-        "confidence": "low",
-        "source": "plage Est orientée au S ; houle utile du SE au SO, idéale S ; vent offshore N à NO (surfnerd.com)"
+        "confidence": "high",
+        "source": "plage Est orientée au S ; houle utile du SE au SO, idéale S ; vent offshore N à NO (surfnerd.com) ; confirmée par Tom le 11/11/2026"
       },
       "swellWindow": {
         "min": 125,
@@ -449,7 +449,7 @@
         "surfnerd.com/surf-forecast/saintes-maries : beach break sable, houle S (SE→SO), offshore NO, 0,3–1,2 m",
         "plages.tv : Plage Est"
       ],
-      "notes": "Ajouté le 10/11 à la demande de Tom ; réglages proposés d'après des guides de spots, à confirmer. Bouée de recalage : Espiguette (03001), à ~25 km."
+      "notes": "Ajouté le 10/11 à la demande de Tom ; orientation confirmée par Tom le 11/11/2026 (taille et niveau : réglages des guides de spots). Bouée de recalage : Espiguette (03001), à ~25 km."
     },
     {
       "id": "la-couronne",
@@ -465,8 +465,8 @@
       "waterBody": "sea",
       "orientation": {
         "seaward": 165,
-        "confidence": "low",
-        "source": "plage de la Couronne Vieille orientée SSE ; houle de SE (gauche puissante) à SO ; vent offshore NNO (surf-report.com)"
+        "confidence": "high",
+        "source": "plage de la Couronne Vieille orientée SSE ; houle de SE (gauche puissante) à SO ; vent offshore NNO (surf-report.com) ; confirmée par Tom le 11/11/2026"
       },
       "swellWindow": {
         "min": 105,
@@ -493,7 +493,7 @@
         "surf-report.com : La Couronne, gauche par houle de SE, vent NNO, tient jusqu'à 2,5 m, fond de sable, rochers sur les bords",
         "plages.tv : Plage de la Couronne Vieille"
       ],
-      "notes": "Ajouté le 10/11 à la demande de Tom ; réglages à confirmer. Pas de bouée Candhis proche collectée : recalage sur Espiguette (03001), à ~75 km, donc moins sûr."
+      "notes": "Ajouté le 10/11 à la demande de Tom ; orientation confirmée par Tom le 11/11/2026. Pas de bouée Candhis proche collectée : recalage sur Espiguette (03001), à ~75 km, donc moins sûr."
     },
     {
       "id": "frontignan-palavas",

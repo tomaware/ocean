@@ -211,3 +211,6 @@ Les apps actuelles restent en ligne jusqu'à ce que leur remplaçante soit véri
 ### D-32 (11/11/2026, Tom) — étoiles plus visibles, note surf expliquée
 - Tableaux heure par heure : les colonnes notées prennent une teinte de la couleur des étoiles (vert ★, orange ★★, violet ★★★) au lieu du gris clair ; ligne Étoiles plus grande et plus colorée.
 - VAGUE : au survol d'une heure, la note est expliquée en mots (« bonne taille de vague, vent de terre : vent et houle opposés… mais … ») avec les facteurs taille, période, vent / houle sur 10. Le pipeline publie les facteurs que le moteur surf calcule déjà (`h.f` = taille, période, vent, clapot, sens de l'écart de taille) ; moteur et note inchangés (golden).
+
+### D-33 (11/11/2026, Tom) — orientations confirmées
+- Tom confirme les orientations de Saintes-Maries-de-la-Mer, La Couronne, Le Jaï, Beauduc et l'Almanarre : `orientation.confidence` passe à `high` (registre). Les notes ne changent pas (la confiance d'orientation n'entre dans aucun calcul) ; l'app n'affiche plus « orientation à confirmer » pour ces spots. Taille et niveau des deux spots surf restent ceux des guides de spots.
