@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { allSessions, bestByDiscipline, windows, publicSpots, compass, label } from '../pipeline/publish/sessions.ts';
-import { liveObsPublic, meteoPublic, publicPrivacy } from '../pipeline/publish/run.ts';
+import { liveObsPublic, meteoPublic, publicPrivacy, windGridPublic } from '../pipeline/publish/run.ts';
+import { windGridPoints } from '../pipeline/collect/openmeteo.ts';
 import { loadRegistry } from '../pipeline/collect/points.ts';
 
 const H = 3600e3, T0 = Date.UTC(2026, 10, 12, 7);
@@ -76,4 +77,18 @@ test('mesure publique en direct : METAR de Marignane pour l’étang de Berre (s
   assert.equal(o['le-jai'].kn, 14); assert.equal(o['le-jai'].gust, 18); assert.equal(o['le-jai'].dir, 310); assert.equal(o['le-jai'].t, now - 20 * 60e3);
   // mesure trop vieille (> 3 h) : rien
   assert.deepEqual(liveObsPublic(bundle, reg, now + 4 * 3600e3), {});
+});
+
+test('carte : grille de vent publiée en nœuds et degrés, 16 × 8 points, affichage seul', () => {
+  const now = Date.UTC(2026, 10, 11, 8);
+  const pts = windGridPoints();
+  assert.equal(pts.length, 128);
+  assert.deepEqual([pts[0].lat, pts[0].lon, pts[127].lat, pts[127].lon], [42.25, 2.75, 44, 6.5]);
+  const times = [now - 4 * 3600e3, now, now + 3600e3];
+  const values = Object.fromEntries(pts.map((p, k) => [p.id, { meteofrance_seamless: { wind_speed_10m: [1, 5, k === 3 ? null : 10], wind_direction_10m: [0, 315.4, 320] } }]));
+  const g = windGridPublic({ forecasts: [{ id: 'open-meteo-vent-carte', times, values, provenance: { fetchedAt: now } }] } as any, now) as any;
+  assert.equal(g.available, true); assert.deepEqual(g.times, [now, now + 3600e3]);
+  assert.equal(g.kn[0][0], 10); assert.equal(g.kn[1][0], 19); assert.equal(g.kn[1][3], null); assert.equal(g.dir[0][5], 315);
+  assert.match(g.provenance.note, /non corrigé/);
+  assert.deepEqual(windGridPublic(null, now), { available: false });
 });

@@ -124,9 +124,6 @@ function SpotView({ d, spot, now, day: dayParam }: { d: AllData; spot: PublicSpo
               })()}
             </div>
           </Section>
-          <Section title="Sessions 2H">
-            <div class="card">{sessions.length ? <div class="list">{sessions.map((x) => <SessionRow key={x.id} s={x} now={now} showSpot={false} />)}</div> : <div class="empty">Pas de session 2H en vue{s.levels ? ` en ${LEVEL_LABEL[level]}` : ''}.</div>}</div>
-          </Section>
           <Section title="Jour par jour" aside={<Seg<Reading> label="Niveau de lecture" value={reading} onChange={(v) => setPrefs((p) => ({ ...p, reading: v }))}
             options={disc === 'wing' ? [['synthese', 'Synthèse'], ['detail', 'Détail'], ['expert', 'Expert']] : [['synthese', 'Synthèse'], ['detail', 'Détail']]} />}>
             <div class="card stack">

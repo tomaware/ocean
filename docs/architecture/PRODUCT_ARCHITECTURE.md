@@ -174,3 +174,7 @@ Les apps actuelles restent en ligne jusqu'à ce que leur remplaçante soit véri
 - Prévision 5 jours : chaque case se remplit selon les heures de jour à 1 ★ (vert), 2 ★ (orange), 3 ★ (violet) ; le chiffre = heures au meilleur niveau. « Fiche complète » ouvre le jour cliqué.
 - HOULE, modes Sécu first / OffShore et règle des 35 nd : formule proposée, en attente de validation de Tom (aucune note downwind modifiée).
 
+### D-24 (11/11/2026, Tom) — carte façon Windy, Sessions 2H
+- Carte de la fiche spot : champ de vent coloré (échelle Windy) et particules dans le sens du vent, à l'heure affichée (survol compris). Données : grille Open-Meteo 16 × 8 points (0,25°) de Leucate à Hyères, modèle Météo-France brut (AROME puis ARPEGE), interpolée ; affichage seul, la pastille du spot et la note gardent le vent corrigé. Pas d'API Windy / Windguru utilisable ici.
+- Sessions 2H retirées de la fiche spot, et du menu HOULE (2 h ne font pas un downwind).
+

@@ -3,6 +3,7 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import type { Check } from '../../src/types/contracts.ts';
 import { loadRegistry } from '../collect/points.ts';
+import { WIND_GRID } from '../collect/openmeteo.ts';
 import { privacyEngines } from '../engines/run.ts';
 import type { CollectBundle, ForecastBlock, Registry } from '../../src/types/contracts.ts';
 import { allSessions, bestByDiscipline, ALL_LEVELS, publicSpots } from './sessions.ts';
@@ -49,6 +50,23 @@ export function meteoPublic(bundle: CollectBundle | null, now: number) {
         Object.fromEntries(Object.entries(byM).map(([model, v]) => [model, { kn: idx.map(([, i]) => kn(v.wind_speed_10m?.[i])), gust: idx.map(([, i]) => kn(v.wind_gusts_10m?.[i])), dir: idx.map(([, i]) => r(v.wind_direction_10m?.[i])) }]))])) };
   }
   return out;
+}
+
+/** Grille de vent pour la carte : nœuds et direction (entiers), heure par heure sur 5 jours. Affichage seul (D-24). */
+export function windGridPublic(bundle: CollectBundle | null, now: number) {
+  const b = bundle?.forecasts.find((f) => f.id === 'open-meteo-vent-carte');
+  if (!b) return { available: false };
+  const idx = b.times.map((t, i) => [t, i] as const).filter(([t]) => t >= now - 3 * 3600e3);
+  const g = WIND_GRID, pts: string[] = [];
+  for (let i = 0; i < g.nLat; i++) for (let j = 0; j < g.nLon; j++) pts.push(`grid_${i}_${j}`);
+  const col = (pid: string, v: string) => b.values[pid]?.[g.model]?.[v] ?? [];
+  return {
+    available: true, lat0: g.lat0, lon0: g.lon0, dLat: g.dLat, dLon: g.dLon, nLat: g.nLat, nLon: g.nLon,
+    provenance: { source: 'open-meteo', model: g.model, kind: 'forecast', fetchedAt: b.provenance.fetchedAt, note: 'modèle Météo-France brut (AROME puis ARPEGE), non corrigé ; affichage de la carte seulement' },
+    times: idx.map(([t]) => t),
+    kn: idx.map(([, i]) => pts.map((p) => { const x = col(p, 'wind_speed_10m')[i]; return x == null ? null : Math.round(x * 1.94384); })),
+    dir: idx.map(([, i]) => pts.map((p) => { const x = col(p, 'wind_direction_10m')[i]; return x == null ? null : Math.round(x); })),
+  };
 }
 
 /**
@@ -99,6 +117,7 @@ function main(): void {
     'surf.json': JSON.stringify(surf),
     'downwind.json': JSON.stringify(downwind),
     'verify.json': JSON.stringify(verify ?? { generatedAt: now, unavailable: true }),
+    'wind-grid.json': JSON.stringify(windGridPublic(opt('data/v1/collect/bundle.json') as CollectBundle | null, now)),
     'meteo.json': JSON.stringify({ ...meteoPublic(opt('data/v1/collect/bundle.json') as CollectBundle | null, now), obs: liveObsPublic(opt('data/v1/collect/bundle.json') as CollectBundle | null, registry, now) }),
   };
   const live = opt('data/private/super-prevision-live.json');

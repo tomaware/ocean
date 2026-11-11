@@ -4,7 +4,7 @@ import { createRequire } from 'node:module';
 const { chromium, devices } = createRequire(import.meta.url)('playwright');   // installé à part (CI : npm i --no-save playwright)
 const base = process.argv[2] ?? 'http://localhost:4173';
 const routes = [['', 'Où naviguer en wing'], ['wind/meilleure', 'Meilleure session à venir'], ['wind/sessions', 'Sessions de 2H (Localisation Montpellier)'], ['wind/prevision', 'Prévision 5 jours'], ['wind/spots', 'Spots'],
-  ['vague/meilleure', 'Meilleure session à venir'], ['vague/prevision', 'Prévision 5 jours'], ['vague/sessions', 'Sessions de 2H'], ['houle/prevision', 'Prévision 5 jours'], ['houle/sessions', 'Sessions de 2H'],
+  ['vague/meilleure', 'Meilleure session à venir'], ['vague/prevision', 'Prévision 5 jours'], ['vague/sessions', 'Sessions de 2H'], ['houle/prevision', 'Prévision 5 jours'], ['houle/meilleure', 'Meilleure session à venir'],
   ['spot/port-camargue', 'Jour par jour'], ['spot/carnon', 'Jour par jour'], ['spot/plagesud-grandemotte', 'Jour par jour'], ['sessions', 'Où naviguer en wing'], ['profil', 'Mode perso'], ['fiabilite', 'Fiabilité']];
 const errs = [];
 const b = await chromium.launch();
@@ -62,6 +62,10 @@ for (const [name, opt] of [['mobile', { ...devices['iPhone 13'], locale: 'fr-FR'
           if ((r === 'spot/plagesud-grandemotte' || r === 'spot/carnon') && !(await p.locator('.maprep .swell-tag').count())) errs.push(`${name} #/${r} : houle absente du repère de la carte`);
         }
         if (!(await p.locator('.notecard .scorebars .grid5').count())) errs.push(`${name} #/${r} : ligne 5 absente`);
+        // vent sur la carte façon Windy (grille publiée) : 2 calques (couleurs + particules)
+        const hasGrid = await p.evaluate(() => fetch('./data/wind-grid.json').then((x) => x.ok && /json/.test(x.headers.get('content-type') ?? '')).catch(() => false));
+        if (hasGrid && (await p.locator('.mapbox .windcanvas').count()) !== 2) errs.push(`${name} #/${r} : vent absent de la carte`);
+        if (await p.getByRole('heading', { name: 'Sessions 2H', exact: true }).count()) errs.push(`${name} #/${r} : section Sessions 2H encore sur la fiche`);
         // changer de jour met à jour la note du jour
         const tabsN = await p.locator('.daytabs button').count();
         if (tabsN > 1) { await p.locator('.daytabs button').nth(1).click(); if ((await p.locator('.daytabs button[aria-pressed="true"]').innerText()) !== (await p.locator('.daytabs button').nth(1).innerText())) errs.push(`${name} #/${r} : choix du jour sans effet`); }

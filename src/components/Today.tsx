@@ -9,6 +9,8 @@ import { compass, dayKey, dayShort, hh, hourOf, n0, n1 } from '../services/forma
 import type { Series } from '../features/series';
 import { meteoAt, Stars, starsOf, SURF_WIND, WMO } from './Views';
 import { SpotMap } from './SpotMap';
+import type { Map as LMap } from 'leaflet';
+import { gridIndex, useWindField, useWindGrid } from './WindField';
 
 /** Heures d'une journée dans la série. */
 export const dayIdx = (s: Series, dayT: number) => { const k = dayKey(dayT); return s.times.map((_, i) => i).filter((i) => dayKey(s.times[i]) === k); };
@@ -155,7 +157,7 @@ export function NoteCard({ s, dayT, now, sessions, level, picked, onPick }: { s:
     <section class="card notecard t-note" aria-label="Note du jour">
       <div class="head">
         <span class="eyebrow">Note du jour · {today ? 'aujourd’hui' : dayShort(dayT)}</span>
-        <span class="small muted">{ss.length ? <>Créneau{ss.length > 1 ? 'x' : ''} <strong style={{ color: 'var(--c-ink)' }}>{ss.map((x) => `${hh(x.start)} – ${hh(x.end)}`).join(' · ')}</strong></> : 'pas de session 2H'}</span>
+        <span class="small muted">{ss.length ? <>Créneau{ss.length > 1 ? 'x' : ''} <strong style={{ color: 'var(--c-ink)' }}>{ss.map((x) => `${hh(x.start)} – ${hh(x.end)}`).join(' · ')}</strong></> : s.discipline === 'downwind' ? 'pas de créneau' : 'pas de session 2H'}</span>
       </div>
       <div class="mid">
         <Stars score={best < 0 ? null : best} size="xl" />
@@ -210,10 +212,11 @@ export function windColor(kn: number, alpha = 1): string {
   return `rgba(${m[0]}, ${m[1]}, ${m[2]}, ${alpha})`;
 }
 function WindLegend() {
+  // échelle de vent façon Windy ; le champ coloré vient du modèle Météo-France brut (la pastille du spot garde le vent corrigé)
   const stops = [0, 5, 10, 20, 30, 40, 60];
   return (
     <div class="windlegend" aria-hidden="true">
-      <span>nd</span>
+      <span title="Carte : modèle Météo-France brut ; pastille du spot : vent corrigé">nd</span>
       {/* repères espacés régulièrement, comme la légende de Windy (0, 5, 10, 20, 30, 40, 60) */}
       <span class="bar" style={{ background: `linear-gradient(to right, ${stops.map((v, k) => `${windColor(v)} ${(k / (stops.length - 1)) * 100}%`).join(', ')})` }}>
         {stops.map((v, k) => <span key={v} style={{ left: `${(k / (stops.length - 1)) * 100}%` }}>{v}</span>)}
@@ -228,6 +231,11 @@ export function MapCompass({ d, spot, s, dayT, now, best, picked }: { d: AllData
   const i = picked ?? refIndex(s, dayT, now);
   // la carte Leaflet n'est recréée que si le spot change (pas à chaque heure survolée)
   const spots = useMemo(() => [spot], [spot]);
+  // vent sur toute la carte (façon Windy) à l'heure affichée : grille du modèle Météo-France, interpolée
+  const [map, setMap] = useState<LMap | null>(null);
+  const grid = useWindGrid();
+  const gk = grid && i !== null ? gridIndex(grid, s.times[i]) : null;
+  useWindField(map, grid, gk);
   const bestMap = useMemo(() => ({ [spot.id]: best }), [spot.id, best]);
   const x = i === null ? null : s.rows[i];
   const from = x === null ? null : s.discipline === 'surf' ? x.wd : s.discipline === 'wing' ? x.dir : x.from;
@@ -250,19 +258,8 @@ export function MapCompass({ d, spot, s, dayT, now, best, picked }: { d: AllData
   };
   return (
     <div class="mapbox t-map">
-      <SpotMap spots={spots} best={bestMap} focus={spot.id} />
-      {/* vent en légère couleur sur toute la carte (force) et traits orientés dans le sens du vent (direction), demande de Tom 11/11 */}
-      {from != null && kn != null && (
-        <div class="windfield" style={{ background: windColor(kn, 0.26) }} aria-hidden="true">
-          <svg width="100%" height="100%">
-            <defs><pattern id={`wf-${spot.id}`} width="46" height="46" patternUnits="userSpaceOnUse" patternTransform={`rotate(${from})`}>
-              <path d="M23 9 V31 M18.5 25.5 L23 31 L27.5 25.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
-            </pattern></defs>
-            <rect width="100%" height="100%" fill={`url(#wf-${spot.id})`} />
-          </svg>
-        </div>
-      )}
-      {from != null && kn != null && <WindLegend />}
+      <SpotMap spots={spots} best={bestMap} focus={spot.id} onMap={setMap} />
+      {grid && gk !== null && <WindLegend />}
       {from != null && i !== null && (
         <svg class="maprep" viewBox="-180 -140 360 280" role="img" aria-label={`${hh(s.times[i])} : vent de ${compass(from)} (${n0(from)}°), ${n0(kn)} nœuds, rafales ${n0(gust)}${swell ? `, houle de ${compass(swell.from)}` : ''}${seaward !== null ? `, plage ouverte vers ${compass(seaward)}` : ''}`}>
           <circle class="ring" r={R} />

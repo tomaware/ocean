@@ -8,7 +8,7 @@ import { labelOf, n1 } from '../services/format';
 const COLORS = (s: number | null) => (s === null ? '#7A898E' : s >= 8.5 ? '#8A4FD8' : s >= 7 ? '#EE7F1B' : s >= 5 ? '#23A26A' : '#7A898E');
 const LETTER: Record<Discipline, string> = { wing: 'W', surf: 'S', downwind: 'D' };
 
-export function SpotMap({ spots, best, focus, height }: { spots: PublicSpot[]; best: Record<string, number | null>; focus?: string; height?: number }) {
+export function SpotMap({ spots, best, focus, height, onMap }: { spots: PublicSpot[]; best: Record<string, number | null>; focus?: string; height?: number; onMap?: (m: L.Map | null) => void }) {
   const el = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!el.current) return;
@@ -30,9 +30,10 @@ export function SpotMap({ spots, best, focus, height }: { spots: PublicSpot[]; b
       }
     }
     const f = focus ? spots.find((s) => s.id === focus) : null;
-    if (f) map.setView(spotPos(f), f.kind === 'run' ? 11 : 11);
+    if (f) map.setView(spotPos(f), 10);   // vue régionale : on voit le champ de vent autour du spot
     else if (bounds.length) map.fitBounds(bounds, { padding: [20, 20] });
-    return () => { map.remove(); };
+    onMap?.(map);
+    return () => { onMap?.(null); map.remove(); };
   }, [spots, best, focus]);
   return <div class="map" ref={el} style={height ? { height: `${height}px` } : undefined} aria-label="Carte des spots" />;
 }

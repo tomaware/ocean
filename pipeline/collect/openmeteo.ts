@@ -57,6 +57,22 @@ export function windUrl(points: CollectPoint[], models: string[]): string {
     '&longitude=' + points.map((p) => p.lon).join(',') + '&hourly=' + WIND_VARS.join(',') + '&models=' + models.join(',') +
     `&wind_speed_unit=kmh&timezone=GMT&past_days=${PAST_DAYS}&forecast_days=${FORECAST_DAYS}`;
 }
+/**
+ * Grille de vent pour la carte (façon Windy) : 16 × 8 points tous les 0,25°, de Leucate à Hyères, au large et à terre.
+ * Modèle Météo-France (AROME puis ARPEGE), brut, non corrigé : sert à l'affichage seulement (D-24), jamais aux notes.
+ */
+export const WIND_GRID = { lat0: 42.25, lon0: 2.75, dLat: 0.25, dLon: 0.25, nLat: 8, nLon: 16, model: 'meteofrance_seamless', days: 5 };
+export function windGridPoints(): CollectPoint[] {
+  const g = WIND_GRID, out: CollectPoint[] = [];
+  for (let i = 0; i < g.nLat; i++) for (let j = 0; j < g.nLon; j++)
+    out.push({ id: `grid_${i}_${j}`, lat: Math.round((g.lat0 + i * g.dLat) * 1000) / 1000, lon: Math.round((g.lon0 + j * g.dLon) * 1000) / 1000, usedBy: ['carte'] });
+  return out;
+}
+export function windGridUrl(points: CollectPoint[]): string {
+  return 'https://api.open-meteo.com/v1/forecast?latitude=' + points.map((p) => p.lat).join(',') +
+    '&longitude=' + points.map((p) => p.lon).join(',') + '&hourly=wind_speed_10m,wind_direction_10m&models=' + WIND_GRID.model +
+    `&wind_speed_unit=kmh&timezone=GMT&forecast_days=${WIND_GRID.days}`;
+}
 export function marineUrl(points: CollectPoint[]): string {
   return SurfEngine.openMeteoMarineURL(points, { pastDays: PAST_DAYS, forecastDays: FORECAST_DAYS });
 }

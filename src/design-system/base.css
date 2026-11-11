@@ -263,9 +263,7 @@ table.wg col.pk { background: color-mix(in srgb, var(--c-accent) 16%, transparen
 .gauge text { fill: var(--c-ink); font-size: 13px; font-weight: 800; font-family: var(--font); }
 
 /* carte : vent en légère couleur (force) + traits dans le sens du vent ; légende façon Windy */
-.windfield { position: absolute; inset: 0; z-index: 450; pointer-events: none; border-radius: var(--r-lg); overflow: hidden; mix-blend-mode: multiply; }
-:root[data-theme="dark"] .windfield { mix-blend-mode: screen; }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .windfield { mix-blend-mode: screen; } }
+.windcanvas { position: absolute; left: 0; top: 0; pointer-events: none; transition: opacity .15s; }
 .windlegend { position: absolute; top: 10px; right: 10px; z-index: 700; pointer-events: none; display: flex; align-items: center; gap: 6px; padding: 4px 8px 4px 10px; border-radius: var(--r-pill); background: color-mix(in srgb, var(--c-surface) 85%, transparent); font-size: 11px; font-weight: 700; color: var(--c-ink); }
 .windlegend .bar { position: relative; width: 170px; height: 16px; border-radius: 8px; }
 .windlegend .bar span { position: absolute; top: 50%; transform: translate(-50%, -50%); color: #fff; font-size: 10px; text-shadow: 0 0 2px rgba(0,0,0,.6); }

@@ -21,7 +21,8 @@ export const SUBS = [
 ] as const;
 export type Sub = (typeof SUBS)[number]['id'];
 /** « En direct » : WIND seulement (balises Winds-Up en mode perso, mesure publique de Marignane pour Le Jaï). */
-export const subsFor = (disc: Discipline) => SUBS.filter((x) => x.id !== 'direct' || disc === 'wing');
+// HOULE : pas de Sessions 2H (2 h ne font pas un downwind, Tom 11/11)
+export const subsFor = (disc: Discipline) => SUBS.filter((x) => (x.id !== 'direct' || disc === 'wing') && (x.id !== 'sessions' || disc !== 'downwind'));
 
 // ------------------------------------------------------------ vue d'une journée, propre à chaque onglet
 export const chipColors = (sc: number | null) =>

@@ -4,7 +4,7 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import type { Check, CollectBundle, ForecastBlock, ObservationBlock, SourceStatus } from '../../src/types/contracts.ts';
 import { collectPlan, loadRegistry, SURF_BUOYS, SurfEngine, surfSpotsOf } from './points.ts';
-import { collectOpenMeteo, ENGINE_WIND_MODELS, MARINE_VARS, marineUrl, METEO_MODELS, METEO_VARS, meteoUrl, SPOT_WIND_MODELS, WAVE_MODELS, WIND_VARS, windUrl } from './openmeteo.ts';
+import { collectOpenMeteo, WIND_GRID, windGridPoints, windGridUrl, ENGINE_WIND_MODELS, MARINE_VARS, marineUrl, METEO_MODELS, METEO_VARS, meteoUrl, SPOT_WIND_MODELS, WAVE_MODELS, WIND_VARS, windUrl } from './openmeteo.ts';
 import { collectCandhis } from './candhis.ts';
 import { collectSuperPrevision } from './superprevision.ts';
 import { collectMetar } from './metar.ts';
@@ -77,6 +77,11 @@ async function main(): Promise<void> {
   const spots = await step('open-meteo-vent-spots', () => collectOpenMeteo('open-meteo-vent-spots', windUrl(plan.windSpots, SPOT_WIND_MODELS), plan.windSpots, WIND_VARS, SPOT_WIND_MODELS), status, (r) => span(r.block));
   if (spots) { forecasts.push(spots.block); checks.push(hourlyGrid(spots.block, now), coverage(spots.block, 'wind_speed_10m', now), modelAvailability(spots.block, 'wind_speed_10m', now)); }
 
+  // carte : grille de vent (affichage seul, D-24)
+  const gridPts = windGridPoints();
+  const grid = await step('open-meteo-vent-carte', () => collectOpenMeteo('open-meteo-vent-carte', windGridUrl(gridPts), gridPts, ['wind_speed_10m', 'wind_direction_10m'], [WIND_GRID.model]), status, (r) => span(r.block));
+  if (grid) { forecasts.push(grid.block); checks.push(coverage(grid.block, 'wind_speed_10m', now)); }
+
   if (secretUrl) {
     const sp = await step('super-prevision', () => collectSuperPrevision(secretUrl, registry), status, (r) => ({ ...span(r.block), points: r.stats.points }));
     if (sp) { forecasts.push(sp.block); checks.push(coverageSuper(sp.block, now, registry)); keepPrivate('super-prevision-live.json', sp.live); keepPrivate('raw-super-prevision-spots.json', { spots: sp.raw.spots ?? {} }); }
@@ -94,7 +99,7 @@ async function main(): Promise<void> {
   const metar = await step('metar', () => collectMetar(registry), status, (r) => ({ points: Object.keys(r.block.stations).length }));
   if (metar) { observations.push(metar.block); checks.push(freshness(metar.block, 120)); }
 
-  const bundle: CollectBundle = { version: 1, generatedAt: now, points: [...plan.marine, ...plan.engineWind, ...plan.windSpots, ...plan.meteo], forecasts, observations, status, checks };
+  const bundle: CollectBundle = { version: 1, generatedAt: now, points: [...plan.marine, ...plan.engineWind, ...plan.windSpots, ...plan.meteo, ...gridPts], forecasts, observations, status, checks };
   checks.push(privacy(bundle, [secretUrl]));
 
   mkdirSync(OUT, { recursive: true });
