@@ -261,4 +261,18 @@ table.wg col.pk { background: color-mix(in srgb, var(--c-accent) 16%, transparen
 .gauge .tr { stroke: var(--c-surface-2); }
 .gauge .g-bad { stroke: var(--c-bad); } .gauge .g-mid { stroke: var(--c-mid); } .gauge .g-good { stroke: var(--c-good); }
 .gauge text { fill: var(--c-ink); font-size: 13px; font-weight: 800; font-family: var(--font); }
-.formula { padding: var(--s-3) var(--s-4); border-radius: var(--r-md); background: var(--c-top-soft); color: var(--c-top); font-size: var(--fs-sm); display: grid; gap: 4px; }
+
+/* carte : vent en légère couleur (force) + traits dans le sens du vent ; légende façon Windy */
+.windfield { position: absolute; inset: 0; z-index: 450; pointer-events: none; border-radius: var(--r-lg); overflow: hidden; mix-blend-mode: multiply; }
+:root[data-theme="dark"] .windfield { mix-blend-mode: screen; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .windfield { mix-blend-mode: screen; } }
+.windlegend { position: absolute; top: 10px; right: 10px; z-index: 700; pointer-events: none; display: flex; align-items: center; gap: 6px; padding: 4px 8px 4px 10px; border-radius: var(--r-pill); background: color-mix(in srgb, var(--c-surface) 85%, transparent); font-size: 11px; font-weight: 700; color: var(--c-ink); }
+.windlegend .bar { position: relative; width: 170px; height: 16px; border-radius: 8px; }
+.windlegend .bar span { position: absolute; top: 50%; transform: translate(-50%, -50%); color: #fff; font-size: 10px; text-shadow: 0 0 2px rgba(0,0,0,.6); }
+.windlegend .bar span:first-child { transform: translate(2px, -50%); } .windlegend .bar span:last-child { transform: translate(calc(-100% - 2px), -50%); }
+@media (max-width: 560px) { .windlegend .bar { width: 120px; } }
+.me.theme { cursor: pointer; background: transparent; color: var(--c-ink); }
+/* grille 5 jours : case remplie selon les heures à 1, 2, 3 étoiles */
+.grid5 .cell.s { color: var(--c-ink); }
+.grid5 .cell-l { display: inline-flex; align-items: center; gap: 4px; padding: 1px 8px; border-radius: var(--r-pill); background: color-mix(in srgb, var(--c-surface) 82%, transparent); font-weight: 800; }
+.grid5 .cell-l .stars { font-size: 11px; }

@@ -37,7 +37,6 @@ export function seriesFor(d: AllData, spot: PublicSpot, disc: Discipline, level:
       extra: [
         { label: 'Orientation', value: spot.orientation?.seaward != null ? `plage ouverte vers ${n0(spot.orientation.seaward)}° (${compass(spot.orientation.seaward)})` : 'plan d’eau fermé' },
         { label: 'Confiance orientation', value: ({ low: 'faible, à confirmer', medium: 'moyenne', high: 'élevée' } as Record<string, string>)[spot.orientation?.confidence] ?? '—' },
-        { label: 'Formule', value: `note wing v${d.wing.version} : vent × rafales × direction (docs/product/WING_SCORE.md)` },
       ],
     };
   }

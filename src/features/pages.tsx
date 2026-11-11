@@ -63,13 +63,13 @@ export const MODULES: { slug: string; disc: Discipline; tab: string; title: stri
 export const moduleOf = (disc: Discipline) => MODULES.find((m) => m.disc === disc)!;
 
 // ------------------------------------------------------------------ Prévisions (un spot)
-export function SpotPage({ d, id, now }: { d: AllData; id: string; now: number }) {
+export function SpotPage({ d, id, now, day }: { d: AllData; id: string; now: number; day?: string | null }) {
   const spot = d.spots.find((s) => s.id === id);
   if (!spot) return <div class="empty">Spot inconnu. <a href="#/wind">Retour</a></div>;
-  return <SpotView key={spot.id} d={d} spot={spot} now={now} />;
+  return <SpotView key={spot.id + (day ?? '')} d={d} spot={spot} now={now} day={day ?? null} />;
 }
 
-function SpotView({ d, spot, now }: { d: AllData; spot: PublicSpot; now: number }) {
+function SpotView({ d, spot, now, day: dayParam }: { d: AllData; spot: PublicSpot; now: number; day: string | null }) {
   const prefs = usePrefs();
   const id = spot.id;
   const disc = spotDiscipline(spot);
@@ -77,10 +77,11 @@ function SpotView({ d, spot, now }: { d: AllData; spot: PublicSpot; now: number 
   const s = seriesFor(d, spot, disc, level);
   const live = useLive(disc === 'wing' ? [spot.id] : []);
   const sessions = upcoming(d, now).filter((x) => x.spot === id && (x.level === 'tous' || x.level === level));
-  const reading = prefs.reading;
+  const reading: Reading = disc !== 'wing' && prefs.reading === 'expert' ? 'detail' : prefs.reading;   // pas d'Expert pour VAGUE et HOULE
   const future = s ? s.rows.map((r, i) => ({ r, i })).filter(({ i }) => s.times[i] >= now - 3600e3) : [];
   const days = useMemo(() => (s ? daysOf(s, now) : []), [s, Math.floor(now / 3600e3)]);
-  const [dayT, setDay] = useState<number | null>(null);
+  // « Fiche complète » depuis la Prévision : on ouvre directement le jour cliqué (?day=AAAA-MM-JJ)
+  const [dayT, setDay] = useState<number | null>(() => days.find((t) => dayKey(t) === dayParam) ?? null);
   const day = dayT !== null && days.some((t) => dayKey(t) === dayKey(dayT)) ? dayT : days[0] ?? now;
   const best = sessions.length ? Math.max(...sessions.map((x) => x.peak)) : null;
   // heure survolée (souris) ou touchée : la carte, les cartes de conditions et les critères suivent cette heure
@@ -99,7 +100,6 @@ function SpotView({ d, spot, now }: { d: AllData; spot: PublicSpot; now: number 
       </header>
       <div class="row between">
         {s?.levels && <Seg<Level> label={disc === 'wing' ? 'Mode' : 'Niveau de pratique'} value={level} onChange={(v) => setPrefs((p) => ({ ...p, levels: { ...p.levels, [disc]: v } }))} options={LEVELS_FOR[disc].map((l) => [l, LEVEL_LABEL[l]] as [Level, string])} />}
-        <Seg<Reading> label="Niveau de lecture" value={reading} onChange={(v) => setPrefs((p) => ({ ...p, reading: v }))} options={[['synthese', 'Synthèse'], ['detail', 'Détail'], ['expert', 'Expert']]} />
       </div>
       {disc === 'wing' && <LiveBox live={[...(live.live ?? []), ...publicLive(d.meteo?.obs, [spot])]} spot={spot.id} />}
       {s?.notice && <div class="notice">{s.notice}</div>}
@@ -127,7 +127,8 @@ function SpotView({ d, spot, now }: { d: AllData; spot: PublicSpot; now: number 
           <Section title="Sessions 2H">
             <div class="card">{sessions.length ? <div class="list">{sessions.map((x) => <SessionRow key={x.id} s={x} now={now} showSpot={false} />)}</div> : <div class="empty">Pas de session 2H en vue{s.levels ? ` en ${LEVEL_LABEL[level]}` : ''}.</div>}</div>
           </Section>
-          <Section title="Jour par jour">
+          <Section title="Jour par jour" aside={<Seg<Reading> label="Niveau de lecture" value={reading} onChange={(v) => setPrefs((p) => ({ ...p, reading: v }))}
+            options={disc === 'wing' ? [['synthese', 'Synthèse'], ['detail', 'Détail'], ['expert', 'Expert']] : [['synthese', 'Synthèse'], ['detail', 'Détail']]} />}>
             <div class="card stack">
               {(() => {
                 // WIND, VAGUE, HOULE : le même tableau, toutes les 3 h sur 5 jours
@@ -232,6 +233,13 @@ export function Reliability({ d, now }: { d: AllData; now: number }) {
   const v = d.verify;
   const W = v?.meilleurs?.ventCourtTerme ?? {}, H = v?.meilleurs?.vaguesCourtTerme ?? {};
   const cal = v?.calibration?.surf ?? {};
+  const prefs = usePrefs();
+  if (!prefs.perso.enabled) return (
+    <>
+      <header class="page-head"><button type="button" class="back" onClick={() => goBack('#/profil')}><ChevronLeft size={22} strokeWidth={2.8} aria-hidden="true" />Retour</button><h1>Fiabilité</h1></header>
+      <div class="notice">Page réservée au mode perso (Profil).</div>
+    </>
+  );
   return (
     <>
       <header class="page-head"><button type="button" class="back" onClick={() => goBack('#/profil')}><ChevronLeft size={22} strokeWidth={2.8} aria-hidden="true" />Retour</button><h1>Fiabilité</h1>

@@ -7,7 +7,7 @@ import { setPrefs, usePrefs } from '../services/prefs';
 import { publicLive, useLive } from '../services/perso';
 import { Badge, Fav, Section, Seg } from '../components/ui';
 import { SpotMap } from '../components/SpotMap';
-import { headFor, ModuleView, pickHours } from '../components/Views';
+import { headFor, ModuleView, pickHours, starsOf } from '../components/Views';
 import { ScoreBars } from '../components/Today';
 import { seriesFor, type Series } from './series';
 import { bestScoreBySpot, Freshness, levelFor, LiveBox, matches, moduleOf, upcoming } from './pages';
@@ -17,8 +17,11 @@ export const SUBS = [
   { id: 'sessions', label: 'Sessions 2H' },
   { id: 'prevision', label: 'Prévision' },
   { id: 'spots', label: 'Spots' },
+  { id: 'direct', label: 'En direct' },
 ] as const;
 export type Sub = (typeof SUBS)[number]['id'];
+/** « En direct » : WIND seulement (balises Winds-Up en mode perso, mesure publique de Marignane pour Le Jaï). */
+export const subsFor = (disc: Discipline) => SUBS.filter((x) => x.id !== 'direct' || disc === 'wing');
 
 // ------------------------------------------------------------ vue d'une journée, propre à chaque onglet
 export const chipColors = (sc: number | null) =>
@@ -40,6 +43,12 @@ export function DayChart({ d, spot, dayT, level, window, title }: { d: AllData; 
 }
 
 // ------------------------------------------------------------ PRÉVISION : grille spots × 5 jours
+/** Remplissage d'une case : violet (3 ★), orange (2 ★), vert (1 ★) en proportion des heures de jour, le reste vide. */
+const fillOf = (n: number[], day: number) => {
+  const p = (x: number) => Math.round((x / day) * 1000) / 10;
+  const a = p(n[2]), b = a + p(n[1]), c = b + p(n[0]);
+  return `linear-gradient(to right, var(--c-k3) 0 ${a}%, var(--c-k2) ${a}% ${b}%, var(--c-k1) ${b}% ${c}%, var(--c-surface-2) ${c}% 100%)`;
+};
 const shortName = (s: PublicSpot) => s.name.replace(/\s*\(.*\)/, '').replace('Port Camargue / Espiguette', 'Espiguette').replace('Saintes-Maries-de-la-Mer', 'Stes-Maries').replace('La Grande-Motte', 'G-Motte').replace(/^Plage Sud/, 'P. Sud').replace(/→ La Grande-Motte$/, '→ G-Motte');
 
 function Prevision({ d, now, disc, spots, L, query }: { d: AllData; now: number; disc: Discipline; spots: PublicSpot[]; L: Level; query: URLSearchParams }) {
@@ -58,16 +67,23 @@ function Prevision({ d, now, disc, spots, L, query }: { d: AllData; now: number;
   const cell = (sp: PublicSpot, dayT: number) => {
     const k = dayKey(dayT);
     const ss = sess.filter((s) => s.spot === sp.id && dayKey(s.start) === k);
-    if (ss.length) return { session: true, hours: ss.reduce((a, s) => a + s.hours, 0), peak: Math.max(...ss.map((s) => s.peak)), text: '' };
+    if (ss.length) {
+      // heures de jour à 1, 2, 3 étoiles (demande de Tom, 11/11 : la case se remplit selon les heures à chaque niveau)
+      const s = series[sp.id];
+      const idx = s ? s.times.map((_, i) => i).filter((i) => dayKey(s.times[i]) === k && s.day[i]) : [];
+      const n = [1, 2, 3].map((st) => idx.filter((i) => starsOf(s!.score[i]) === st).length);
+      const peak = Math.max(...ss.map((x) => x.peak)), top = starsOf(peak);
+      return { session: true, hours: ss.reduce((a, x) => a + x.hours, 0), peak, text: '', n, day: Math.max(1, idx.length), top };
+    }
     // pas de session : case vide (demande de Tom, 10/11 : « autant rien mettre ») ; « — » seulement sans prévision
     const s = series[sp.id];
     const has = !!s && s.times.some((t) => dayKey(t) === k);   // nuit déjà tombée : case vide, pas « — »
-    return { session: false, hours: 0, peak: null, text: has ? '' : '—' };
+    return { session: false, hours: 0, peak: null, text: has ? '' : '—', n: [0, 0, 0], day: 1, top: 0 };
   };
   const selSpot = sel ? spots.find((s) => s.id === sel.spot) : null;
   return (
     <Section title="Prévision 5 jours">
-      <p class="faint">Case colorée = session 2H (nombre d’heures ; couleur = étoiles : vert ★, orange ★★, violet ★★★). Case vide = pas de session ce jour-là. Touche une case pour le détail.</p>
+      <p class="faint">Chaque case se remplit selon les heures de jour à 1 ★ (vert), 2 ★ (orange) et 3 ★ (violet) ; le chiffre = heures au meilleur niveau du jour. Case vide = pas de session 2H ce jour-là. Touche une case pour le détail.</p>
       <div class="card table-wrap">
         <table class="grid5">
           <thead><tr><th />{spots.map((s) => <th key={s.id} title={s.name}><strong>{shortName(s)}</strong></th>)}</tr></thead>
@@ -80,10 +96,10 @@ function Prevision({ d, now, disc, spots, L, query }: { d: AllData; now: number;
                   const on = sel?.spot === sp.id && sel?.day === dayT;
                   return (
                     <td key={sp.id}>
-                      <button type="button" class={`cell${c.session ? ' s' : ''}${on ? ' sel' : ''}`} style={c.session ? chipColors(c.peak) : undefined}
-                        aria-pressed={on} aria-label={`${sp.name}, ${dayLabel(dayT, now)} : ${c.session ? `session de ${c.hours} h, note max ${n1(c.peak)}` : c.text === '—' ? 'pas de prévision' : 'pas de session'}`}
+                      <button type="button" class={`cell${c.session ? ' s' : ''}${on ? ' sel' : ''}`} style={c.session ? { background: fillOf(c.n, c.day) } : undefined}
+                        aria-pressed={on} aria-label={`${sp.name}, ${dayLabel(dayT, now)} : ${c.session ? `${c.n[2] ? `${c.n[2]} h à 3 étoiles, ` : ''}${c.n[1] ? `${c.n[1]} h à 2 étoiles, ` : ''}${c.n[0]} h à 1 étoile` : c.text === '—' ? 'pas de prévision' : 'pas de session'}`}
                         onClick={() => setSel(on ? null : { spot: sp.id, day: dayT })}>
-                        {c.session ? `${c.hours}h` : c.text}
+                        {c.session ? <span class="cell-l">{c.n[c.top - 1] || c.hours}h <span class={`stars sm k${c.top}`}><span class="on">{'★'.repeat(c.top)}</span></span></span> : c.text}
                       </button>
                     </td>
                   );
@@ -95,7 +111,7 @@ function Prevision({ d, now, disc, spots, L, query }: { d: AllData; now: number;
       </div>
       {sel && selSpot && (
         <div class="card stack">
-          <div class="row between"><strong>{selSpot.name}</strong><a href={`#/spot/${selSpot.id}`} class="small">Fiche complète →</a></div>
+          <div class="row between"><strong>{selSpot.name}</strong><a href={`#/spot/${selSpot.id}?day=${dayKey(sel.day)}`} class="small">Fiche complète →</a></div>
           <DayChart d={d} spot={selSpot} dayT={sel.day} level={L} title={dayLabel(sel.day, now)}
             window={(() => { const s = sess.find((x) => x.spot === sel.spot && dayKey(x.start) === dayKey(sel.day)); return s ? [s.start, s.end] as [number, number] : undefined; })()} />
           {sess.filter((x) => x.spot === sel.spot && dayKey(x.start) === dayKey(sel.day)).map((x) => (
@@ -156,6 +172,12 @@ export function Module({ d, now, disc, sub, query }: { d: AllData; now: number; 
       ))}
     </Section>
   );
+  else if (sub === 'direct' && disc === 'wing') body = (
+    <div class="stack">
+      <LiveBox live={[...(live.live ?? []), ...publicLive(d.meteo?.obs, spots)].sort((a, b) => spots.findIndex((s) => s.id === a.spot) - spots.findIndex((s) => s.id === b.spot))} />
+      {!prefs.perso.enabled && <p class="faint">Les balises Winds-Up s’affichent en mode perso (Profil). Le Jaï : mesure publique de l’aéroport de Marignane, pour tous.</p>}
+    </div>
+  );
   else if (sub === 'prevision') body = <Prevision d={d} now={now} disc={disc} spots={spots} L={L} query={query} />;
   else if (sub === 'spots') body = (
     <Section title="Spots">
@@ -192,11 +214,10 @@ export function Module({ d, now, disc, sub, query }: { d: AllData; now: number; 
       </header>
       <div class="module">
         <nav class="subnav" aria-label={`Modules ${m.tab}`}>
-          {SUBS.map((x) => <a key={x.id} href={`#/${m.slug}/${x.id}`} aria-current={sub === x.id ? 'page' : undefined}>{x.label}</a>)}
+          {subsFor(disc).map((x) => <a key={x.id} href={`#/${m.slug}/${x.id}`} aria-current={sub === x.id ? 'page' : undefined}>{x.label}</a>)}
         </nav>
         <div class="module-body">
           {!meta.available && <div class="notice warn">Prévision indisponible pour cette mise à jour : {meta.note || meta.source}</div>}
-          <LiveBox live={disc === 'wing' ? [...(live.live ?? []), ...publicLive(d.meteo?.obs, spots)].sort((a, b) => spots.findIndex((s) => s.id === a.spot) - spots.findIndex((s) => s.id === b.spot)) : live.live} />
           {body}
           <p class="faint">Session 2H = au moins 2 h d’affilée à 5/10 ou plus, de jour. Source : {meta.source}.</p>
         </div>

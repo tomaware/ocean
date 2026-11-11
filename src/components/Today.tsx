@@ -165,7 +165,6 @@ export function NoteCard({ s, dayT, now, sessions, level, picked, onPick }: { s:
         </span>
       </div>
       <ScoreBars s={s} dayT={dayT} now={now} picked={picked} onPick={onPick} level={level} />
-      {why && <span class="comment"><strong>Commentaire :</strong> {why}</span>}
     </section>
   );
 }
@@ -200,6 +199,29 @@ export function CondCards({ d, spot, s, dayT, now, picked }: { d: AllData; spot:
   </>;
 }
 
+/** Échelle de vent façon Windy (nœuds → couleur), pour teinter légèrement la carte. */
+export const WIND_SCALE: [number, string][] = [[0, '#6271B7'], [5, '#3A9FC4'], [10, '#4CB26A'], [15, '#6CBA3A'], [20, '#C9B83A'], [25, '#D9963A'], [30, '#CF5B3A'], [40, '#A23A6E'], [60, '#7A4FA0']];
+export function windColor(kn: number, alpha = 1): string {
+  const k = WIND_SCALE.findIndex(([v]) => kn < v);
+  const [a, b] = k <= 0 ? [WIND_SCALE[0], WIND_SCALE[0]] : k === -1 ? [WIND_SCALE[WIND_SCALE.length - 1], WIND_SCALE[WIND_SCALE.length - 1]] : [WIND_SCALE[k - 1], WIND_SCALE[k]];
+  const f = b[0] === a[0] ? 0 : (kn - a[0]) / (b[0] - a[0]);
+  const c = (h: string, i: number) => parseInt(h.slice(1 + 2 * i, 3 + 2 * i), 16);
+  const m = [0, 1, 2].map((i) => Math.round(c(a[1], i) + f * (c(b[1], i) - c(a[1], i))));
+  return `rgba(${m[0]}, ${m[1]}, ${m[2]}, ${alpha})`;
+}
+function WindLegend() {
+  const stops = [0, 5, 10, 20, 30, 40, 60];
+  return (
+    <div class="windlegend" aria-hidden="true">
+      <span>nd</span>
+      {/* repères espacés régulièrement, comme la légende de Windy (0, 5, 10, 20, 30, 40, 60) */}
+      <span class="bar" style={{ background: `linear-gradient(to right, ${stops.map((v, k) => `${windColor(v)} ${(k / (stops.length - 1)) * 100}%`).join(', ')})` }}>
+        {stops.map((v, k) => <span key={v} style={{ left: `${(k / (stops.length - 1)) * 100}%` }}>{v}</span>)}
+      </span>
+    </div>
+  );
+}
+
 /** Carte du spot : repère centré sur le spot (cercle, N/E/S/O, axe de la plage), flèche du vent avec sa force,
  *  et pour VAGUE la flèche de la houle. Suit l'heure survolée dans la note du jour ou les tableaux. */
 export function MapCompass({ d, spot, s, dayT, now, best, picked }: { d: AllData; spot: PublicSpot; s: Series; dayT: number; now: number; best: number | null; picked?: number | null }) {
@@ -229,6 +251,18 @@ export function MapCompass({ d, spot, s, dayT, now, best, picked }: { d: AllData
   return (
     <div class="mapbox t-map">
       <SpotMap spots={spots} best={bestMap} focus={spot.id} />
+      {/* vent en légère couleur sur toute la carte (force) et traits orientés dans le sens du vent (direction), demande de Tom 11/11 */}
+      {from != null && kn != null && (
+        <div class="windfield" style={{ background: windColor(kn, 0.26) }} aria-hidden="true">
+          <svg width="100%" height="100%">
+            <defs><pattern id={`wf-${spot.id}`} width="46" height="46" patternUnits="userSpaceOnUse" patternTransform={`rotate(${from})`}>
+              <path d="M23 9 V31 M18.5 25.5 L23 31 L27.5 25.5" fill="none" stroke="#FFFFFF" stroke-opacity="0.55" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+            </pattern></defs>
+            <rect width="100%" height="100%" fill={`url(#wf-${spot.id})`} />
+          </svg>
+        </div>
+      )}
+      {from != null && kn != null && <WindLegend />}
       {from != null && i !== null && (
         <svg class="maprep" viewBox="-180 -140 360 280" role="img" aria-label={`${hh(s.times[i])} : vent de ${compass(from)} (${n0(from)}°), ${n0(kn)} nœuds, rafales ${n0(gust)}${swell ? `, houle de ${compass(swell.from)}` : ''}${seaward !== null ? `, plage ouverte vers ${compass(seaward)}` : ''}`}>
           <circle class="ring" r={R} />
@@ -277,10 +311,7 @@ export function Criteria({ d, spot, s, dayT, now, level, sessions, picked }: { d
       <section class="card crit t-crit" aria-label={`Critères de la note à ${at}`}>
         <div class="row between"><span class="eyebrow">Critères à {at}</span><span class="eyebrow">sur 10</span></div>
         {rows.map(([name, detail, v]) => <div key={name} class="crit-row"><div class="txt"><strong>{name}</strong><span>{detail}</span></div><Gauge v={Math.round(v * 10) / 10} name={name} /></div>)}
-        <div class="formula">
-          <span>Note = 10 × force ({dec(f[0])}) × régularité ({dec(f[1])}) × direction ({dec(f[2])}) = <strong>{n1(s.score[i])}</strong></span>
-          <span>« Ça envoie » s’affiche quand une session compte au moins 4 h à plus de 20 nd{sess ? ` : ici ${sess.windyHours} h` : ''}.</span>
-        </div>
+
       </section>
     );
   }

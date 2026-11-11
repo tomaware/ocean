@@ -168,3 +168,9 @@ Les apps actuelles restent en ligne jusqu'à ce que leur remplaçante soit véri
 - WIND : **Le Jaï** (étang de Berre, balise Winds-Up 26-le-jai) ajouté ; dès que la super prévision le couvre (ligne à ajouter par Tom dans son script), son vent corrigé remplace le repli ci-dessous. La super prévision ne le couvre pas : vent = modèle le plus juste aux mesures METAR de Marignane (LFML, ajoutée aux stations) sur les 3 derniers jours, non corrigé, provenance affichée (« forecast ») ; jamais mélangé avec la super prévision. Formule wing inchangée. Secteur SE à S (vent qui pousse vers le large de l'étang) déconseillé, comme le nord au Ponant. Orientation à confirmer.
 - Code couleur des étoiles : 1 ★ vert, 2 ★ orange, 3 ★ violet (« légendaire ») ; les barres horaires et les cases de la Prévision 5 jours suivent le même code (gris = pas d'étoile).
 
+### D-23 (11/11/2026, Tom) — affichage
+- Bouton clair / sombre dans la barre du haut. « En direct » devient un module du menu de gauche (WIND). Fiabilité : mode perso seulement. Synthèse / Détail / Expert placé à côté de « Jour par jour » ; pas d'Expert pour VAGUE et HOULE ; formule retirée de l'affichage (fiche et Expert).
+- Note du jour : commentaire au survol seulement. Carte : vent en légère couleur (échelle façon Windy) et traits dans le sens du vent, légende 0–60 nd.
+- Prévision 5 jours : chaque case se remplit selon les heures de jour à 1 ★ (vert), 2 ★ (orange), 3 ★ (violet) ; le chiffre = heures au meilleur niveau. « Fiche complète » ouvre le jour cliqué.
+- HOULE, modes Sécu first / OffShore et règle des 35 nd : formule proposée, en attente de validation de Tom (aucune note downwind modifiée).
+
