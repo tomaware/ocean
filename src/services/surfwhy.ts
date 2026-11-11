@@ -17,7 +17,7 @@ export function surfWhy(x: Record<string, any>): string | null {
   else if (wind >= 0.8) plus.push('vent faible, peu gênant');
   else if (wk === 'side') minus.push('vent de côté');
   else if (wk === 'side-on' || wk === 'onshore') minus.push('vent de mer : vagues hachées');
-  if (wind < 0.8 && (wk === 'offshore' || wk === 'side-off')) minus.push('vent de terre un peu fort');
+  if (wind < 0.95 && (wk === 'offshore' || wk === 'side-off')) minus.push(`vent de terre un peu fort${x.ws != null ? ` (${n0(x.ws)} nd)` : ''} : vagues moins faciles à prendre`);
   if (chop < 1) minus.push('mer du vent : clapot');
   if (per >= 0.9) plus.push(`bonne période (${n0(x.tp)} s)`);
   else if (per < 0.7) minus.push(`période courte (${n0(x.tp)} s) : vagues molles`);

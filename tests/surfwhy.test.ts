@@ -9,6 +9,8 @@ test('note surf expliquée : vent de terre + bonne taille (Saintes-Maries vendre
   assert.match(w, /^Bonne taille de vague, vent de terre : vent et houle opposés/);
   assert.match(w, /bonne période \(9 s\)/);
   assert.doesNotMatch(w, /Mais/);
+  // 11 h : même chose mais vent de terre plus fort (16 nd) → 7,7 au lieu de 9,5
+  assert.match(surfWhy({ f: [1, 1, 0.8, 1, 0], wk: 'offshore', tp: 9, ws: 16 })!, /Mais vent de terre un peu fort \(16 nd\)/);
 });
 
 test('note surf expliquée : ce qui fait baisser la note', () => {
