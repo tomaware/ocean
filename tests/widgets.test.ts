@@ -31,7 +31,11 @@ test('widget Vent : chaque taille s’affiche, spot par défaut La Grande-Motte,
     if (family !== 'accessoryCircular') assert.match(t, /G-Motte|La Grande-Motte/, family);   // le rond n'a la place que pour le vent
     assert.match(t, /\b12\b/, `${family} : vent de 10 h (12 nd) attendu — ${t}`);
     if (family === 'small' || family === 'medium') assert.match(t, /prévu/, family);
-    if (family === 'medium' || family === 'large') assert.match(t, /Auj\..*Jeu\..*Ven\..*Sam\./, family);
+    if (family === 'medium') assert.match(t, /Auj\..*Jeu\..*Ven\..*Sam\./, family);
+    if (family === 'large') {                                         // grand : aujourd'hui et demain heure par heure (7 h → 21 h)
+      assert.match(t, /Aujourd'hui \| mercredi 11 .*max 16 nd NO · raf\. 22.*Créneau : 13–16 h.*Demain \| jeudi 12 .*Créneau : pas de créneau/, t);
+      assert.doesNotMatch(t, /Auj\./);
+    }
     assert.equal(urls(o.widget)[0], 'https://tomaware.github.io/ocean/#/spot/la-grande-motte');
   }
 });

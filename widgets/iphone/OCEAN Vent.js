@@ -141,7 +141,26 @@ function model(data, spot, level, live, now) {
       cr: ss.length ? `${new Date(ss[0].s).getHours()}–${new Date(ss[0].e).getHours()} h` : "—", strip };
   });
   const next = rows.filter((r) => r.t >= now - 3600e3).slice(0, 12);
-  return { rows, now: live && !live.panne ? live : nowRow ? { t: nowRow.t, kn: nowRow.kn, gust: nowRow.gust, dir: nowRow.dir, dirTxt: compass(nowRow.dir), src: "prévu" } : null,
+  // grand format : aujourd'hui et demain heure par heure, 7 h → 21 h (après 21 h : demain et après-demain), comme le widget Windows
+  const k0 = new Date(now).getHours() >= 21 ? 1 : 0;
+  const detail = [k0, k0 + 1].map((k) => {
+    const d = dayKey(now + k * 86400e3);
+    const rr = rows.filter((r) => dayKey(r.t) === d);
+    const hours = [];
+    for (let h = 7; h <= 21; h++) {
+      const r = rr.find((x) => new Date(x.t).getHours() === h);
+      hours.push({ h, has: !!r, kn: r ? r.kn : null, gust: r ? r.gust : null, dir: r ? r.dir : null, stars: r && r.day ? starsOf(r.score) : 0, past: !!r && r.t + 3600e3 <= now });
+    }
+    const up = hours.filter((x) => x.has && !x.past);
+    const max = up.reduce((b, x) => (x.kn != null && (!b || x.kn > b.kn) ? x : b), null);
+    const gmax = up.reduce((g, x) => (x.gust != null && (g == null || x.gust > g) ? x.gust : g), null);
+    const ss = (spot.sessions[level] || []).filter((x) => dayKey(x.s) === d && x.e > now);
+    return { key: d, label: k === 0 ? "Aujourd'hui" : k === 1 ? "Demain" : "Après-demain",
+      date: new Date(now + k * 86400e3).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric" }),
+      stars: up.reduce((b, x) => Math.max(b, x.stars), 0), kn: max ? max.kn : null, dir: max ? max.dir : null, gust: gmax,
+      cr: ss.length ? ss.map((x) => `${new Date(x.s).getHours()}–${new Date(x.e).getHours()} h`).join(" · ") : "pas de créneau", hours };
+  });
+  return { detail, rows, now: live && !live.panne ? live : nowRow ? { t: nowRow.t, kn: nowRow.kn, gust: nowRow.gust, dir: nowRow.dir, dirTxt: compass(nowRow.dir), src: "prévu" } : null,
     panne: live && live.panne, in2: twoRow, days, next };
 }
 
@@ -194,32 +213,32 @@ function large(w, data, spot, m, now) {
   const rr = r.addStack(); rr.layoutVertically();
   text(rr, m.now && m.now.gust != null ? `${m.now.src === "balise" ? "max" : "rafales"} ${Math.round(m.now.gust)} nd` : "", F.s(12), INK2);
   text(rr, m.in2 ? `dans 2 h : ${Math.round(m.in2.kn)} nd ${compass(m.in2.dir)}` : "", F.s(12), INK2);
-  w.addSpacer(8);
-  // prochaines 12 h : barres colorées (hauteur = vent)
-  const box = w.addStack(); box.layoutVertically(); box.backgroundColor = CELL; box.cornerRadius = 12; box.setPadding(8, 8, 6, 8); box.spacing = 3;
-  text(box, "PROCHAINES HEURES · VENT CORRIGÉ", F.b(9), INK3);
-  const bars = box.addStack(); bars.bottomAlignContent(); bars.spacing = 3;
-  const labels = box.addStack(); labels.spacing = 3;
-  const bw = Math.floor((310 - 3 * 11) / 12);
-  for (const h of m.next) {
-    const col = bars.addStack(); col.layoutVertically(); col.size = new Size(bw, 62); col.addSpacer();
-    const n = col.addStack(); n.addSpacer(); text(n, Math.round(h.kn ?? 0), F.h(9), INK); n.addSpacer();
-    const bar = col.addStack(); bar.size = new Size(bw, Math.max(3, Math.round(((h.kn ?? 0) / 30) * 44))); bar.backgroundColor = windCell(h.kn)[0]; bar.cornerRadius = 3;
-    const lb = labels.addStack(); lb.size = new Size(bw, 11); lb.addSpacer(); text(lb, new Date(h.t).getHours(), F.r(9), INK3); lb.addSpacer();
+  // aujourd'hui et demain heure par heure, 7 h → 21 h : vent, rafales, direction, étoiles (heures passées estompées)
+  const cw = 20;
+  for (const d of m.detail) {
+    w.addSpacer(6);
+    const hd = w.addStack(); hd.centerAlignContent(); hd.spacing = 4;
+    text(hd, d.label, F.h(13), INK); text(hd, d.date, F.r(11), INK3, { scale: 0.7 }); if (d.stars) text(hd, "★".repeat(d.stars), F.b(11), STAR[d.stars]);
+    hd.addSpacer();
+    if (d.kn != null) text(hd, `max ${Math.round(d.kn)} nd ${compass(d.dir)}${d.gust != null ? ` · raf. ${Math.round(d.gust)}` : ""}`, F.b(11), INK, { scale: 0.7 });
+    w.addSpacer(3);
+    const box = w.addStack(); box.backgroundColor = CELL; box.cornerRadius = 10; box.setPadding(4, 3, 4, 3); box.spacing = 1;
+    for (const x of d.hours) {
+      const c = box.addStack(); c.layoutVertically(); c.size = new Size(cw, 0); c.spacing = 1;
+      const dim = x.past || !x.has;
+      const hl = c.addStack(); hl.addSpacer(); text(hl, x.h, F.s(9), dim ? OFF : INK3); hl.addSpacer();
+      if (x.has && !x.past) {
+        const k = c.addStack(); k.addSpacer(); cellNum(k, x.kn, cw - 1, 17, 10); k.addSpacer();
+        const g = c.addStack(); g.addSpacer(); text(g, x.gust != null ? Math.round(x.gust) : " ", F.r(9), INK2); g.addSpacer();
+        const a = c.addStack(); a.addSpacer(); addArrow(a, x.dir, 10, INK2); a.addSpacer();
+      } else { c.addSpacer(46); }
+      const sb = c.addStack(); sb.size = new Size(cw - 2, 4); sb.cornerRadius = 2; sb.backgroundColor = x.stars > 0 && !dim ? STAR[x.stars] : NONE;
+    }
+    w.addSpacer(2);
+    text(w, `Créneau : ${d.cr}`, F.s(11), INK2, { scale: 0.7 });
   }
-  w.addSpacer(8);
-  for (const d of m.days) {
-    const line = w.addStack(); line.centerAlignContent(); line.spacing = 6;
-    const l = line.addStack(); l.size = new Size(34, 0); text(l, d.label, F.h(12), INK);
-    const st = line.addStack(); st.size = new Size(38, 0); starsText(st, d.stars, 10);
-    const strip = line.addStack(); strip.spacing = 1;
-    for (const k of d.strip) { const c = strip.addStack(); c.size = new Size(9, 14); c.cornerRadius = 2; c.backgroundColor = k < 0 ? NONE : k ? STAR[k] : NONE; }
-    line.addSpacer();
-    cellNum(line, d.kn, 30, 18, 12);
-    const cr = line.addStack(); cr.size = new Size(48, 0); text(cr, d.cr, F.s(10), INK2, { scale: 0.7 });
-    w.addSpacer(4);
-  }
-  text(w, "7 h → 21 h · vert ★ · orange ★★ · violet ★★★", F.r(9), INK3);
+  w.addSpacer();
+  text(w, "nœuds · rafales · direction · étoiles (vert ★, orange ★★, violet ★★★)", F.r(9), INK3, { scale: 0.7 });
 }
 function lock(w, family, spot, m) {
   const k = m.now ? Math.round(m.now.kn) : "–", dir = m.now ? m.now.dirTxt || compass(m.now.dir) : "";
