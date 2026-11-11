@@ -8,9 +8,12 @@ export const WIDGET_FILES: [string, string][] = [['widgets/iphone/OCEAN Vent.js'
 /** Widget Windows : un .zip à extraire puis installer.cmd (fins de ligne Windows pour les .cmd et le LISEZ-MOI). */
 export const WINDOWS_ZIP = 'ocean-widget-windows.zip';
 const WINDOWS_FILES = ['installer.cmd', 'desinstaller.cmd', 'ocean-widget.ps1', 'LISEZ-MOI.txt'];
+/** Widget Mac (Übersicht) : un .zip (les .command gardent le droit d'exécution). */
+export const MAC_ZIP = 'ocean-widget-mac.zip';
+const MAC_FILES = ['installer.command', 'desinstaller.command', 'ocean.jsx', 'LISEZ-MOI.txt'];
 
 /** Archive .zip minimale (deflate), sans dépendance. */
-export function zip(files: { name: string; data: Buffer }[], date = new Date()): Buffer {
+export function zip(files: { name: string; data: Buffer; exec?: boolean }[], date = new Date()): Buffer {
   const dosTime = (date.getHours() << 11) | (date.getMinutes() << 5) | (date.getSeconds() >> 1);
   const dosDate = ((date.getFullYear() - 1980) << 9) | ((date.getMonth() + 1) << 5) | date.getDate();
   const local: Buffer[] = [], central: Buffer[] = [];
@@ -19,8 +22,10 @@ export function zip(files: { name: string; data: Buffer }[], date = new Date()):
     const name = Buffer.from(f.name, 'utf8'), body = deflateRawSync(f.data), crc = crc32(f.data);
     const h = Buffer.alloc(30); h.writeUInt32LE(0x04034b50, 0); h.writeUInt16LE(20, 4); h.writeUInt16LE(0x0800, 6); h.writeUInt16LE(8, 8);
     h.writeUInt16LE(dosTime, 10); h.writeUInt16LE(dosDate, 12); h.writeUInt32LE(crc, 14); h.writeUInt32LE(body.length, 18); h.writeUInt32LE(f.data.length, 22); h.writeUInt16LE(name.length, 26);
-    const c = Buffer.alloc(46); c.writeUInt32LE(0x02014b50, 0); c.writeUInt16LE(20, 4); c.writeUInt16LE(20, 6); c.writeUInt16LE(0x0800, 8); c.writeUInt16LE(8, 10);
+    const c = Buffer.alloc(46); c.writeUInt32LE(0x02014b50, 0); c.writeUInt16LE(f.exec !== undefined ? 0x0314 : 20, 4); c.writeUInt16LE(20, 6); c.writeUInt16LE(0x0800, 8); c.writeUInt16LE(8, 10);
     c.writeUInt16LE(dosTime, 12); c.writeUInt16LE(dosDate, 14); c.writeUInt32LE(crc, 16); c.writeUInt32LE(body.length, 20); c.writeUInt32LE(f.data.length, 24); c.writeUInt16LE(name.length, 28); c.writeUInt32LE(offset, 42);
+    // « créé sous Unix » + droits : les .command restent exécutables une fois extraits sur le Mac
+    if (f.exec !== undefined) c.writeUInt32LE(((f.exec ? 0o100755 : 0o100644) << 16) >>> 0, 38);
     local.push(h, name, body); central.push(c, name);
     offset += 30 + name.length + body.length;
   }
@@ -36,6 +41,10 @@ export function windowsZip(): Buffer {
   }));
 }
 
+export function macZip(): Buffer {
+  return zip(MAC_FILES.map((f) => ({ name: `OCEAN widget Mac/${f}`, data: readFileSync(`widgets/mac/${f}`), exec: f.endsWith('.command') })));
+}
+
 const widgets = (): Plugin => ({
   name: 'ocean-widgets',
   apply: 'build',
@@ -44,6 +53,7 @@ const widgets = (): Plugin => ({
     mkdirSync(dir, { recursive: true });
     for (const [from, to] of WIDGET_FILES) copyFileSync(from, `${dir}/${to}`);
     writeFileSync(`${dir}/${WINDOWS_ZIP}`, windowsZip());
+    writeFileSync(`${dir}/${MAC_ZIP}`, macZip());
   },
 });
 

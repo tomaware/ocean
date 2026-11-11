@@ -172,7 +172,20 @@ export function WidgetsPage() {
       {os === 'mac' && (
         <Section title={<span class="row"><Laptop size={18} /> Mac</span>}>
           <div class="card stack">
-            <strong>Les widgets de l’iPhone sur le bureau du Mac</strong>
+            <strong>Le widget OCEAN sur le bureau</strong>
+            <span class="small">Les cartes <b>Vent</b>, <b>Créneaux</b> et <b>Vague</b> (surf), chacune en petit, moyen ou grand, sans iPhone. Il tourne dans Übersicht, une app gratuite que l’installateur télécharge si besoin.</span>
+            <div class="row"><a class="btn primary" href="./widgets/ocean-widget-mac.zip" download><Download size={16} /> Télécharger le widget Mac (.zip)</a></div>
+            <Steps>
+              <li>Double-clic sur le fichier téléchargé pour l’extraire.</li>
+              <li>Dans le dossier, <b>clic droit</b> sur <b>installer.command</b> → <b>Ouvrir</b> → <b>Ouvrir</b> (la première fois, macOS bloque le double-clic sur un fichier venu d’Internet ; sinon : Réglages Système → Confidentialité et sécurité → <b>Ouvrir quand même</b>).</li>
+              <li>Le Terminal installe tout ; s’il pose une question sur la super prévision, appuie sur <b>Entrée</b>. Le widget apparaît en haut à droite du bureau et revient à chaque démarrage.</li>
+            </Steps>
+            <span class="small"><b>Régler</b> : clic sur <b>⚙ réglages</b> sous le widget, change les valeurs du bloc « TES RÉGLAGES » (spot, mode, taille de chaque carte, spot surf…) puis <b>⌘S</b>. Une nouvelle version installée garde tes réglages.</span>
+            {prefs.perso.enabled && <span class="small"><b>Mode perso</b> : colle le lien de ta super prévision quand l’installateur le demande ; il est rangé dans le trousseau du Mac et le widget affiche alors les balises Winds-Up en direct.</span>}
+            <span class="faint">Pour l’enlever : clic droit sur <b>desinstaller.command</b> → Ouvrir.</span>
+          </div>
+          <div class="card stack">
+            <strong>Ou : les widgets de l’iPhone sur le bureau du Mac</strong>
             <span class="small">Il faut d’abord les installer sur l’iPhone (onglet iPhone), un Mac sous macOS Sonoma (14) ou plus récent, un iPhone sous iOS 17 ou plus récent, connecté au même compte Apple et à proximité ou sur le même Wi-Fi.</span>
             <Steps>
               <li>Menu Pomme → <b>Réglages Système</b> → <b>Bureau et Dock</b> → section Widgets : active <b>Utiliser des widgets pour iPhone</b>.</li>
@@ -189,7 +202,6 @@ export function WidgetsPage() {
               <li>OCEAN s’ouvre alors dans sa propre fenêtre, comme une app.</li>
             </Steps>
           </div>
-          <div class="notice">Widget Mac autonome (sur le bureau, sans iPhone) : en préparation.</div>
         </Section>
       )}
 

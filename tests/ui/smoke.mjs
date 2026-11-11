@@ -31,6 +31,8 @@ for (const [name, opt] of [['mobile', { ...devices['iPhone 13'], locale: 'fr-FR'
         for (const os of ['iPhone', 'Mac', 'Windows']) { await p.getByRole('button', { name: os, exact: true }).click(); if (!(await p.locator('ol.steps li').count())) errs.push(`${name} #/widgets : pas d'étapes pour ${os}`); }
         const zip = await p.request.get(`${base}/widgets/ocean-widget-windows.zip`);
         if (!zip.ok() || (await zip.body()).readUInt32LE(0) !== 0x04034b50) errs.push(`${name} #/widgets : widget Windows (.zip) introuvable`);
+        const mzip = await p.request.get(`${base}/widgets/ocean-widget-mac.zip`);
+        if (!mzip.ok() || (await mzip.body()).readUInt32LE(0) !== 0x04034b50) errs.push(`${name} #/widgets : widget Mac (.zip) introuvable`);
         await p.getByRole('button', { name: 'iPhone', exact: true }).click();
         if (await p.getByRole('button', { name: /Copier « OCEAN/ }).and(p.locator(':disabled')).count()) errs.push(`${name} #/widgets : scripts des widgets introuvables (dist/widgets)`);
       }

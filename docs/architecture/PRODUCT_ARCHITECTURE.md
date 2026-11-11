@@ -220,3 +220,8 @@ Les apps actuelles restent en ligne jusqu'à ce que leur remplaçante soit véri
 - iPhone : script Scriptable « OCEAN Vague » (Carnon par défaut, Parameter ou ▶︎ → Choisir le spot) : petit (vagues maintenant, période, houle, vent), moyen (+ 4 jours), grand (aujourd'hui et demain heure par heure 7 h → 21 h + meilleur créneau surf tous spots), écran verrouillé.
 - Windows : carte « Vague » (petit / moyen / grand), masquée par défaut, à afficher au clic droit ; spot au clic droit.
 - Vérifié : banc d'essai Scriptable et PowerShell sur un jeu d'essai commun et sur les données réelles ; rendu Windows en CI.
+
+### D-35 (11/11/2026, Tom) — widget Mac autonome
+- `widgets/mac/ocean.jsx` pour Übersicht (comme les widgets Mac actuels de Tom) : cartes Vent, Créneaux (meilleur créneau en haut, spots en colonnes) et Vague, chacune petit / moyen / grand / masquée ; clair / sombre suivant macOS ; clic = fiche du spot dans OCEAN. Réglages : bloc « TES RÉGLAGES » du fichier (bouton ⚙), gardés à la réinstallation.
+- `installer.command` : installe Übersicht si besoin (site officiel, signature Apple vérifiée), copie le widget, lancement au démarrage ; mode perso : lien de la super prévision rangé dans le trousseau du Mac (`ocean.superprevision`), jamais dans le fichier. Publié en `.zip` (droits d'exécution gardés) dans l'onglet Widgets → Mac.
+- Vérifié hors Mac : le widget est compilé et rendu (tests `widget-mac.test.ts`, mêmes jeux d'essai que iPhone et Windows), installateur testé sous zsh avec des commandes macOS simulées. Pas encore vu sur un vrai Mac.
