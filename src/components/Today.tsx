@@ -260,6 +260,9 @@ export function MapCompass({ d, spot, s, dayT, now, best, picked }: { d: AllData
     <div class="mapbox t-map">
       <SpotMap spots={spots} best={bestMap} focus={spot.id} onMap={setMap} />
       {grid && gk !== null && <WindLegend />}
+      {grid && grid.times?.length && i !== null && gk === null && (
+        <span class="windnote">Vent sur la carte : prévision du modèle jusqu’au {dayShort(grid.times[grid.times.length - 1])} à {hh(grid.times[grid.times.length - 1])}</span>
+      )}
       {from != null && i !== null && (
         <svg class="maprep" viewBox="-180 -140 360 280" role="img" aria-label={`${hh(s.times[i])} : vent de ${compass(from)} (${n0(from)}°), ${n0(kn)} nœuds, rafales ${n0(gust)}${swell ? `, houle de ${compass(swell.from)}` : ''}${seaward !== null ? `, plage ouverte vers ${compass(seaward)}` : ''}`}>
           <circle class="ring" r={R} />

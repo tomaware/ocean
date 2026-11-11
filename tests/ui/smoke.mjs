@@ -78,7 +78,7 @@ for (const [name, opt] of [['mobile', { ...devices['iPhone 13'], locale: 'fr-FR'
         if (!(await p.locator('.notecard .scorebars .grid5').count())) errs.push(`${name} #/${r} : ligne 5 absente`);
         // vent sur la carte façon Windy (grille publiée) : 2 calques (couleurs + particules)
         const hasGrid = await p.evaluate(() => fetch('./data/wind-grid.json').then((x) => x.ok && /json/.test(x.headers.get('content-type') ?? '')).catch(() => false));
-        if (hasGrid && (await p.locator('.mapbox .windcanvas').count()) !== 2) errs.push(`${name} #/${r} : vent absent de la carte`);
+        if (hasGrid && (await p.locator('.mapbox .windcanvas').count()) !== 2 && !(await p.locator('.mapbox .windnote').count())) errs.push(`${name} #/${r} : vent absent de la carte`);
         if (await p.getByRole('heading', { name: 'Sessions 2H', exact: true }).count()) errs.push(`${name} #/${r} : section Sessions 2H encore sur la fiche`);
         // changer de jour met à jour la note du jour
         const tabsN = await p.locator('.daytabs button').count();

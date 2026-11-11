@@ -307,3 +307,4 @@ table.wg col.pk { background: color-mix(in srgb, var(--c-accent) 16%, transparen
 .menu a:hover, .menu a[aria-current="page"] { background: var(--c-chip); color: var(--c-chip-ink); }
 .userlink { display: none; }
 @media (min-width: 900px) { .menuwrap { display: none; } .userlink { display: grid; } }
+.windnote { position: absolute; left: 10px; top: 10px; z-index: 700; pointer-events: none; background: color-mix(in srgb, var(--c-surface) 88%, transparent); color: var(--c-ink-2); font-size: var(--fs-xs); font-weight: 600; padding: 4px 10px; border-radius: var(--r-pill); max-width: calc(100% - 20px); }
