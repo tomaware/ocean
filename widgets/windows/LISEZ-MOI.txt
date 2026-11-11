@@ -1,0 +1,95 @@
+WIDGET OCEAN POUR WINDOWS — VENT DU SPOT + CRÉNEAUX WING
+=========================================================
+
+Sur le bureau, deux cartes avec les mêmes données, les mêmes étoiles et les
+mêmes créneaux que l'app OCEAN (https://tomaware.github.io/ocean/) :
+
+  - VENT : le spot de ton choix (La Grande-Motte au départ), le vent
+    maintenant et dans 2 h, puis 4 jours (étoiles, vent max, créneau) ;
+  - CRÉNEAUX : les meilleurs créneaux wing, tous spots confondus ;
+    en grand, la grille spots × 5 jours remplie par étoiles
+    (vert ★, orange ★★, violet ★★★).
+
+Chaque carte existe en petit, moyen ou grand, ou peut être masquée.
+Rien à télécharger en plus : le widget utilise PowerShell, déjà inclus
+dans Windows 10 et 11.
+
+Contenu du dossier :
+  - installer.cmd        le script d'installation
+  - desinstaller.cmd     pour tout enlever
+  - ocean-widget.ps1     le widget
+  - LISEZ-MOI.txt        ce fichier
+
+
+INSTALLATION (environ 1 minute)
+-------------------------------
+
+1. CLIC DROIT sur le .zip → « Extraire tout… ».
+   (Ne lance pas l'installateur depuis l'intérieur du .zip.)
+
+2. Dans le dossier extrait, double-clique sur « installer.cmd ».
+
+   Windows affiche sans doute « Windows a protégé votre ordinateur »
+   (le fichier vient d'Internet) : clique sur « Informations
+   complémentaires » puis « Exécuter quand même ».
+
+3. Une fenêtre noire affiche « Terminé ! » : appuie sur une touche.
+
+4. Le widget apparaît en haut à droite de l'écran principal.
+   Il passe derrière tes fenêtres ; pour le voir, appuie sur
+   Windows + D (afficher le bureau) ou clique sur le bureau.
+   Il se relance tout seul à chaque démarrage de Windows.
+
+
+UTILISATION
+-----------
+
+  - Clic sur la carte Vent : ouvre la fiche du spot dans OCEAN.
+  - Clic sur un créneau ou une case de la grille : ouvre la fiche du
+    spot au bon jour.
+  - Glisser : déplace le widget (la position est retenue).
+  - Clic droit : tous les réglages
+      Spot du vent, Mode (Sécu first / OffShore),
+      Carte Vent et Carte Créneaux (petit, moyen, grand, masquée),
+      Spots des créneaux (tous, ou proches de Montpellier),
+      Disposition (côte à côte, l'une sous l'autre),
+      Thème (comme Windows, clair, sombre), Écran,
+      Remettre en haut à droite, Actualiser, Quitter.
+  - Les prévisions se mettent à jour toutes les 15 minutes (OCEAN
+    publie une nouvelle prévision chaque heure).
+  - « prévu » : vent prévu pour l'heure (pas de balise) ;
+    « ● … min » : vent mesuré (âge de la mesure).
+  - Hors ligne, le widget garde les dernières données et l'indique.
+
+
+MODE PERSO : BALISES WINDS-UP EN DIRECT
+---------------------------------------
+
+Si tu as ton script Google « super prévision » : clic droit →
+« Mode perso : brancher ma super prévision… » et colle son lien
+(il se termine par « /exec?key=… »). Le lien est gardé chiffré sur ce PC,
+pour ton compte Windows uniquement. Le vent mesuré par la balise
+remplace alors le vent prévu (mise à jour toutes les 5 minutes).
+Si l'ancien widget Winds-Up est installé avec ce lien, OCEAN le reprend
+tout seul.
+
+
+DÉSINSTALLATION
+---------------
+
+Double-clic sur « desinstaller.cmd » : le widget est arrêté, retiré
+du démarrage et supprimé (réglages compris).
+
+
+EN CAS DE PROBLÈME
+------------------
+
+- Le widget n'apparaît pas : Windows + D. S'il n'y est toujours pas,
+  relance « installer.cmd ».
+- « Pas de données » : pas d'accès Internet pour le moment ; il réessaie
+  tout seul.
+- Une petite fenêtre noire apparaît une fraction de seconde au démarrage
+  de Windows : c'est normal, c'est le widget qui se lance.
+- Sur un PC d'entreprise, l'administrateur peut avoir bloqué les scripts
+  PowerShell ; l'installateur affiche alors une erreur.
+- Les éventuelles erreurs sont notées dans %LOCALAPPDATA%\OCEAN\erreur.log
