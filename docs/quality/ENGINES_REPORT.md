@@ -1,6 +1,6 @@
 # Rapport d'analyse (② ANALYSE)
 
-Généré le 2026-11-11 17:37 UTC par `pipeline/engines/run.ts`, juste après la collecte.
+Généré le 2026-11-11 18:02 UTC par `pipeline/engines/run.ts`, juste après la collecte.
 
 Les moteurs des apps actuelles (copies non modifiées dans `legacy/`) sont alimentés par la collecte commune. Le test golden refait le calcul comme les apps actuelles, avec leurs propres parseurs sur les mêmes réponses brutes, et exige les mêmes notes à ±0.1.
 
@@ -14,8 +14,8 @@ Les moteurs des apps actuelles (copies non modifiées dans `legacy/`) sont alime
 | sorties-surf | ✅ | 6/6 spots notés ; 12 créneaux |
 | houle-direction-downwind | ✅ | direction de la houle (affichage, carte) : 288/288 heures |
 | sorties-downwind | ✅ | 3/3 parcours notés ; 0 meilleurs créneaux |
-| ecart-prod-surf | ✅ | notes surf OCEAN vs app en service (calcul prod. 43 min avant, même extrait Copernicus) : médiane 0.10, 90 % ≤ 0.20, max 1.60 sur 664 heures (max : vias mar. 16:00, OCEAN 4.4 / prod 6) |
-| ecart-prod-downwind | ✅ | notes downwind (intermédiaire, de jour) OCEAN vs app en service (calcul prod. 21 min avant) : médiane 0.00, 90 % ≤ 0.00, max 1.40 sur 120 heures |
+| ecart-prod-surf | ✅ | notes surf OCEAN vs app en service (calcul prod. 7 min avant, même extrait Copernicus) : médiane 0.00, 90 % ≤ 0.00, max 0.10 sur 664 heures (max : vias dim. 18:00, OCEAN 7.6 / prod 7.7) |
+| ecart-prod-downwind | ✅ | notes downwind (intermédiaire, de jour) OCEAN vs app en service (calcul prod. 45 min avant) : médiane 0.00, 90 % ≤ 0.00, max 1.40 sur 120 heures |
 | sorties-wing | ✅ | 7 spots notés (wing v2.0.0) ; 5 session(s) 2H en mode Sécu first sur les heures prévues |
 | confidentialite-moteurs | ✅ | aucun relevé Winds-Up ni clé dans les sorties (seuls les facteurs de correction dérivés y figurent, comme dans l’app downwind actuelle) |
 | copernicus-surf | ✅ | Copernicus Med-WAV inclus dans le moteur surf (comme l’app en service) |
@@ -25,10 +25,10 @@ Les moteurs des apps actuelles (copies non modifiées dans `legacy/`) sont alime
 | Quand | Spot | Note moyenne | Pic |
 |---|---|---|---|
 | ven. 13 08:00 → ven. 13 18:00 | Saintes-Maries-de-la-Mer | 8.05 | 9.5 |
-| ven. 13 08:00 → ven. 13 18:00 | Carnon | 8.33 | 9.06 |
-| lun. 16 08:00 → lun. 16 18:00 | Carnon | 7.41 | 8.53 |
+| ven. 13 08:00 → ven. 13 18:00 | Carnon | 8.32 | 9.06 |
 | lun. 16 08:00 → lun. 16 18:00 | Sète (Lazaret / Fontaine) | 7.35 | 8.45 |
-| lun. 16 08:00 → lun. 16 18:00 | Saintes-Maries-de-la-Mer | 7.27 | 8.56 |
+| lun. 16 08:00 → lun. 16 18:00 | Saintes-Maries-de-la-Mer | 7.26 | 8.56 |
+| lun. 16 08:00 → lun. 16 18:00 | La Couronne (Martigues) | 7.28 | 8.22 |
 
 ## Meilleurs créneaux downwind (4 jours)
 
