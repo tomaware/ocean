@@ -342,8 +342,8 @@ const STYLE = `
 .ag .seg div.on{background:var(--bg);color:var(--ink);font-weight:600;box-shadow:0 1px 3px var(--shadow)}
 .ag .settings .sync{display:flex;align-items:center;justify-content:space-between;gap:8px;max-width:none;margin-top:6px}
 .ag .linkbtn{color:var(--acc);font-size:12px;justify-content:flex-start;margin-top:10px}
-.ag .tcol{width:58px;flex:none;display:flex;flex-direction:column;gap:1px;font-size:12px;color:var(--ink3);padding-left:2px}
-.ag .tcol b{font-size:14px;color:var(--ink);font-weight:600} .ag .tcol .dur{font-size:11px}
+.ag .tcol{width:66px;flex:none;display:flex;flex-direction:column;gap:1px;font-size:12px;color:var(--ink3);padding-left:2px}
+.ag .tcol b{font-size:13.5px;color:var(--ink);font-weight:600} .ag .tcol .dur{font-size:11px}
 .ag .calname{display:flex;align-items:center;gap:6px} .ag .calname .cn{overflow:hidden;text-overflow:ellipsis;min-width:0}
 .ag .body{-webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 22px),transparent);mask-image:linear-gradient(to bottom,#000 calc(100% - 22px),transparent);padding-bottom:14px}
 .ag.f-compact .calicon{display:none} .ag.f-compact .round{width:30px;height:30px;border-radius:15px}
