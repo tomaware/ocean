@@ -529,7 +529,7 @@ if ($Capture) {
     $script:reg = [ordered]@{}; foreach ($k in $base.Keys) { $script:reg[$k] = $base[$k] }; foreach ($k in $c.r.Keys) { $script:reg[$k] = $c.r[$k] }
     $el = New-WidgetContent $data $false $null (-not $c.nolink) $now
     $frame = New-Box $(if ($script:isDark) { Get-Brush '#0B1418' } else { Get-Brush '#D9DED9' }) 0 (Th 8 8 8 8); $frame.Child = $el
-    $frame.FontFamily = [System.Windows.Media.FontFamily]::new('Segoe UI Variable Text, Segoe UI')
+    [System.Windows.Documents.TextElement]::SetFontFamily($frame, [System.Windows.Media.FontFamily]::new('Segoe UI Variable Text, Segoe UI'))
     Save-Png $frame (Join-Path $Capture "$($c.n).png")
     Write-Host "[image] $($c.n).png"
   }
