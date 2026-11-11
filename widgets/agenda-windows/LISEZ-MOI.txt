@@ -1,0 +1,101 @@
+WIDGET AGENDA POUR WINDOWS
+==========================
+
+Tes événements Google Agenda des prochains jours, sur le bureau, avec la même
+charte que le widget OCEAN (mêmes cartes, couleurs, thème clair ou sombre).
+Tous tes agendas : perso, BO, collègues, jours fériés… chacun avec sa couleur,
+et tu choisis ceux qui s'affichent.
+
+Une carte, en petit, moyen ou grand :
+  - Petit : la date et les deux prochains événements.
+  - Moyen : la date à gauche, les 4 prochains événements à droite.
+  - Grand : la date, le bandeau des 7 prochains jours (une pastille par agenda
+    occupé ce jour-là), puis les événements jour par jour : heure de début et
+    de fin, titre, agenda ; « en cours » en vert ; les passés barrés.
+
+Rien à télécharger en plus : le widget utilise PowerShell, déjà inclus dans
+Windows 10 et 11.
+
+Contenu du dossier :
+  - installer.cmd        le script d'installation
+  - desinstaller.cmd     pour tout enlever
+  - agenda-widget.ps1    le widget
+  - agenda-google.gs     le script Google qui lit tes agendas (version 2)
+  - LISEZ-MOI.txt        ce fichier
+
+
+INSTALLATION (environ 1 minute)
+-------------------------------
+
+1. CLIC DROIT sur le .zip → « Extraire tout… ».
+
+2. Dans le dossier extrait, double-clique sur « installer.cmd ».
+   Si Windows affiche « Windows a protégé votre ordinateur » : clique sur
+   « Informations complémentaires » puis « Exécuter quand même ».
+
+3. Une fenêtre noire affiche « Terminé ! » : appuie sur une touche.
+
+4. Le widget apparaît en haut à gauche de l'écran principal (le widget
+   OCEAN est en haut à droite). Windows + D pour afficher le bureau.
+   Il se relance tout seul à chaque démarrage de Windows.
+
+Si l'ancien widget Winds-Up (vent + agenda) est installé, le widget reprend
+tout seul le lien de ton script Google : rien à configurer.
+Sinon : clic droit → « Brancher mon Google Agenda… » et colle le lien
+…/exec?key=… (il est gardé chiffré sur ce PC, pour ton compte Windows).
+
+
+UTILISATION
+-----------
+
+  - Glisser : déplace le widget (la position est retenue).
+  - Clic sur un événement ou un jour : ouvre Google Agenda à ce jour.
+  - Bouton « + » (taille grand) : nouvel événement.
+  - Clic droit : tous les réglages
+      Agendas affichés (une case par agenda, le menu reste ouvert pour en
+        cocher plusieurs ; « Comme dans Google Agenda » pour revenir au
+        choix fait dans Google),
+      Taille (petit, moyen, grand),
+      Jours affichés (aujourd'hui, 3, 7 ou 14 jours),
+      Événements passés (barrés et estompés, ou masqués),
+      Thème (comme Windows, clair, sombre), Écran,
+      Remettre en haut à gauche, Actualiser, Quitter.
+  - Mise à jour toutes les 5 minutes.
+  - Hors ligne, le widget garde les derniers événements et l'indique.
+
+
+LE SCRIPT GOOGLE (version 2, recommandée)
+-----------------------------------------
+
+Ton script actuel marche déjà avec ce widget, mais il n'envoie que les
+agendas cochés dans Google Agenda, et seulement 7 jours. La version 2
+(agenda-google.gs) envoie tous tes agendas, cochés ou non, et jusqu'à
+14 jours : tu choisis alors tout depuis le widget.
+
+Pour passer à la version 2, sur script.google.com, avec
+thomas@band-originale.com, dans ton projet « Widget agenda » :
+  1. Note ta ligne « const KEY = '…' » (ta clé secrète).
+  2. Sélectionne tout (Ctrl + A), colle le contenu de agenda-google.gs,
+     puis remets TA ligne « const KEY = '…' » à la place de celle
+     d'exemple. Ctrl + S.
+  3. Choisis la fonction « test » → Exécuter : le journal liste tes agendas.
+  4. Déployer → Gérer les déploiements → crayon → Version : « Nouvelle
+     version » → Déployer. Le lien ne change pas.
+
+
+DÉSINSTALLATION
+---------------
+
+Double-clic sur « desinstaller.cmd » : le widget est arrêté, retiré du
+démarrage et supprimé (réglages et lien compris).
+
+
+EN CAS DE PROBLÈME
+------------------
+
+- Le widget n'apparaît pas : Windows + D. Sinon, relance « installer.cmd ».
+- « Lien refusé par le script » : la clé du lien ne correspond pas à la
+  ligne « const KEY » du script Google.
+- « page au lieu des événements » : le déploiement n'est pas réglé sur
+  « Exécuter en tant que : Moi » et « Qui a accès : Tout le monde ».
+- Les éventuelles erreurs sont notées dans %LOCALAPPDATA%\OCEAN-Agenda\erreur.log
