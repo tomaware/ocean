@@ -115,9 +115,9 @@ function Header({ m, dispatch, now, link }) {
   return <div className="hd">
     <span className="ink3 calicon"><Icon n="cal" s={22} /></span>
     <b className="num">{m.header.num}</b>
-    <div className="hdt"><div className="month">{m.header.month}</div><div className="sub">{m.header.sub}</div></div>
+    <div className="hdt"><div className="month">{m.header.month}</div><div className="sub">{m.header.sub}{m.header.isToday ? null
+      : <span data-btn="1" className="tlink" title="Revenir à aujourd'hui" onClick={stop(() => dispatch({ type: "NAV", sel: null }))}> · ↩ aujourd'hui</span>}</div></div>
     <div className="grow" />
-    {!m.week.isCurrent || !m.header.isToday ? <Btn cls="pill" title="Revenir à aujourd'hui" onClick={() => dispatch({ type: "NAV", sel: null })}>Aujourd'hui</Btn> : null}
     <Btn cls="round" title="Réglages" onClick={() => dispatch({ type: "SETTINGS", open: true })}><Icon n="gear" s={17} /></Btn>
     <Btn cls="round" title="Nouvel événement" onClick={() => openUrl(newEventUrl(m, now))}><Icon n="plus" s={18} /></Btn>
   </div>;
@@ -342,6 +342,7 @@ const STYLE = `
 .ag .seg div.on{background:var(--bg);color:var(--ink);font-weight:600;box-shadow:0 1px 3px var(--shadow)}
 .ag .settings .sync{display:flex;align-items:center;justify-content:space-between;gap:8px;max-width:none;margin-top:6px}
 .ag .linkbtn{color:var(--acc);font-size:12px;justify-content:flex-start;margin-top:10px}
+.ag .tlink{color:var(--acc);cursor:pointer;font-weight:600} .ag .tlink:hover{text-decoration:underline}
 .ag .tcol{width:66px;flex:none;display:flex;flex-direction:column;gap:1px;font-size:12px;color:var(--ink3);padding-left:2px}
 .ag .tcol b{font-size:13.5px;color:var(--ink);font-weight:600} .ag .tcol .dur{font-size:11px}
 .ag .calname{display:flex;align-items:center;gap:6px} .ag .calname .cn{overflow:hidden;text-overflow:ellipsis;min-width:0}
