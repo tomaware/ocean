@@ -194,3 +194,6 @@ Les apps actuelles restent en ligne jusqu'à ce que leur remplaçante soit véri
 - Réglages au clic droit (spot, mode, tailles, spots des créneaux, disposition, thème, écran), position par glisser. Clic : fiche du spot dans OCEAN (au bon jour pour un créneau).
 - Vent mesuré : balise Winds-Up via la super prévision (mode perso, lien chiffré DPAPI pour le compte Windows, ou repris de l'ancien widget) ; sinon mesure publique publiée par OCEAN (Le Jaï) ; sinon « prévu ». Aucune lecture directe de Winds-Up.
 - Vérifié sur un vrai Windows (GitHub Actions `windows-latest`, Windows PowerShell 5.1, fuseau de Paris) : tests, images de chaque carte (branche `captures`), installation / lancement / désinstallation. L'ancien widget Winds-Up (avec l'agenda) reste en service.
+
+### D-28 (11/11/2026, Tom) — affichage 7 h → 21 h partout
+- « Personne n'ira naviguer la nuit » : graphique de la note (15 barres au lieu de 24), tableaux heure par heure (WIND, VAGUE, HOULE) et bandes horaires des widgets iPhone et Windows affichent 7 h → 21 h. Affichage seul : notes, créneaux et heures de jour inchangés.

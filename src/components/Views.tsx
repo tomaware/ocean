@@ -68,7 +68,7 @@ export function Arrow({ from, size = 12 }: { from: number | null; size?: number 
 // ------------------------------------------------------------------ sélection des heures
 export type Pick = { i: number; t: number };
 export function pickHours(s: Series, opts: { day?: number; from?: number; days?: number; step?: number; hours?: [number, number] }): Pick[] {
-  const [h0, h1] = opts.hours ?? [7, 20];
+  const [h0, h1] = opts.hours ?? [7, 21];   // 7 h → 21 h partout (Tom, 11/11)
   const step = opts.step ?? 1;
   const keys = opts.day !== undefined ? [dayKey(opts.day)] : null;
   const end = opts.from !== undefined && opts.days ? opts.from + opts.days * 86400e3 : Infinity;

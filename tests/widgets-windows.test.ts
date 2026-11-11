@@ -41,7 +41,7 @@ test('widget Windows : carte Vent par défaut (La Grande-Motte), prévision de l
   assert.deepEqual(m.vent.days.map((d: any) => d.label), ['Auj.', 'Jeu.', 'Ven.', 'Sam.']);
   assert.deepEqual(m.vent.days.map((d: any) => d.cr), ['13–16 h', '—', '9–17 h', '—']);
   assert.equal(m.vent.days[2].stars, 2);                                   // vendredi : 22 nd à midi → note 7,5
-  assert.equal(m.vent.days[0].strip.split(',').length, 14);                 // 7 h → 20 h
+  assert.equal(m.vent.days[0].strip.split(',').length, 15);                 // 7 h → 21 h
   assert.deepEqual(m.vent.next.slice(0, 3), [10, 11, 12]);
 });
 

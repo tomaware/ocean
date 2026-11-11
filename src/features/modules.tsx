@@ -33,7 +33,7 @@ export const chipColors = (sc: number | null) =>
 export function DayChart({ d, spot, dayT, level, window, title }: { d: AllData; spot: PublicSpot; dayT: number; level: Level; window?: [number, number]; title?: string }) {
   const s = useMemo(() => seriesFor(d, spot, spotDiscipline(spot), level), [d, spot, level]);
   if (!s) return null;
-  // WIND, VAGUE, HOULE : le même tableau, toutes les heures de 7 h à 20 h (harmonie demandée par Tom, 10/11)
+  // WIND, VAGUE, HOULE : le même tableau, toutes les heures de 7 h à 21 h (harmonie demandée par Tom, 10/11 ; 21 h ajouté le 11/11)
   const picks = pickHours(s, { day: dayT });
   return (
     <div class="daychart">

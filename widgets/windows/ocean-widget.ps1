@@ -215,7 +215,7 @@ function Get-VentModel($data, $spot, [string]$level, $live, [double]$now) {
       if ($null -ne $r.kn -and (-not $max -or $r.kn -gt $max.kn)) { $max = $r }
     }
     $ss = @($sess | Where-Object { (Get-DayKey $_.s) -eq $d })
-    $strip = @(foreach ($hr in 7..20) {
+    $strip = @(foreach ($hr in 7..21) {
       $r = $rr | Where-Object { (Get-Hour $_.t) -eq $hr } | Select-Object -First 1
       if ($r) { Get-Stars $r.score } else { -1 }
     })
@@ -463,7 +463,7 @@ function New-VentCard($m, [string]$size, [double]$now) {
     $cn = Add $line (New-CellNum $d.kn 30 18 12); $cn.Margin = Th 6 0 6 0
     $cr = Add $line (T $d.cr 10 (C 'INK2') 'SemiBold'); $cr.VerticalAlignment = 'Center'
   }
-  [void](Add $st (T '7 h → 20 h · vert ★ · orange ★★ · violet ★★★' 9 (C 'INK3')))
+  [void](Add $st (T '7 h → 21 h · vert ★ · orange ★★ · violet ★★★' 9 (C 'INK3')))
   $root
 }
 

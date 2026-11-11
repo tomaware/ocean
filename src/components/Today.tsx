@@ -48,7 +48,9 @@ export function DayTabs({ s, days, value, now, onChange }: { s: Series; days: nu
   );
 }
 
-/** 24 barres (0 h → 23 h) : couleur = note, nuit grisée, trait « Maintenant » si c'est aujourd'hui. */
+/** Heures affichées : 7 h → 21 h (personne ne navigue la nuit ; demande de Tom, 11/11). */
+export const H0 = 7, H1 = 21, NH = H1 - H0 + 1;
+/** 15 barres (7 h → 21 h) : couleur = note, nuit grisée, trait « Maintenant » si c'est aujourd'hui. */
 /** Largeur réelle du conteneur : le graphique se dessine en pixels réels (textes lisibles du téléphone au grand écran). */
 function useWidth(initial: number): [Ref<HTMLDivElement>, number] {
   const ref = useRef<HTMLDivElement>(null);
@@ -67,22 +69,25 @@ export type PickProps = { picked?: number | null; onPick?: (i: number | null) =>
 
 export function ScoreBars({ s, dayT, now, picked = null, onPick, level }: { s: Series; dayT: number; now: number } & PickProps) {
   const [ref, width] = useWidth(340);
-  const W = Math.max(240, width), H = W > 600 ? 130 : 104, top = 24, P = H - top, x0 = 20, bw = (W - x0) / 24;
+  const W = Math.max(240, width), H = W > 600 ? 130 : 104, top = 24, P = H - top, x0 = 20, bw = (W - x0) / NH;
+  const X = (h: number) => x0 + (h - H0) * bw;          // bord gauche de la colonne de l'heure h
   const y = (v: number) => H - (v / 10) * P;
   const byH = new Map(dayIdx(s, dayT).map((i) => [hourOf(s.times[i]), i]));
   const today = dayKey(dayT) === dayKey(now);
-  const nowH = today ? hourOf(now) + new Date(now).getMinutes() / 60 : null;
+  const nowH0 = today ? hourOf(now) + new Date(now).getMinutes() / 60 : null;
+  const nowH = nowH0 !== null && nowH0 >= H0 && nowH0 < H1 + 1 ? nowH0 : null;
   // heures sans prévision avant le lever / après le coucher (déduits des heures publiées) : nuit
   const dayHours = [...byH.entries()].filter(([, i]) => s.day[i]).map(([h]) => h);
   const isNight = (h: number) => { const i = byH.get(h); return i !== undefined ? !s.day[i] : dayHours.length > 0 && (h < Math.min(...dayHours) || h > Math.max(...dayHours)); };
-  const best = [...byH.values()].filter((i) => s.day[i]).sort((a, b) => (s.score[b] ?? -1) - (s.score[a] ?? -1))[0];
+  const best = [...byH.entries()].filter(([h, i]) => s.day[i] && h >= H0 && h <= H1).map(([, i]) => i).sort((a, b) => (s.score[b] ?? -1) - (s.score[a] ?? -1))[0];
   const label = `Note heure par heure, ${today ? 'aujourd’hui' : dayShort(dayT)}${best !== undefined ? ` ; meilleure à ${hourOf(s.times[best])} h (${n1(s.score[best])}/10)` : ''}. Survole ou touche une colonne pour le détail.`;
   const wide = bw >= 22;
-  const pickedH = picked !== null && dayKey(s.times[picked]) === dayKey(dayT) ? hourOf(s.times[picked]) : null;
+  const pickedH0 = picked !== null && dayKey(s.times[picked]) === dayKey(dayT) ? hourOf(s.times[picked]) : null;
+  const pickedH = pickedH0 !== null && pickedH0 >= H0 && pickedH0 <= H1 ? pickedH0 : null;
   const at = (e: PointerEvent) => {
     const r = (e.currentTarget as SVGElement).getBoundingClientRect();
-    const h = Math.floor(((e.clientX - r.left) * (W / r.width) - x0) / bw);
-    return h >= 0 && h < 24 ? byH.get(h) ?? null : null;
+    const h = H0 + Math.floor(((e.clientX - r.left) * (W / r.width) - x0) / bw);
+    return h >= H0 && h <= H1 ? byH.get(h) ?? null : null;
   };
   return (
     <div class="scorebars-w" ref={ref}>
@@ -90,13 +95,13 @@ export function ScoreBars({ s, dayT, now, picked = null, onPick, level }: { s: S
       onPointerMove={onPick ? (e) => { if (e.pointerType === 'mouse') { const i = at(e as unknown as PointerEvent); if (i !== null) onPick(i); } } : undefined}
       onPointerDown={onPick ? (e) => { const i = at(e as unknown as PointerEvent); if (i !== null) onPick(i === picked && (e as PointerEvent).pointerType !== 'mouse' ? null : i); } : undefined}
       onPointerLeave={onPick ? (e) => { if ((e as PointerEvent).pointerType === 'mouse') onPick(null); } : undefined}>
-      {Array.from({ length: 24 }, (_, h) => (isNight(h) ? <rect key={`z${h}`} class="z" x={x0 + h * bw} y={top} width={bw + 0.5} height={P} /> : null))}
+      {Array.from({ length: NH }, (_, j) => H0 + j).map((h) => (isNight(h) ? <rect key={`z${h}`} class="z" x={X(h)} y={top} width={bw + 0.5} height={P} /> : null))}
       {/* quadrillage : 0, 2,5, 7,5, 10 en fin ; 5 = seuil d'une session 2H, en gras */}
       {[0, 2.5, 7.5, 10].map((v) => <line key={v} class="grid" x1={x0} x2={W} y1={y(v)} y2={y(v)} />)}
-      {[3, 6, 9, 12, 15, 18, 21].map((h) => <line key={`v${h}`} class="grid" x1={x0 + h * bw} x2={x0 + h * bw} y1={top} y2={H} />)}
+      {[9, 12, 15, 18, 21].map((h) => <line key={`v${h}`} class="grid" x1={X(h)} x2={X(h)} y1={top} y2={H} />)}
       <line class="grid5" x1={x0} x2={W} y1={y(5)} y2={y(5)} />
-      {pickedH !== null && <rect class="pk" x={x0 + pickedH * bw} y={top - 4} width={bw} height={P + 4} rx={3} />}
-      {Array.from({ length: 24 }, (_, h) => {
+      {pickedH !== null && <rect class="pk" x={X(pickedH)} y={top - 4} width={bw} height={P + 4} rx={3} />}
+      {Array.from({ length: NH }, (_, j) => H0 + j).map((h) => {
         const i = byH.get(h);
         const night = isNight(h), sc = i === undefined ? null : s.score[i];
         const v = i === undefined || night || sc === null ? 0.4 : Math.max(0.4, sc);
@@ -104,16 +109,16 @@ export function ScoreBars({ s, dayT, now, picked = null, onPick, level }: { s: S
         const cls = night ? 'b-night' : i === undefined || sc === null ? 'b-none' : sc >= 8.5 ? 'b-top' : sc >= 7 ? 'b-good' : sc >= 5 ? 'b-mid' : 'b-bad';
         return (
           <g key={h}>
-            <rect class={cls} x={x0 + h * bw + 1.5} y={y(v)} width={bw - 3} height={H - y(v)} rx={2} />
-            {!night && sc !== null && <text class="val" x={x0 + h * bw + bw / 2} y={y(v) - 3} text-anchor="middle">{wide ? sc1(sc) : n0(sc)}</text>}
+            <rect class={cls} x={X(h) + 1.5} y={y(v)} width={bw - 3} height={H - y(v)} rx={2} />
+            {!night && sc !== null && <text class="val" x={X(h) + bw / 2} y={y(v) - 3} text-anchor="middle">{wide ? sc1(sc) : n0(sc)}</text>}
           </g>
         );
       })}
       <text x={0} y={y(0) + 4}>0</text><text class="lbl5" x={0} y={y(5) + 4}>5</text><text x={0} y={y(10) + 4}>10</text>
-      {nowH !== null && <><line class="now" x1={x0 + nowH * bw} x2={x0 + nowH * bw} y1={top - 6} y2={H} /><text class="now-l" x={Math.min(W - 30, Math.max(x0 + 26, x0 + nowH * bw))} y={10} text-anchor="middle">Maintenant</text></>}
-      {[0, 3, 6, 9, 12, 15, 18, 21].map((h) => <text key={h} x={x0 + h * bw + bw / 2} y={H + 15} text-anchor="middle">{h} h</text>)}
+      {nowH !== null && <><line class="now" x1={X(nowH)} x2={X(nowH)} y1={top - 6} y2={H} /><text class="now-l" x={Math.min(W - 30, Math.max(x0 + 26, X(nowH)))} y={10} text-anchor="middle">Maintenant</text></>}
+      {[7, 9, 12, 15, 18, 21].map((h) => <text key={h} x={X(h) + bw / 2} y={H + 15} text-anchor="middle">{h} h</text>)}
     </svg>
-    {pickedH !== null && picked !== null && <HourTip s={s} i={picked} level={level} left={Math.min(Math.max(0, x0 + pickedH * bw + bw / 2 - 130), W - 260)} top={H + 24} />}
+    {pickedH !== null && picked !== null && <HourTip s={s} i={picked} level={level} left={Math.min(Math.max(0, X(pickedH) + bw / 2 - 130), W - 260)} top={H + 24} />}
     </div>
   );
 }

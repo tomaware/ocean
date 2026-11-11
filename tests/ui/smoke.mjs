@@ -54,9 +54,9 @@ for (const [name, opt] of [['mobile', { ...devices['iPhone 13'], locale: 'fr-FR'
       if (r === 'spot/carnon' && ((await p.locator('table.wg .wg-bars td').count()) < 10 || (await p.locator('table.wg th', { hasText: /^Rafales$/ }).count()) || !(await p.locator('table.wg th', { hasText: /^Vent nd$/ }).count()))) errs.push(`${name} #/${r} : VAGUE = même tableau que WIND : vagues + vent et direction, sans rafales ni pluie`);
       if (r === 'spot/port-camargue' && (await p.getByRole('rowheader', { name: 'Plage' }).count() + await p.locator('table.wg th', { hasText: /^Plage$/ }).count())) errs.push(`${name} #/${r} : ligne « Plage » encore là`);
       if (r.startsWith('spot/') && !(await p.locator('.stars').count())) errs.push(`${name} #/${r} : étoiles absentes`);
-      // fiche spot au style validé le 10/11 : note du jour (24 barres), 2 cartes de conditions, boussole, critères
+      // fiche spot au style validé le 10/11 : note du jour (15 barres, 7 h → 21 h), 2 cartes de conditions, boussole, critères
       if (r.startsWith('spot/')) {
-        if ((await p.locator('.notecard .scorebars rect[class^="b-"]').count()) !== 24) errs.push(`${name} #/${r} : barres horaires de la note ≠ 24`);
+        if ((await p.locator('.notecard .scorebars rect[class^="b-"]').count()) !== 15) errs.push(`${name} #/${r} : barres horaires de la note ≠ 15 (7 h → 21 h)`);
         if ((await p.locator('.today .cond').count()) !== 2) errs.push(`${name} #/${r} : cartes de conditions ≠ 2`);
         if (!(await p.locator('.daytabs button').count())) errs.push(`${name} #/${r} : choix du jour absent`);
         if (!(await p.locator('.mapbox .maprep').count())) errs.push(`${name} #/${r} : repère de la carte absent`);

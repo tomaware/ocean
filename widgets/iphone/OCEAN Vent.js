@@ -136,7 +136,7 @@ function model(data, spot, level, live, now) {
     const max = rr.reduce((b, r) => ((r.kn ?? -1) > (b ? b.kn ?? -1 : -1) ? r : b), null);
     const ss = (spot.sessions[level] || []).filter((s) => dayKey(s.s) === d);
     const strip = [];
-    for (let h = 7; h <= 20; h++) { const r = rr.find((x) => new Date(x.t).getHours() === h); strip.push(r ? starsOf(r.score) : -1); }
+    for (let h = 7; h <= 21; h++) { const r = rr.find((x) => new Date(x.t).getHours() === h); strip.push(r ? starsOf(r.score) : -1); }
     return { key: d, label: dayLabel(d, now), stars: starsOf(best ? best.score : null), kn: max ? max.kn : null, dir: max ? max.dir : null,
       cr: ss.length ? `${new Date(ss[0].s).getHours()}–${new Date(ss[0].e).getHours()} h` : "—", strip };
   });
@@ -219,7 +219,7 @@ function large(w, data, spot, m, now) {
     const cr = line.addStack(); cr.size = new Size(48, 0); text(cr, d.cr, F.s(10), INK2, { scale: 0.7 });
     w.addSpacer(4);
   }
-  text(w, "7 h → 20 h · vert ★ · orange ★★ · violet ★★★", F.r(9), INK3);
+  text(w, "7 h → 21 h · vert ★ · orange ★★ · violet ★★★", F.r(9), INK3);
 }
 function lock(w, family, spot, m) {
   const k = m.now ? Math.round(m.now.kn) : "–", dir = m.now ? m.now.dirTxt || compass(m.now.dir) : "";
