@@ -86,6 +86,15 @@ for (const [name, opt] of [['mobile', { ...devices['iPhone 13'], locale: 'fr-FR'
       if (tabs.map((x) => x.trim()).join(',') !== 'WIND,VAGUE,HOULE') errs.push(`${name} #/${r} : onglets ${tabs.join(',')}`);
     }
   }
+  // menu (téléphone) ou menu de gauche (ordinateur) : Widgets et Avis accessibles depuis n'importe quel écran
+  for (const [link, head] of [[/widgets/i, 'Installer les widgets'], [/avis/i, 'Avis et commentaires']]) {
+    await p.goto(`${base}/#/wind/meilleure`); await p.reload();
+    const mobile = await p.locator('.menubtn').isVisible();
+    if (mobile) await p.locator('.menubtn').click();
+    await p.locator(mobile ? '.menu' : '.side').getByRole('link', { name: link }).click();
+    try { await p.getByRole('heading', { name: head }).first().waitFor({ timeout: 5000 }); } catch { errs.push(`${name} : ${head} inaccessible depuis le menu`); }
+    if (await p.locator('.menu').count()) errs.push(`${name} : menu resté ouvert après navigation`);
+  }
   // retour arrière : grille → case → fiche spot → « Retour » ramène à la grille avec la même case ouverte
   await p.goto(`${base}/#/wind/prevision`); await p.reload();
   await p.locator('table.grid5 .cell').nth(3).click();

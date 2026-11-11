@@ -297,3 +297,13 @@ table.wg col.pk { background: color-mix(in srgb, var(--c-accent) 16%, transparen
 .foot { display: flex; justify-content: center; gap: var(--s-2); flex-wrap: wrap; margin-top: var(--s-6); padding-top: var(--s-4); border-top: 1px solid var(--c-line); }
 .foot a { display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; border-radius: var(--r-pill); color: var(--c-ink-2); text-decoration: none; font-size: var(--fs-sm); font-weight: 600; background: var(--c-surface-2); }
 @media (min-width: 900px) { .foot { display: none; } }
+/* téléphone et tablette : menu (Profil, Widgets, Avis) à la place de l'icône Profil ; ordinateur : menu de gauche */
+.menuwrap { position: relative; }
+.menubtn { cursor: pointer; background: transparent; color: var(--c-ink); }
+.menubtn.open { background: var(--c-chip); color: var(--c-chip-ink); }
+.menu { position: absolute; right: 0; top: calc(100% + 8px); z-index: 1100; min-width: 240px; display: grid; gap: 2px; padding: var(--s-2);
+  background: var(--c-surface); border: 1px solid var(--c-line); border-radius: var(--r-lg); box-shadow: 0 10px 30px rgba(0, 0, 0, .18); }
+.menu a { display: flex; align-items: center; gap: var(--s-3); padding: 12px 12px; border-radius: var(--r-md); color: var(--c-ink); text-decoration: none; font-weight: 600; }
+.menu a:hover, .menu a[aria-current="page"] { background: var(--c-chip); color: var(--c-chip-ink); }
+.userlink { display: none; }
+@media (min-width: 900px) { .menuwrap { display: none; } .userlink { display: grid; } }

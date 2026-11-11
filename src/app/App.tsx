@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'preact/hooks';
-import { LayoutGrid, MessageSquare, Moon, ShieldCheck, Sun, User } from 'lucide-preact';
+import { LayoutGrid, Menu, MessageSquare, Moon, ShieldCheck, Sun, User, X } from 'lucide-preact';
 import { spotDiscipline, useData } from '../services/data';
 import { MODULES, moduleOf, Profile, Reliability, SpotPage } from '../features/pages';
 import { Module, subsFor, type Sub } from '../features/modules';
@@ -27,6 +27,16 @@ export function App() {
   const [route, setRoute] = useState(parse());
   const [now, setNow] = useState(Date.now());
   const { data, error } = useData();
+  // menu du téléphone (Profil, Widgets, Avis) : se ferme au changement d'écran, au toucher ailleurs ou avec Échap
+  const [menu, setMenu] = useState(false);
+  useEffect(() => { setMenu(false); }, [location.hash]);
+  useEffect(() => {
+    if (!menu) return;
+    const close = () => setMenu(false);
+    const esc = (e: KeyboardEvent) => { if (e.key === 'Escape') close(); };
+    document.addEventListener('click', close); document.addEventListener('keydown', esc);
+    return () => { document.removeEventListener('click', close); document.removeEventListener('keydown', esc); };
+  }, [menu]);
   useEffect(() => {
     const off = installNav(() => setRoute(parse()));
     const iv = setInterval(() => setNow(Date.now()), 60e3);
@@ -62,7 +72,19 @@ export function App() {
         <div class="row" style={{ gap: '6px' }}>
         <button type="button" class="me theme" aria-label={dark ? 'Passer en mode clair' : 'Passer en mode sombre'} title={dark ? 'Mode clair' : 'Mode sombre'}
           onClick={() => setPrefs((p) => ({ ...p, theme: dark ? 'light' : 'dark' }))}>{dark ? <Sun size={19} /> : <Moon size={19} />}</button>
-        <a class="me" href="#/profil" aria-label="Profil et réglages" aria-current={['profil', 'fiabilite', 'avis', 'widgets'].includes(tab) ? 'page' : undefined}><User size={20} /></a>
+        <div class="menuwrap">
+          <button type="button" class={`me menubtn${menu ? ' open' : ''}`} aria-expanded={menu} aria-controls="menu" aria-label="Menu : profil, widgets, avis"
+            onClick={(e) => { e.stopPropagation(); setMenu(!menu); }}>{menu ? <X size={20} /> : <Menu size={20} />}</button>
+          {menu && (
+            <nav id="menu" class="menu" aria-label="Menu" onClick={(e) => e.stopPropagation()}>
+              <a href="#/profil" aria-current={route.name === 'profil' ? 'page' : undefined}><User size={18} /> Profil et réglages</a>
+              <a href="#/widgets" aria-current={route.name === 'widgets' ? 'page' : undefined}><LayoutGrid size={18} /> Installer les widgets</a>
+              <a href="#/avis" aria-current={route.name === 'avis' ? 'page' : undefined}><MessageSquare size={18} /> Donner un avis</a>
+              {prefs.perso.enabled && <a href="#/fiabilite" aria-current={route.name === 'fiabilite' ? 'page' : undefined}><ShieldCheck size={18} /> Fiabilité</a>}
+            </nav>
+          )}
+        </div>
+        <a class="me userlink" href="#/profil" aria-label="Profil et réglages" aria-current={['profil', 'fiabilite', 'avis', 'widgets'].includes(tab) ? 'page' : undefined}><User size={20} /></a>
         </div>
       </header>
       <div class="body">
