@@ -182,3 +182,8 @@ Les apps actuelles restent en ligne jusqu'à ce que leur remplaçante soit véri
 - Deux widgets iPhone (Scriptable), toutes les tailles laissées au choix : « OCEAN Vent » (un spot, La Grande-Motte par défaut, changeable dans l'app Scriptable ou par Parameter) et « OCEAN Créneaux » (remplace « Créneau Vent »). Données : `widget-wind.json` (vent corrigé, notes, créneaux, heures par étoiles), publié chaque heure ; balise en direct via le lien de la super prévision gardé dans le trousseau de l'iPhone. Mac et PC ensuite ; VAGUE ensuite.
 - Classement des créneaux du widget : étoiles, puis durée, puis note max.
 
+
+### D-26 (11/11/2026, Tom) — onglets « Avis » et « Widgets »
+- **Avis** (`#/avis`) : type (Avis, Idée, Bug, Prévision ratée), message, prénom et e-mail facultatifs, champ piège anti-robot. Joint : l'écran d'où l'on vient, le type d'appareil (sans identifiant) et l'heure des données. Envoi vers un script Google de Tom (`retours/ocean-retours.gs`, application Web « exécuter en tant que moi ») qui transfère sur la boîte du compte qui le déploie : l'adresse de Tom n'est jamais dans le site ni dans le dépôt. Plafond 40 messages par jour. Tant que l'adresse /exec n'est pas renseignée (`src/services/feedback.ts`), le formulaire le dit et n'envoie rien.
+- **Widgets** (`#/widgets`) : tutoriel iPhone (Scriptable, scripts publiés avec le site dans `widgets/` pour les copier ou télécharger, réglages Parameter), Mac (widgets de l'iPhone sur le bureau, macOS 14 + iOS 17 ; OCEAN dans le Dock via Safari), Windows (OCEAN installé comme application via Edge ou Chrome). Widgets autonomes Mac et Windows : en préparation, annoncés comme tels.
+- Accès : menu de gauche sur ordinateur ; en bas de chaque écran et dans Profil sur mobile.

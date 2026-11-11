@@ -3,6 +3,7 @@ const scrolls = new Map<string, number>();
 let depth = 0;            // nombre d'écrans ouverts dans l'app depuis l'arrivée (pour savoir si « Retour » peut reculer)
 let byLink = false;       // le changement d'adresse vient d'un clic sur un lien (sinon : bouton retour / avant)
 let current = location.hash;
+let previous = '';      // écran ouvert avant celui-ci (contexte joint à un avis)
 
 export function installNav(onChange: () => void): () => void {
   const click = (e: MouseEvent) => {
@@ -15,6 +16,7 @@ export function installNav(onChange: () => void): () => void {
     if (byLink) { depth++; onChange(); requestAnimationFrame(() => window.scrollTo(0, 0)); }
     else { depth = Math.max(0, depth - 1); onChange(); const y = scrolls.get(next) ?? 0; requestAnimationFrame(() => requestAnimationFrame(() => window.scrollTo(0, y))); }
     byLink = false;
+    previous = current;
     current = next;
     rememberSub(next);
   };
@@ -38,3 +40,6 @@ function rememberSub(hash: string): void {
 export function lastSub(slug: string): string | null {
   try { return sessionStorage.getItem(KEY + slug); } catch { return null; }
 }
+
+/** Écran ouvert juste avant (ex. la fiche d'où l'on vient avant d'écrire un avis). */
+export const previousHash = (): string => previous;

@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'preact/hooks';
-import { Moon, ShieldCheck, Sun, User } from 'lucide-preact';
+import { LayoutGrid, MessageSquare, Moon, ShieldCheck, Sun, User } from 'lucide-preact';
 import { spotDiscipline, useData } from '../services/data';
 import { MODULES, moduleOf, Profile, Reliability, SpotPage } from '../features/pages';
 import { Module, subsFor, type Sub } from '../features/modules';
+import { FeedbackPage, WidgetsPage } from '../features/extras';
 import { setPrefs, usePrefs } from '../services/prefs';
 import { installNav, lastSub } from '../services/nav';
+
+const TITLES: Record<string, string> = { fiabilite: 'Fiabilité', avis: 'Avis', widgets: 'Widgets', profil: 'Profil' };
 
 type Route = { name: string; id?: string; query: URLSearchParams };
 function parse(): Route {
@@ -32,7 +35,7 @@ export function App() {
   const spot = route.name === 'spot' && data ? data.spots.find((s) => s.id === route.id) : null;
   const tab = spot ? moduleOf(spotDiscipline(spot)).slug : route.name;
   const mod = MODULES.find((m) => m.slug === tab);
-  useEffect(() => { document.title = `${spot ? spot.name : mod ? mod.tab : route.name === 'fiabilite' ? 'Fiabilité' : 'Profil'} · OCEAN`; }, [tab, spot?.id]);
+  useEffect(() => { document.title = `${spot ? spot.name : mod ? mod.tab : TITLES[route.name] ?? 'Profil'} · OCEAN`; }, [tab, spot?.id]);
 
   let page;
   if (error) page = <div class="notice warn">Données indisponibles ({error}). Réessaie dans quelques minutes.</div>;
@@ -40,6 +43,8 @@ export function App() {
   else if (route.name === 'spot' && route.id) page = <SpotPage d={data} id={route.id} now={now} day={route.query.get('day')} />;
   else if (route.name === 'profil') page = <Profile d={data} />;
   else if (route.name === 'fiabilite') page = <Reliability d={data} now={now} />;
+  else if (route.name === 'avis') page = <FeedbackPage d={data} now={now} />;
+  else if (route.name === 'widgets') page = <WidgetsPage />;
   else {
     const m = mod ?? MODULES[0];
     const sub: Sub = (subsFor(m.disc).find((x) => x.id === (route.id ?? lastSub(m.slug)))?.id ?? 'meilleure') as Sub;
@@ -57,7 +62,7 @@ export function App() {
         <div class="row" style={{ gap: '6px' }}>
         <button type="button" class="me theme" aria-label={dark ? 'Passer en mode clair' : 'Passer en mode sombre'} title={dark ? 'Mode clair' : 'Mode sombre'}
           onClick={() => setPrefs((p) => ({ ...p, theme: dark ? 'light' : 'dark' }))}>{dark ? <Sun size={19} /> : <Moon size={19} />}</button>
-        <a class="me" href="#/profil" aria-label="Profil et réglages" aria-current={tab === 'profil' || tab === 'fiabilite' ? 'page' : undefined}><User size={20} /></a>
+        <a class="me" href="#/profil" aria-label="Profil et réglages" aria-current={['profil', 'fiabilite', 'avis', 'widgets'].includes(tab) ? 'page' : undefined}><User size={20} /></a>
         </div>
       </header>
       <div class="body">
@@ -69,8 +74,16 @@ export function App() {
           {mod && <hr />}
           <a href="#/profil" aria-current={route.name === 'profil' ? 'page' : undefined}><User size={16} /> Profil</a>
           {prefs.perso.enabled && <a href="#/fiabilite" aria-current={route.name === 'fiabilite' ? 'page' : undefined}><ShieldCheck size={16} /> Fiabilité</a>}
+          <a href="#/widgets" aria-current={route.name === 'widgets' ? 'page' : undefined}><LayoutGrid size={16} /> Widgets</a>
+          <a href="#/avis" aria-current={route.name === 'avis' ? 'page' : undefined}><MessageSquare size={16} /> Avis</a>
         </aside>
-        <main class="main" id="contenu">{page}</main>
+        <main class="main" id="contenu">{page}
+          <nav class="foot" aria-label="Plus">
+            <a href="#/widgets"><LayoutGrid size={15} /> Widgets</a>
+            <a href="#/avis"><MessageSquare size={15} /> Avis</a>
+            <a href="#/profil"><User size={15} /> Profil</a>
+          </nav>
+        </main>
       </div>
     </div>
   );

@@ -274,3 +274,26 @@ table.wg col.pk { background: color-mix(in srgb, var(--c-accent) 16%, transparen
 .grid5 .cell.s { color: var(--c-ink); }
 .grid5 .cell-l { display: inline-flex; align-items: center; gap: 4px; padding: 1px 8px; border-radius: var(--r-pill); background: color-mix(in srgb, var(--c-surface) 82%, transparent); font-weight: 800; }
 .grid5 .cell-l .stars { font-size: 11px; }
+
+/* Avis et Widgets (onglets du menu) */
+.field textarea { border: 1px solid var(--c-line); background: var(--c-surface); color: var(--c-ink); border-radius: var(--r-md); padding: 8px 10px; width: 100%; font: inherit; resize: vertical; min-height: 140px; }
+.field textarea[aria-invalid="true"] { border-color: var(--c-warn); }
+.field input { color: var(--c-ink); }
+.fb-who { display: grid; gap: var(--s-3); grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); }
+.hp { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
+.btn:disabled { opacity: .55; cursor: not-allowed; }
+.btn { color: var(--c-ink); text-decoration: none; }
+.btn.primary { color: var(--c-bg); }   /* lisible dans les deux thèmes (le sombre a un accent clair) */
+.steps { margin: 0; padding-left: 1.4em; display: grid; gap: var(--s-3); font-size: var(--fs-sm); line-height: 1.5; }
+.steps li::marker { font-weight: 800; color: var(--c-accent); }
+.wgrid { display: grid; gap: var(--s-3); grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+.wbtns { display: grid; gap: var(--s-2); margin-top: var(--s-2); }
+.params { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
+.params th, .params td { text-align: left; padding: 6px 8px 6px 0; border-bottom: 1px solid var(--c-line); vertical-align: top; }
+.params th { font-size: var(--fs-xs); color: var(--c-ink-3); font-weight: 700; }
+.params code { font-size: .92em; background: var(--c-surface-2); padding: 1px 5px; border-radius: 4px; white-space: nowrap; }
+@media (max-width: 560px) { .params th:first-child, .params td:first-child { display: none; } .params code { white-space: normal; } }
+/* mobile : Widgets / Avis / Profil en bas de chaque écran (sur ordinateur, ils sont dans le menu de gauche) */
+.foot { display: flex; justify-content: center; gap: var(--s-2); flex-wrap: wrap; margin-top: var(--s-6); padding-top: var(--s-4); border-top: 1px solid var(--c-line); }
+.foot a { display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; border-radius: var(--r-pill); color: var(--c-ink-2); text-decoration: none; font-size: var(--fs-sm); font-weight: 600; background: var(--c-surface-2); }
+@media (min-width: 900px) { .foot { display: none; } }

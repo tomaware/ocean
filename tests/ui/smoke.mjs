@@ -5,7 +5,7 @@ const { chromium, devices } = createRequire(import.meta.url)('playwright');   //
 const base = process.argv[2] ?? 'http://localhost:4173';
 const routes = [['', 'Où naviguer en wing'], ['wind/meilleure', 'Meilleure session à venir'], ['wind/sessions', 'Sessions de 2H (Localisation Montpellier)'], ['wind/prevision', 'Prévision 5 jours'], ['wind/spots', 'Spots'],
   ['vague/meilleure', 'Meilleure session à venir'], ['vague/prevision', 'Prévision 5 jours'], ['vague/sessions', 'Sessions de 2H'], ['houle/prevision', 'Prévision 5 jours'], ['houle/meilleure', 'Meilleure session à venir'],
-  ['spot/port-camargue', 'Jour par jour'], ['spot/carnon', 'Jour par jour'], ['spot/plagesud-grandemotte', 'Jour par jour'], ['sessions', 'Où naviguer en wing'], ['profil', 'Mode perso'], ['fiabilite', 'Fiabilité']];
+  ['spot/port-camargue', 'Jour par jour'], ['spot/carnon', 'Jour par jour'], ['spot/plagesud-grandemotte', 'Jour par jour'], ['sessions', 'Où naviguer en wing'], ['profil', 'Mode perso'], ['fiabilite', 'Fiabilité'], ['widgets', 'Installer les widgets'], ['avis', 'Avis et commentaires']];
 const errs = [];
 const b = await chromium.launch();
 // langue fixée (fr-FR) ; un 3e passage sans langue fixée vérifie que l'app survit à une langue système invalide
@@ -25,6 +25,18 @@ for (const [name, opt] of [['mobile', { ...devices['iPhone 13'], locale: 'fr-FR'
       const over = await p.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
       if (over > 1) errs.push(`${name} #/${r} (${reading}) : débordement horizontal de ${over} px`);
       if (await p.locator('.notice.warn').filter({ hasText: 'Données indisponibles' }).count()) errs.push(`${name} #/${r} : données indisponibles`);
+      if (r === 'widgets') {
+        // scripts publiés avec le site, prêts à copier ; un onglet par appareil
+        try { await p.getByRole('button', { name: /Copier « OCEAN Vent »/ }).first().waitFor({ timeout: 4000 }); } catch {}
+        for (const os of ['iPhone', 'Mac', 'Windows']) { await p.getByRole('button', { name: os, exact: true }).click(); if (!(await p.locator('ol.steps li').count())) errs.push(`${name} #/widgets : pas d'étapes pour ${os}`); }
+        await p.getByRole('button', { name: 'iPhone', exact: true }).click();
+        if (await p.getByRole('button', { name: /Copier « OCEAN/ }).and(p.locator(':disabled')).count()) errs.push(`${name} #/widgets : scripts des widgets introuvables (dist/widgets)`);
+      }
+      if (r === 'avis') {
+        // sans message : bouton bloqué ou alerte ; champ piège invisible
+        if (await p.locator('label.hp').evaluate((e) => e.getBoundingClientRect().right > 0)) errs.push(`${name} #/avis : champ piège visible`);
+        if (!(await p.locator('textarea').count())) errs.push(`${name} #/avis : pas de zone de message`);
+      }
       if (r.endsWith('/prevision')) {
         // la grille : 5 jours × spots, et le détail s'ouvre au clic
         const n = await p.locator('table.grid5 tbody tr').count();

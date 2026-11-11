@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'preact/hooks';
-import { ChevronLeft, Info, Radio, ShieldCheck, TriangleAlert } from 'lucide-preact';
+import { ChevronLeft, Info, LayoutGrid, MessageSquare, Radio, ShieldCheck, TriangleAlert } from 'lucide-preact';
 import type { AllData, Discipline, Level, PublicSpot, Session } from '../services/data';
 import { DISC_LABEL, LEVEL_LABEL, LEVELS_FOR, spotDiscipline } from '../services/data';
 import { ago, compass, dayKey, dayLabel, hh, hourOf, labelOf, msToKn, n0, n1, span } from '../services/format';
@@ -217,6 +217,8 @@ export function Profile({ d }: { d: AllData }) {
       </Section>
       <Section title="À propos">
         <div class="card stack">
+          <a href="#/widgets" class="row"><LayoutGrid size={16} /> Installer les widgets (iPhone, Mac, Windows)</a>
+          <a href="#/avis" class="row"><MessageSquare size={16} /> Donner un avis, signaler un bug</a>
           <a href="#/fiabilite" class="row"><ShieldCheck size={16} /> Fiabilité des prévisions et sources</a>
           <span class="faint">OCEAN · données : Open-Meteo (Météo-France, ECMWF, DWD, NOAA), Copernicus Marine Med-WAV (generated using E.U. Copernicus Marine Service Information), bouées Candhis – Cerema (licence Etalab), METAR (NOAA), super prévision vent. Fond de carte © OpenStreetMap.</span>
         </div>

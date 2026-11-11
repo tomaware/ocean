@@ -10,6 +10,8 @@ Deux widgets Scriptable, mêmes données que l'app OCEAN (`data/widget-wind.json
 Il remplace le widget « Créneau Vent ».
 
 ## Installer
+Tutoriel pas à pas (iPhone, Mac, Windows) dans l'app : https://tomaware.github.io/ocean/#/widgets — les scripts y sont publiés (`widgets/ocean-vent.js`, `widgets/ocean-creneaux.js`) avec un bouton « Copier ».
+
 1. Installer **Scriptable** (App Store, gratuit).
 2. Copier chaque fichier `.js` dans le dossier iCloud Drive › Scriptable, ou créer un script dans Scriptable et coller le contenu.
 3. Écran d'accueil : appui long → « + » → Scriptable → choisir la taille → Modifier le widget → Script : « OCEAN Vent » ou « OCEAN Créneaux ».
