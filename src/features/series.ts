@@ -44,7 +44,7 @@ export function seriesFor(d: AllData, spot: PublicSpot, disc: Discipline, level:
     const s = d.surf.spots?.find((x: any) => x.id === spot.id);
     if (!s) return null;
     const h = s.h;
-    const rows = h.t.map((t: number, i: number) => ({ t, i, score: h.score[i], hb: h.hb[i], lo: h.lo[i], hi: h.hi[i], hs: h.hs[i], tp: h.tp[i], dir: h.dir[i], ws: kmhToKn(h.ws[i]), wd: h.wd[i], wk: h.wk?.[i] ?? null, wg: kmhToKn(h.wg[i]), conf: h.conf[i], day: h.day[i], n: h.n[i], sst: h.sst[i] }));
+    const rows = h.t.map((t: number, i: number) => ({ t, i, score: h.score[i], hb: h.hb[i], lo: h.lo[i], hi: h.hi[i], hs: h.hs[i], tp: h.tp[i], dir: h.dir[i], ws: kmhToKn(h.ws[i]), wd: h.wd[i], wk: h.wk?.[i] ?? null, wg: kmhToKn(h.wg[i]), conf: h.conf[i], day: h.day[i], n: h.n[i], sst: h.sst[i], f: h.f?.[i] ?? null, bas: h.bas?.[i] ?? 0, flat: h.flat?.[i] ?? 0 }));
     return {
       discipline: 'surf', times: h.t, score: h.score, day: h.day, rows, levels: false,
       cols: [

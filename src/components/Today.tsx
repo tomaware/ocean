@@ -5,6 +5,7 @@ import type { Ref } from 'preact';
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import type { AllData, Level, PublicSpot, Session } from '../services/data';
 import { LEVEL_LABEL } from '../services/data';
+import { surfWhy } from '../services/surfwhy';
 import { compass, dayKey, dayShort, hh, hourOf, n0, n1 } from '../services/format';
 import type { Series } from '../features/series';
 import { meteoAt, Stars, starsOf, SURF_WIND, WMO } from './Views';
@@ -134,7 +135,10 @@ function HourTip({ s, i, level, left, top }: { s: Series; i: number; level?: Lev
     if (f) lines.push(['Force', `${sc1(f[0] * 10)}/10`], ['Régularité', `${sc1(f[1] * 10)}/10`], ['Direction / plage', `${sc1(f[2] * 10)}/10${x.sector ? ` (${(SECTOR_TAG[x.sector] ?? x.sector).toLowerCase()})` : ''}`]);
     why = level ? (x.limit?.[level] as string | null) : null;
   } else if (s.discipline === 'surf') {
+    const f = x.f as [number, number, number, number, number] | null;
     lines = [['Vagues', `${n1(x.lo)}–${n1(x.hi)} m`], ['Houle', `${compass(x.dir)} ${n1(x.hs)} m · ${n0(x.tp)} s`], ['Vent', `${n0(x.ws)} nd ${compass(x.wd)}${x.wk ? ` (${x.wk})` : ''}`]];
+    if (f) lines.push(['Taille', `${sc1(f[0] * 10)}/10`], ['Période', `${sc1(f[1] * 10)}/10`], ['Vent / houle', `${sc1(f[2] * f[3] * 10)}/10`]);
+    why = surfWhy(x);
   } else {
     lines = [['Vent', `${n0(x.kn)} nd de ${compass(x.from)} · raf. ${n0(x.gust)}`], ['Côte', SHORE_TAG[x.shore] ?? '—'], ['Houle', x.bumpH == null ? '—' : `${n1(x.bumpH)} m · ${n0(x.bumpT)} s${x.swd != null ? ` · de ${compass(x.swd)}` : ''}`]];
   }

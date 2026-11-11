@@ -67,11 +67,22 @@ export function runEngines(inp: EngineInputs) {
   const downwind = D.run(inp.downwind);
   const downwindJSON = D.toJSON(downwind, { pipeline: 'ocean' });
   addSwellDirection(downwindJSON, inp.downwind.marine);
-  return {
-    surf, downwind,
-    surfJSON: E.toForecastJSON(surf, { sources: { pipeline: 'ocean', copernicus: usesCopernicus(inp.surf.marine) ? { used: true } : null } }),
-    downwindJSON,
-  };
+  const surfJSON = E.toForecastJSON(surf, { sources: { pipeline: 'ocean', copernicus: usesCopernicus(inp.surf.marine) ? { used: true } : null } });
+  addSurfFactors(surfJSON, surf);
+  return { surf, downwind, surfJSON, downwindJSON };
+}
+
+/** Détail de la note surf heure par heure, pour l'expliquer dans l'app (« pourquoi 9,5 à 9 h ? ») : les facteurs que le
+ *  moteur surf calcule déjà (taille, période, vent, clapot), plus le sens de l'écart de taille (-1 trop petit, 0 idéal,
+ *  1 trop gros). Affichage seul : la note et le moteur ne changent pas. Mêmes heures que toForecastJSON (leadH ≥ -6). */
+export function addSurfFactors(json: { spots: { id: string; h: Record<string, unknown> }[] }, res: { spots: { spot: { id: string; size: { min: number; ideal: number; max: number } }; rows: any[] }[] }) {
+  const r2 = (x: number) => Math.round(x * 100) / 100;
+  for (const sp of json.spots) {
+    const src = res.spots.find((x) => x.spot.id === sp.id);
+    if (!src) continue;
+    const rows = src.rows.filter((r) => r.leadH >= -6), sz = src.spot.size;
+    sp.h.f = rows.map((r) => (r.factors ? [r2(r.factors.size), r2(Math.min(1, r.factors.period)), r2(r.factors.wind), r2(r.factors.chop), r.hb < sz.ideal ? -1 : r.hb > sz.max ? 1 : 0] : null));
+  }
 }
 
 /** Moyenne circulaire (degrés) pondérée ; null si rien ou si les directions s'annulent. */

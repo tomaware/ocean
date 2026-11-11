@@ -308,3 +308,13 @@ table.wg col.pk { background: color-mix(in srgb, var(--c-accent) 16%, transparen
 .userlink { display: none; }
 @media (min-width: 900px) { .menuwrap { display: none; } .userlink { display: grid; } }
 .windnote { position: absolute; left: 10px; top: 10px; z-index: 700; pointer-events: none; background: color-mix(in srgb, var(--c-surface) 88%, transparent); color: var(--c-ink-2); font-size: var(--fs-xs); font-weight: 600; padding: 4px 10px; border-radius: var(--r-pill); max-width: calc(100% - 20px); }
+/* colonnes notées : teinte de la couleur des étoiles (vert ★, orange ★★, violet ★★★) ; ligne Étoiles plus marquée */
+table.wg col.st.k1 { background: color-mix(in srgb, var(--c-k1) 13%, transparent); }
+table.wg col.st.k2 { background: color-mix(in srgb, var(--c-k2) 15%, transparent); }
+table.wg col.st.k3 { background: color-mix(in srgb, var(--c-k3) 15%, transparent); }
+table.wg tr.wg-stars td.k1 { background: color-mix(in srgb, var(--c-k1) 28%, transparent); }
+table.wg tr.wg-stars td.k2 { background: color-mix(in srgb, var(--c-k2) 30%, transparent); }
+table.wg tr.wg-stars td.k3 { background: color-mix(in srgb, var(--c-k3) 30%, transparent); }
+table.wg tr.wg-stars .stars { font-size: 15px; gap: 0; }
+table.wg tr.wg-stars .stars .off { opacity: .55; }
+@media (max-width: 560px) { table.wg tr.wg-stars .stars { font-size: 12px; } }

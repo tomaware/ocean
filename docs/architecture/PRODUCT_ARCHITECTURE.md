@@ -207,3 +207,7 @@ Les apps actuelles restent en ligne jusqu'à ce que leur remplaçante soit véri
 
 ### D-31 (11/11/2026, Tom) — widget Windows, carte Créneaux en grand : disposition de l'ancien widget
 - Meilleur créneau en haut, en grand (jour et heures, spot, étoiles, vent et rafales, durée), puis la grille avec les spots en colonnes et les jours en lignes. Cases avec créneau : remplissage par étoiles et heures au meilleur niveau ; cases sans créneau : vent max du jour (heures de jour), comme l'ancien widget.
+
+### D-32 (11/11/2026, Tom) — étoiles plus visibles, note surf expliquée
+- Tableaux heure par heure : les colonnes notées prennent une teinte de la couleur des étoiles (vert ★, orange ★★, violet ★★★) au lieu du gris clair ; ligne Étoiles plus grande et plus colorée.
+- VAGUE : au survol d'une heure, la note est expliquée en mots (« bonne taille de vague, vent de terre : vent et houle opposés… mais … ») avec les facteurs taille, période, vent / houle sur 10. Le pipeline publie les facteurs que le moteur surf calcule déjà (`h.f` = taille, période, vent, clapot, sens de l'écart de taille) ; moteur et note inchangés (golden).
