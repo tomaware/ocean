@@ -234,3 +234,10 @@ Les apps actuelles restent en ligne jusqu'à ce que leur remplaçante soit véri
 - Lien de la super prévision illisible (« format de la chaîne d'entrée incorrect », journal du widget) : le fichier chiffré était relu avec son retour à la ligne final. Corrigé (Trim) ; la CI Windows enregistre puis relit un lien d'essai (`-TestLien`). Le lien déjà enregistré par Tom redevient lisible sans le recoller.
 - Menu Écran avec un seul écran : la liste était aplatie par PowerShell (choix « É ») ; corrigé, et un réglage abîmé retombe sur l'écran principal.
 - La nuit, sans prévision pour l'heure, la carte Vent montre le dernier relevé de la balise avec son âge (en gris) au lieu de « pas de vent ». Même règle sur iPhone et Mac.
+
+### D-38 (11/11/2026, Tom) — widgets, retouches après essai
+- Grandes cartes Vent et Vague : plus de ligne « Créneau : … » sous les heures ; titre au nom court du spot (« Port Camargue », « Almanarre ») ; source alignée sur la même ligne.
+- Chiffre du vent mesuré en direct : vert dès 15 nd, orange dès 20, violet dès 25 (couleurs des étoiles) ; prévision et relevé ancien gardent la couleur normale.
+- Grande carte Créneaux : sans titre « Créneaux vent » ni « Sécu first » ; la nuit, la ligne du jour (vide) disparaît.
+- Écarts avec l'ancien widget Créneaux (seuil « 15 nd et + » de la super prévision) : acceptés par Tom ; OCEAN suit la note wing (Sécu first écarte le vent de terre).
+- Windows, Mac, iPhone (Vent et Vague).

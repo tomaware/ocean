@@ -64,6 +64,10 @@ test('widget Windows : mêmes créneaux et même ordre que le widget iPhone', { 
   const m = model();
   assert.equal(m.creneaux.label, 'Sécu first');
   assert.deepEqual(m.creneaux.days, ['Auj.', 'Jeu.', 'Ven.', 'Sam.', 'Dim.']);
+  // la nuit : plus d'heure de jour aujourd'hui → la ligne du jour (vide) disparaît, la grille reste alignée
+  const night = model({}, undefined, NOW + 9 * 3600e3);                      // 19 h 20
+  assert.deepEqual(night.creneaux.days, ['Jeu.', 'Ven.', 'Sam.', 'Dim.']);
+  assert.equal(night.creneaux.grid.find((g: any) => g.spot === 'Beauduc').cells, ',4h,,');
   assert.deepEqual(m.creneaux.list.map((c: any) => `${c.spot} ${c.when}`), ['Beauduc Ven. 9–17 h', 'G-Motte Ven. 9–17 h', 'G-Motte Auj. 13–16 h']);
   assert.equal(m.creneaux.list[0].kn, 24); assert.equal(m.creneaux.list[0].dir, 'SE'); assert.equal(m.creneaux.list[0].stars, 3);
   assert.equal(m.creneaux.list[0].link, 'https://tomaware.github.io/ocean/#/spot/beauduc?day=13%2F11%2F2026');

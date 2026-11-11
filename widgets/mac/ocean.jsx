@@ -107,15 +107,18 @@ export function creneauxModel(data, level, onlyNear, now) {
   const list = [];
   for (const sp of spots) for (const s of sp.sessions[level] || []) if (s.e > now) list.push({ ...s, spot: sp, stars: starsOf(s.p) });
   list.sort(rank);
-  const grid = spots.slice(0, 8).map((sp) => ({ spot: sp, cells: data.days.slice(0, 5).map((d, i) => {
-    const x = (sp.daily[level] || [])[i], ses = (sp.sessions[level] || []).filter((s) => dayKey(s.s) === d);
+  // la nuit (plus aucune heure de jour à venir aujourd'hui) : la ligne du jour, vide, est retirée
+  const dayLeft = data.spots.some((sp) => sp.hours.some((h) => h[4] && dayKey(h[0]) === dayKey(now) && h[0] + 3600e3 > now));
+  const off = data.days[0] === dayKey(now) && !dayLeft ? 1 : 0, days = data.days.slice(off, 5);
+  const grid = spots.slice(0, 8).map((sp) => ({ spot: sp, cells: days.map((d, i) => {
+    const x = (sp.daily[level] || [])[i + off], ses = (sp.sessions[level] || []).filter((s) => dayKey(s.s) === d);
     const kns = sp.hours.filter((h) => h[4] && dayKey(h[0]) === d && h[1] != null).map((h) => h[1]);
     const kn = kns.length ? Math.max(...kns) : null;
     if (!ses.length || !x) return { has: false, kn };
     const top = x[2] ? 3 : x[1] ? 2 : 1;
     return { has: true, n: x, label: `${x[top - 1] || ses.reduce((a, s) => a + s.h, 0)}h`, kn, day: d };
   }) }));
-  return { level, label: `${level === "offshore" ? "OffShore" : "Sécu first"}${onlyNear ? " · proches" : ""}`, list, grid, days: data.days.slice(0, 5) };
+  return { level, label: `${level === "offshore" ? "OffShore" : "Sécu first"}${onlyNear ? " · proches" : ""}`, list, grid, days };
 }
 const WIND_KIND = { offshore: "vent de terre", "side-off": "side-off", side: "vent de côté", "side-on": "side-on", onshore: "vent de mer", "pétole": "pas de vent" };
 export function vagueModel(surf, spot, now) {
@@ -160,8 +163,11 @@ const srcText = (m, now, short) => {
   if (m.stale != null) return short ? `prévision (balise ${ago(m.stale, now)})` : `prévision · balise il y a ${ago(m.stale, now)}`;
   return short ? "prévision" : m.spot && m.spot.source === "corrected" ? "prévision corrigée" : "prévision";
 };
+// chiffre du vent mesuré en direct : vert dès 15 nd, orange dès 20, violet dès 25 ; nom court du spot pour les titres
+const nowColor = (m) => (!m.now || m.now.src === "prévu" || m.now.stale || m.now.kn == null ? undefined : m.now.kn >= 25 ? "var(--k3)" : m.now.kn >= 20 ? "var(--k2)" : m.now.kn >= 15 ? "var(--k1)" : undefined);
+const title = (spot) => String(spot.name).split(" / ")[0].replace(/\s*\(.*\)$/, "");
 const Big = ({ m, size }) => (
-  <div className="big"><span style={{ fontSize: size }}>{m.now ? r(m.now.kn) : "–"}</span>
+  <div className="big"><span style={{ fontSize: size, color: nowColor(m) }}>{m.now ? r(m.now.kn) : "–"}</span>
     <span className="bigside">{m.now && <Arrow from={m.now.dir} size={Math.round(size / 2.2)} />}<b>nd {m.now ? m.now.dirTxt || compass(m.now.dir) : ""}</b></span></div>);
 const gustText = (m) => (m.now && m.now.gust != null ? `${m.now.src === "balise" ? "max" : "rafales"} ${r(m.now.gust)} nd` : "");
 
@@ -181,13 +187,12 @@ function VentCard({ m, size, now }) {
     {m.days.map((d) => <div key={d.label} className="dcol"><b>{d.label}</b><Stars k={d.stars} size={10} /><Num kn={d.kn} /><Arrow from={d.dir} /><span className="s10">{d.cr}</span></div>)}
   </div></Card>;
   return <Card size={size} url={link(m.spot.id)}>
-    <div className="row"><b className="t15">{m.spot.name}</b><span className={`src${live ? " live" : ""}`}>{srcText(m, now)}</span></div>
+    <div className="row"><b className="t15">{title(m.spot)}</b><span className={`src${live ? " live" : ""}`}>{srcText(m, now)}</span></div>
     <div className="row"><Big m={m} size={34} /><span className="ink2 sb12 right">{gustText(m)}<br />{m.in2 ? `dans 2 h : ${r(m.in2.kn)} nd ${compass(m.in2.dir)}` : ""}</span></div>
     {m.detail.map((d) => <div key={d.label}>
       <div className="row dh"><span><b className="t13">{d.label}</b> <span className="ink3 s11">{d.date}</span> {d.stars > 0 && <Stars k={d.stars} all={false} />}</span>
         {d.kn != null && <span className="s11"><b>max {r(d.kn)} nd {compass(d.dir)}</b><span className="ink2">{d.gust != null ? ` · raf. ${r(d.gust)}` : ""}</span></span>}</div>
-      <HourGrid hours={d.hours} rows={(x) => x.has && <span className="frag"><Num kn={x.kn} w={19} h={18} size={11} /><span className="ink2 s9">{r(x.gust)}</span><Arrow from={x.dir} size={11} /></span>} />
-      <div className="ink2 sb11 cr">Créneau : {d.cr}</div></div>)}</Card>;
+      <HourGrid hours={d.hours} rows={(x) => x.has && <span className="frag"><Num kn={x.kn} w={19} h={18} size={11} /><span className="ink2 s9">{r(x.gust)}</span><Arrow from={x.dir} size={11} /></span>} /></div>)}</Card>;
 }
 function CreneauxCard({ cm, size, now }) {
   const c = cm.list[0];
@@ -203,14 +208,13 @@ function CreneauxCard({ cm, size, now }) {
   </div></Card>;
   const HEAD = { "La Franqui": "Franqui", Espiguette: "Espig.", Almanarre: "Alman." };
   return <Card size={size} url={`${APP}#/wind/prevision`}>
-    <div className="row"><b className="t15">Créneaux vent</b><span className="ink3 s10">{cm.label}</span></div>
     {c ? <div className={`bestbig soft${c.stars}`} onClick={open(link(c.spot.id, c.s))}>
       <div className="row"><span className="eyebrow">MEILLEUR CRÉNEAU</span><span className="pill" style={{ background: FILL[c.stars] || "#888" }}>{c.h}h</span></div>
       <b className="t19">{cap(longDay(c.s))} · {H(c.s)} h – {H(c.e)} h</b>
       <div><span className="sb13">{c.spot.name}</span> <Stars k={c.stars} size={13} all={false} /></div><b className="ink2 s12">{r(c.kn)} nd {compass(c.dir)}{c.g ? ` · raf. ${r(c.g)}` : ""}</b></div>
       : <div className="ink2 sb13 mid">Pas de créneau dans les 5 jours</div>}
     <table className="cgrid"><thead><tr><th />{cm.grid.map((g) => <th key={g.spot.id}>{HEAD[g.spot.short] || g.spot.short}</th>)}</tr></thead>
-      <tbody>{cm.days.map((d, i) => <tr key={d}><th>{i === 0 ? "Auj." : cap(new Date(d + "T12:00:00").toLocaleDateString("fr-FR", { weekday: "short", day: "numeric" }).replace(".", ""))}</th>
+      <tbody>{cm.days.map((d, i) => <tr key={d}><th>{d === dayKey(now) ? "Auj." : cap(new Date(d + "T12:00:00").toLocaleDateString("fr-FR", { weekday: "short", day: "numeric" }).replace(".", ""))}</th>
         {cm.grid.map((g) => { const x = g.cells[i]; return <td key={g.spot.id}>{x.has
           ? <span className="fill" onClick={open(link(g.spot.id, new Date(d + "T12:00:00").getTime()))} style={{ background: `linear-gradient(to right, ${FILL[3]} 0 ${(x.n[2] / x.n[3]) * 100}%, ${FILL[2]} 0 ${((x.n[2] + x.n[1]) / x.n[3]) * 100}%, ${FILL[1]} 0 ${((x.n[2] + x.n[1] + x.n[0]) / x.n[3]) * 100}%, transparent 0)` }}><i>{x.label}</i></span>
           : <span className="kn">{x.kn != null ? r(x.kn) : ""}</span>}</td>; })}</tr>)}</tbody></table></Card>;
@@ -230,12 +234,11 @@ function VagueCard({ m, size, now }) {
     {m.days.map((d) => <div key={d.label} className="dcol"><b>{d.label}</b><Stars k={d.stars} size={9} /><b className="t12">{d.hb == null ? "–" : `${m1(d.hb)} m`}</b><span className="ink2 s10">{d.tp ? `${d.tp} s` : ""}</span><span className="s10">{d.cr}</span></div>)}
   </div></Card>;
   return <Card size={size} url={url}>
-    <div className="row"><b className="t15">{m.spot.name}</b><span className="src">maintenant</span></div><VagueNow m={m} size={30} />
+    <div className="row"><b className="t15">{title(m.spot)}</b><span className="src">maintenant</span></div><VagueNow m={m} size={30} />
     {m.detail.map((d) => { const hMax = Math.max(1.2, ...d.hours.filter((x) => x.has).map((x) => x.hb ?? 0)); return <div key={d.label}>
       <div className="row dh"><span><b className="t13">{d.label}</b> <span className="ink3 s11">{d.date}</span> {d.stars > 0 && <Stars k={d.stars} all={false} />}</span>{d.hbMax > 0 && <b className="s11">jusqu'à {m1(d.hbMax)} m</b>}</div>
       <HourGrid hours={d.hours} rows={(x) => x.has && <span className="frag"><b className="s8">{m1(x.hb)}</b><span className="wbar"><i style={{ height: Math.max(2, Math.round(((x.hb ?? 0) / hMax) * 22)) }} /></span>
-        <span className="ink2 s8">{x.tp ?? ""}</span><Num kn={x.ws} w={18} h={14} size={9} /><Arrow from={x.wd} size={9} /></span>} />
-      <div className="ink2 sb11 cr">Créneau : {d.cr}</div></div>; })}
+        <span className="ink2 s8">{x.tp ?? ""}</span><Num kn={x.ws} w={18} h={14} size={9} /><Arrow from={x.wd} size={9} /></span>} /></div>; })}
     {m.best && <div className="bestline" onClick={open(link(m.best.spot.id, m.best.s))}><span className="eyebrow">MEILLEUR CRÉNEAU SURF</span>
       <div><Stars k={m.best.stars} size={12} all={false} /> <b className="s12">{m.best.spot.short} · {when(m.best, now)} · {m1(m.best.hb)} m · {m.best.tp ?? "–"} s</b></div></div>}</Card>;
 }

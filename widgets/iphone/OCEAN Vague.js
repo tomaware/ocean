@@ -169,7 +169,7 @@ function medium(w, data, spot, m, now) {
   }
 }
 function large(w, data, spot, m, now) {
-  const top = w.addStack(); top.centerAlignContent(); text(top, spot.name, F.h(15), INK, { scale: 0.7 }); top.addSpacer(); text(top, "maintenant", F.b(9), INK3);
+  const top = w.addStack(); top.centerAlignContent(); text(top, String(spot.name).split(" / ")[0].replace(/\s*\(.*\)$/, ""), F.h(15), INK, { scale: 0.7 }); top.addSpacer(); text(top, "maintenant", F.b(9), INK3);
   w.addSpacer(4); nowBlock(w, m, true);
   const cw = 20;
   for (const d of m.detail) {
@@ -193,7 +193,6 @@ function large(w, data, spot, m, now) {
       } else { c.addSpacer(72); }
       const sb = c.addStack(); sb.size = new Size(cw - 2, 4); sb.cornerRadius = 2; sb.backgroundColor = x.stars > 0 && x.has ? STAR[x.stars] : NONE;
     }
-    w.addSpacer(2); text(w, `Créneau : ${d.cr}`, F.s(11), INK2, { scale: 0.7 });
   }
   w.addSpacer();
   const b = bestSession(data, now);

@@ -289,10 +289,15 @@ function Get-CreneauxModel($data, $reg, [double]$now) {
   # du meilleur au moins bon : étoiles, puis durée (8 h valent mieux que 2 h), puis note, puis le plus tôt
   $list = @($all | Sort-Object -Property @{ Expression = 'stars'; Descending = $true }, @{ Expression = 'h'; Descending = $true }, @{ Expression = 'p'; Descending = $true }, @{ Expression = 's'; Descending = $false }, @{ Expression = 'i'; Descending = $false })
   $days = @(@($data.days)[0..4])
+  # la nuit (plus aucune heure de jour à venir aujourd'hui) : la ligne du jour, vide, est retirée (Tom, 11/11)
+  $off = 0
+  $today = Get-DayKey $now
+  $dayLeft = @($data.spots | ForEach-Object { $_.hours } | Where-Object { $_[4] -and (Get-DayKey $_[0]) -eq $today -and [double]$_[0] + 3600000 -gt $now }).Count
+  if ($days.Count -gt 1 -and $days[0] -eq $today -and $dayLeft -eq 0) { $days = @($days | Select-Object -Skip 1); $off = 1 }
   $grid = @(foreach ($sp in ($spots | Select-Object -First 8)) {
     $sess = Get-Sessions $sp $level
     $cells = @(for ($i = 0; $i -lt $days.Count; $i++) {
-      $x = @($sp.daily.$level)[$i]
+      $x = @($sp.daily.$level)[$i + $off]
       $ses = @($sess | Where-Object { (Get-DayKey $_.s) -eq $days[$i] })
       # vent max de la journée (heures de jour), affiché dans les cases sans créneau, comme l'ancien widget
       $kmax = ($sp.hours | Where-Object { $_[4] -and (Get-DayKey $_[0]) -eq $days[$i] -and $null -ne $_[1] } | ForEach-Object { [double]$_[1] } | Measure-Object -Maximum).Maximum
@@ -490,10 +495,18 @@ function New-CellNum($kn, [double]$w, [double]$h, [double]$size) {
 function Center($el) { if ($null -ne $el) { $el.HorizontalAlignment = 'Center' }; $el }
 
 # ------------------------------------------------ Carte Vent
+# Nom court du spot pour les titres : « Port Camargue / Espiguette » → « Port Camargue », « Almanarre (Hyères) » → « Almanarre »
+function Get-SpotTitle($spot) { (([string]$spot.name) -split ' / ')[0] -replace '\s*\(.*\)$', '' }
+# Chiffre du vent mesuré en direct : vert dès 15 nd, orange dès 20, violet dès 25 (Tom, 11/11) ; prévision et relevé ancien : couleur normale
+function Get-NowBrush($m) {
+  if (-not $m.now -or $m.now.src -eq 'prévu' -or $m.now.stale -or $null -eq $m.now.kn) { return C 'INK' }
+  $k = [double]$m.now.kn
+  if ($k -ge 25) { C 'S3' } elseif ($k -ge 20) { C 'S2' } elseif ($k -ge 15) { C 'S1' } else { C 'INK' }
+}
 function Get-SrcBrush($m) { if ($m.now -and $m.now.src -ne 'prévu' -and -not $m.now.stale) { C 'LIVE' } else { C 'INK3' } }
 function New-BigNow($m, [double]$size) {
   $s = New-Stack 'Horizontal'
-  $n = Add $s (T $(if ($m.now) { Get-Round $m.now.kn } else { '–' }) $size (C 'INK') 'Black'); $n.Margin = Th 0 0 6 0
+  $n = Add $s (T $(if ($m.now) { Get-Round $m.now.kn } else { '–' }) $size (Get-NowBrush $m) 'Black'); $n.Margin = Th 0 0 6 0
   $c = Add $s (New-Stack); $c.VerticalAlignment = 'Center'
   if ($m.now) { [void](Add $c (New-Arrow $m.now.dir ([math]::Round($size / 2.2)) (C 'INK'))) }
   $dt = if ($m.now) { if ($m.now.dirTxt) { $m.now.dirTxt } else { Get-Compass $m.now.dir } } else { '' }
@@ -540,8 +553,8 @@ function New-VentCard($m, [string]$size, [double]$now) {
   # grand
   $st = New-Stack; [void]$root.Children.Add($st)
   $top = Add $st (New-Dock)
-  [void](Add $top (Dock (T (Get-SrcText $m $now) 10 (Get-SrcBrush $m) 'Bold') 'Right'))
-  [void](Add $top (T $spot.name 15 (C 'INK') 'Black'))
+  $src = Add $top (Dock (T (Get-SrcText $m $now) 10 (Get-SrcBrush $m) 'Bold') 'Right'); $src.VerticalAlignment = 'Center'
+  $ttl = Add $top (T (Get-SpotTitle $spot) 15 (C 'INK') 'Black'); $ttl.VerticalAlignment = 'Center'
   $r = Add $st (New-Dock); $r.Margin = Th 0 4 0 8
   $rr = Add $r (Dock (New-Stack) 'Right'); $rr.VerticalAlignment = 'Center'
   [void](Add $rr (T (Get-GustText $m) 12 (C 'INK2') 'SemiBold'))
@@ -581,7 +594,6 @@ function New-VentCard($m, [string]$size, [double]$now) {
       }
       $col++
     }
-    $cr = Add $st (T "Créneau : $($d.cr)" 11 (C 'INK2') 'SemiBold'); $cr.Margin = Th 2 3 0 0
   }
   return $root
 }
@@ -648,8 +660,6 @@ function New-CreneauxCard($cm, [string]$size, [double]$now) {
   }
   # grand (Tom, 11/11 : « comme l'ancien ») : meilleur créneau en haut, puis spots en colonnes et jours en lignes
   $st = New-Stack
-  $head = Add $st (New-Dock); $head.Margin = Th 0 0 0 8
-  [void](Add $head (Dock (T $cm.label 10 (C 'INK3')) 'Right')); [void](Add $head (T 'Créneaux vent' 15 (C 'INK') 'Black'))
   if ($list.Count) {
     $c = $list[0]
     $b = Add $st (New-Box $(if ($c.stars) { C "SOFT$($c.stars)" } else { C 'CELL' }) 14 (Th 12 9 12 10)); $b.Margin = Th 0 0 0 10; $b.Tag = Get-CreneauLink $c
@@ -675,7 +685,7 @@ function New-CreneauxCard($cm, [string]$size, [double]$now) {
   for ($i = 0; $i -lt $cm.days.Count; $i++) {
     $r = Add $st (New-Stack 'Horizontal'); $r.Margin = Th 0 0 0 3
     $dl = [datetime]::ParseExact($cm.days[$i], 'yyyy-MM-dd', $INV)
-    $lab = if ($i -eq 0) { 'Auj.' } else { $dl.ToString('ddd d', [Globalization.CultureInfo]::new('fr-FR')).Replace('.', '') }
+    $lab = if ($cm.days[$i] -eq (Get-DayKey $now)) { 'Auj.' } else { $dl.ToString('ddd d', [Globalization.CultureInfo]::new('fr-FR')).Replace('.', '') }
     $dn = Add $r (T ($lab.Substring(0, 1).ToUpper() + $lab.Substring(1)) 11 (C 'INK') 'Black'); $dn.Width = $nameW; $dn.VerticalAlignment = 'Center'
     foreach ($g in $cm.grid) {
       $x = $g.cells[$i]
@@ -739,7 +749,7 @@ function New-VagueCard($m, [string]$size, [double]$now) {
     return $row
   }
   $st = New-Stack
-  $top = Add $st (New-Dock); [void](Add $top (Dock (T 'maintenant' 9 (C 'INK3') 'Bold') 'Right')); [void](Add $top (T $spot.name 15 (C 'INK') 'Black'))
+  $top = Add $st (New-Dock); [void](Add $top (Dock (T 'maintenant' 9 (C 'INK3') 'Bold') 'Right')); [void](Add $top (T (Get-SpotTitle $spot) 15 (C 'INK') 'Black'))
   $nw = Add $st (New-VagueNow $m 30); $nw.Margin = Th 0 2 0 2
   $cw = 21.6
   foreach ($d in $m.detail) {
@@ -774,7 +784,6 @@ function New-VagueCard($m, [string]$size, [double]$now) {
       }
       $col++
     }
-    $cr = Add $st (T "Créneau : $($d.cr)" 11 (C 'INK2') 'SemiBold'); $cr.Margin = Th 2 3 0 0
   }
   if ($m.best) {
     $b = $m.best

@@ -31,7 +31,7 @@ test('widget Vague : chaque taille s’affiche, Carnon par défaut, maintenant +
     if (family === 'small') assert.match(t, /0,4–0,9 \| m .*6 s · houle SSO.*vent de mer/);
     if (family === 'medium') assert.match(t, /Auj\..*Jeu\..*Ven\. \| ★★★ \| ☆?.*1,2 m \| 9 s \| 8–16 h/);
     if (family === 'large') {
-      assert.match(t, /Aujourd'hui \| mercredi 11.*Créneau : pas de créneau.*Demain \| jeudi 12/);
+      assert.match(t, /Aujourd'hui \| mercredi 11.*Demain \| jeudi 12/); assert.doesNotMatch(t, /Créneau :/);
       assert.match(t, /MEILLEUR CRÉNEAU SURF \| ★★★ \| (Carnon|Sète) · Ven\. 8–16 h · 1,[26] m · 9 s/);
     }
   }

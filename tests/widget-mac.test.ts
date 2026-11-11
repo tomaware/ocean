@@ -28,7 +28,8 @@ test('widget Mac : mêmes vents, étoiles et créneaux que les widgets iPhone et
   assert.match(t, /Auj\. .*Jeu\. .*Ven\. .*Sam\./);
   assert.match(t, /Beauduc \| Ven\. 9–17 h \| 24 nd SE .*G-Motte .*Ven\. 9–17 h .*G-Motte .*Auj\. 13–16 h/);
   ({ t } = await show({ CARTE_VENT: '"grand"', CARTE_CRENEAUX: '"grand"' }));
-  assert.match(t, /Aujourd'hui \| mercredi 11 .*max 16 nd NO .*raf\. 22.*Créneau : 13–16 h \| Demain \| jeudi 12/);
+  assert.match(t, /^ \| La Grande-Motte \| prévision corrigée .*Aujourd'hui \| mercredi 11 .*max 16 nd NO .*raf\. 22.*Demain \| jeudi 12/);
+  assert.doesNotMatch(t, /Créneau :|Créneaux vent/);                       // ni ligne « Créneau », ni titre de la carte Créneaux
   assert.match(t, /MEILLEUR CRÉNEAU \| 8h \| Vendredi 13 · 9 h – 17 h \| Beauduc/);
   assert.match(t, /Ven 13 .*4h/);                                           // grille : Beauduc vendredi, 4 h à 3 étoiles
   ({ t } = await show({ CARTE_VENT: '"petit"', CARTE_CRENEAUX: '"masque"', SPOT: '"beauduc"' }, out({ spots: { '61-beauduc': { nom: 'Beauduc', t: NOW - 6 * 60e3, v: 23, o: 'SE', max: 29 } } })));

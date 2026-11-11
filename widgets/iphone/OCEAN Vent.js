@@ -179,14 +179,16 @@ const srcText = (m, now, short) => {
 
 function header(w, spot, m, now, big) {
   const top = w.addStack(); top.centerAlignContent();
-  text(top, big ? spot.name : spot.short, F.h(big ? 15 : 14), INK, { scale: 0.7 });
+  text(top, big ? String(spot.name).split(" / ")[0].replace(/\s*\(.*\)$/, "") : spot.short, F.h(big ? 15 : 14), INK, { scale: 0.7 });
   top.addSpacer();
   const src = srcText(m, now, !big);
   text(top, src, F.b(10), m.now && m.now.src !== "prévu" && !m.now.stale ? LIVE : INK3);
 }
 function bigNow(stack, m, size) {
   const s = stack.addStack(); s.centerAlignContent(); s.spacing = 6;
-  text(s, m.now ? Math.round(m.now.kn) : "–", F.h(size), INK);
+  // vent mesuré en direct : vert dès 15 nd, orange dès 20, violet dès 25
+  const live = m.now && m.now.src !== "prévu" && !m.now.stale && m.now.kn != null;
+  text(s, m.now ? Math.round(m.now.kn) : "–", F.h(size), live && m.now.kn >= 25 ? STAR[3] : live && m.now.kn >= 20 ? STAR[2] : live && m.now.kn >= 15 ? STAR[1] : INK);
   const c = s.addStack(); c.layoutVertically(); c.spacing = 1;
   if (m.now) addArrow(c, m.now.dir, Math.round(size / 2.2), INK);
   text(c, `nd ${m.now ? m.now.dirTxt || compass(m.now.dir) : ""}`, F.b(Math.max(10, Math.round(size / 3.7))), INK);
@@ -246,8 +248,6 @@ function large(w, data, spot, m, now) {
       } else { c.addSpacer(46); }
       const sb = c.addStack(); sb.size = new Size(cw - 2, 4); sb.cornerRadius = 2; sb.backgroundColor = x.stars > 0 && !dim ? STAR[x.stars] : NONE;
     }
-    w.addSpacer(2);
-    text(w, `Créneau : ${d.cr}`, F.s(11), INK2, { scale: 0.7 });
   }
 }
 function lock(w, family, spot, m) {
