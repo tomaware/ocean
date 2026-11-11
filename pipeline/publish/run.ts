@@ -14,15 +14,15 @@ const OUT = new URL('data/v1/public/', ROOT);
 const read = (p: string) => JSON.parse(readFileSync(new URL(p, ROOT), 'utf8'));
 const opt = (p: string) => (existsSync(new URL(p, ROOT)) ? read(p) : null);
 
-export function publicPrivacy(files: Record<string, string>, live: any, secrets: string[], legacyWindIds: string[]): Check {
+export function publicPrivacy(files: Record<string, string>, live: any, secrets: string[], legacyWindIds: string[], publicTimes: ReadonlySet<number> = new Set()): Check {
   const all = Object.values(files).join('\n');
-  const base = privacyEngines(all, live, secrets);
+  const base = privacyEngines(all, live, secrets, publicTimes);
   const extra: string[] = [];
   if (/"live"\s*:\s*\{/.test(all)) extra.push('bloc « live »');
   if (/windsUp/i.test(all)) extra.push('identifiant Winds-Up');
   for (const id of legacyWindIds) if (all.includes(id)) extra.push('identifiant de balise ' + id);
   const ok = base.ok && extra.length === 0;
-  return { id: 'confidentialite-publication', ok, detail: ok ? `${Object.keys(files).length} fichiers publiés vérifiés : aucun relevé Winds-Up, aucune clé, aucun identifiant de balise` : 'FUITE : ' + [base.ok ? '' : base.detail, ...extra].filter(Boolean).join(', ') };
+  return { id: 'confidentialite-publication', ok, detail: ok ? `${Object.keys(files).length} fichiers publiés vérifiés : aucun relevé Winds-Up, aucune clé, aucun identifiant de balise${/ignoré/.test(base.detail) ? ` (${base.detail.split(' ; ')[1]})` : ''}` : 'FUITE : ' + [base.ok ? '' : base.detail, ...extra].filter(Boolean).join(', ') };
 }
 
 /** Météo des spots (air, pluie, nuages, code temps) et vent des 7 modèles aux spots wing : affichage seulement. */
@@ -124,7 +124,10 @@ function main(): void {
   };
   const live = opt('data/private/super-prevision-live.json');
   const legacyIds = registry.spots.map((s) => s.legacy.superPrevisionVent).filter(Boolean) as string[];
-  const priv = publicPrivacy(files, live, [(process.env.SUPER_PREVISION_URL ?? '').trim()], legacyIds);
+  // heures des METAR (NOAA, publiques) : un relevé Winds-Up à la même minute n'est pas une fuite
+  const bundle = opt('data/v1/collect/bundle.json') as CollectBundle | null;
+  const metarTimes = new Set(Object.values(bundle?.observations.find((o) => o.id === 'metar')?.stations ?? {}).flatMap((st: any) => st.t as number[]));
+  const priv = publicPrivacy(files, live, [(process.env.SUPER_PREVISION_URL ?? '').trim()], legacyIds, metarTimes);
   console.log(`[publication] ${priv.ok ? 'OK ' : 'KO '} ${priv.id} : ${priv.detail}`);
   if (!priv.ok) process.exit(2);
   mkdirSync(OUT, { recursive: true });

@@ -48,6 +48,12 @@ test('publication : registre public sans identifiant Winds-Up, fuite détectée'
   assert.ok(!publicPrivacy({ 'a.json': '{"live":{"spots":{}}}' }, null, [], ids).ok);
   assert.ok(!publicPrivacy({ 'a.json': '"135-la-grande-motte"' }, null, [], ids).ok);
   assert.ok(!publicPrivacy({ 'a.json': 'https://script.google.com/macros/s/x' }, null, [], ids).ok);
+  // relevé Winds-Up pris à la même minute qu'un METAR publié (15 h 30) : l'instant publié est celui du METAR, pas une fuite (D-29)
+  const t = Date.UTC(2026, 10, 11, 15, 30), live = { spots: { '61-beauduc': { t } } };
+  assert.ok(!publicPrivacy({ 'a.json': `{"obs":{"le-jai":{"t":${t}}}}` }, live, [], ids).ok, 'sans la liste des METAR : signalé');
+  const ok = publicPrivacy({ 'a.json': `{"obs":{"le-jai":{"t":${t}}}}` }, live, [], ids, new Set([t]));
+  assert.ok(ok.ok); assert.match(ok.detail, /1 relevé\(s\) à la même minute qu’un METAR/);
+  assert.ok(!publicPrivacy({ 'a.json': `{"x":${t + 60e3}}` }, { spots: { '61-beauduc': { t: t + 60e3 } } }, [], ids, new Set([t])).ok, 'autre minute : toujours bloqué');
 });
 
 test('météo publiée : air, pluie, nuages, code temps par spot, et vent des modèles en nœuds', () => {

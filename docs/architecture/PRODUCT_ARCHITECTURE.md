@@ -197,3 +197,7 @@ Les apps actuelles restent en ligne jusqu'à ce que leur remplaçante soit véri
 
 ### D-28 (11/11/2026, Tom) — affichage 7 h → 21 h partout
 - « Personne n'ira naviguer la nuit » : graphique de la note (15 barres au lieu de 24), tableaux heure par heure (WIND, VAGUE, HOULE) et bandes horaires des widgets iPhone et Windows affichent 7 h → 21 h. Affichage seul : notes, créneaux et heures de jour inchangés.
+
+### D-29 (11/11/2026) — contrôle de confidentialité : relevé à la même minute qu'un METAR
+- Le contrôle bloquant de publication signalait « horodatage du relevé » pour La Grande-Motte et Beauduc : leurs relevés Winds-Up tombaient à la même minute (hh:30) qu'un METAR de Marignane, publié pour Le Jaï (`obs`, NOAA, public). L'instant publié est celui du METAR, il ne révèle rien du relevé.
+- Règle : un horodatage de relevé présent dans les fichiers publics n'est ignoré que s'il est identique à l'heure d'un METAR collecté ; le journal l'indique (« n relevé(s) à la même minute qu'un METAR publié, ignoré(s) »). Toute autre minute reste bloquante (tests).

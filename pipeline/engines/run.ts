@@ -18,14 +18,21 @@ const TOL = 0.1;
 const readPrivate = (name: string) => { const u = new URL(name, PRIVATE); return existsSync(u) ? JSON.parse(readFileSync(u, 'utf8')) : null; };
 
 /** Aucune valeur privée dans les sorties : ni horodatage d'un relevé Winds-Up, ni clé, ni URL privée. */
-export function privacyEngines(text: string, live: { spots?: Record<string, { t?: number }> } | null, secrets: string[]): Check {
+/** publicTimes : instants publics déjà publiés pour eux-mêmes (heures des METAR, toutes les 30 min). Un relevé Winds-Up
+ *  pris à la même minute qu'un METAR n'est pas une fuite : l'instant publié est celui du METAR (décision D-29). */
+export function privacyEngines(text: string, live: { spots?: Record<string, { t?: number }> } | null, secrets: string[], publicTimes: ReadonlySet<number> = new Set()): Check {
   const leaks: string[] = [];
-  for (const [id, x] of Object.entries(live?.spots ?? {})) if (x.t && x.t % 3600e3 !== 0 && text.includes(String(x.t))) leaks.push('horodatage du relevé ' + id);
+  let same = 0;
+  for (const [id, x] of Object.entries(live?.spots ?? {})) {
+    if (!x.t || x.t % 3600e3 === 0 || !text.includes(String(x.t))) continue;
+    if (publicTimes.has(x.t)) { same++; continue; }
+    leaks.push('horodatage du relevé ' + id);
+  }
   if (/script\.google(usercontent)?\.com/.test(text)) leaks.push('URL Apps Script');
   if (/winds-up\.com/i.test(text)) leaks.push('URL Winds-Up');
   if (/[?&](key|apikey|token)=/i.test(text)) leaks.push('paramètre de clé');
   for (const s of secrets) if (s && s.length > 8 && text.includes(s)) leaks.push('un secret');
-  return { id: 'confidentialite-moteurs', ok: leaks.length === 0, detail: leaks.length ? 'FUITE : ' + leaks.join(', ') : 'aucun relevé Winds-Up ni clé dans les sorties (seuls les facteurs de correction dérivés y figurent, comme dans l’app downwind actuelle)' };
+  return { id: 'confidentialite-moteurs', ok: leaks.length === 0, detail: leaks.length ? 'FUITE : ' + leaks.join(', ') : `aucun relevé Winds-Up ni clé dans les sorties (seuls les facteurs de correction dérivés y figurent, comme dans l’app downwind actuelle)${same ? ` ; ${same} relevé(s) à la même minute qu’un METAR publié, ignoré(s)` : ''}` };
 }
 
 async function main(): Promise<void> {
