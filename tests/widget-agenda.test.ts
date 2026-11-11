@@ -159,13 +159,14 @@ test('widget Mac : rendu standard comme la maquette (en-tête, semaine, cartes, 
 
 test('widget Mac : formats, détail, réglages, états', async () => {
   let { t } = await mac({}, { format: 'compact' });
-  assert.match(t, /L \| 9 \| M \| 10 \| M \| 11/); assert.doesNotMatch(t, /\| Réunion \|/); assert.match(t, /11 autres événements/);
+  assert.match(t, /L \| 9 \| M \| 10 \| M \| 11/); assert.doesNotMatch(t, /\| Réunion \|/); assert.match(t, /11 autres \| Synchro 10:17/);   // compact : texte court (la synchro est masquée par le style)
   ({ t } = await mac({}, { format: 'etendu' }));
-  assert.match(t, /10:00 – 11:00 \| · 1 h \| en cours \| Manon x BO \| BO \| Réunion/);
+  assert.match(t, /10:00 \| 11:00 \| 1 h \| Manon x BO \| BO \| en cours \| Réunion/);   // étendu : colonne des heures
+  assert.match(t, /Journée \| Armistice \| Jours fériés en France \| Férié/);
   ({ t } = await mac({ view: { sel: null, detail: 'manon' } }));
   assert.match(t, /Retour \| Manon x BO \| Mercredi 11 novembre · 10:00 – 11:00 \(1 h\) \| BO \| 2 invités \| Ouvrir dans Google Agenda/);
   ({ t } = await mac({ settings: true }));
-  assert.match(t, /Calendriers \| Coche ceux à afficher.* \| Personnel \| BO \| Loïc \| Alexandre \| Nadège \| · masqué dans Google \| Jours fériés en France/);
+  assert.match(t, /Calendriers \| Coche ceux à afficher.* \| Personnel \| BO \| Loïc \| Alexandre \| Nadège \| décoché dans Google Agenda \| Jours fériés en France/);
   assert.match(t, /Période \| Aujourd'hui \| 3 jours \| 7 jours \| Prochains \| Format \| Compact \| Standard \| Étendu/);
   assert.match(t, /Google Agenda · Synchro 10:17 \| Actualiser \| Changer le lien du script…/);
   ({ t } = await mac({ output: '@@NOLINK@@' })); assert.match(t, /Agenda non connecté \| Branche ton script Google.* \| Brancher le lien…/);

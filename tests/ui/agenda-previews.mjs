@@ -52,6 +52,8 @@ const WEIGHT = { heavySystemFont: 800, boldSystemFont: 700, semiboldSystemFont: 
 const col = (c, dark) => { if (!c) return null; const hex = (dark && c.dark ? c.dark : c.hex).replace('#', ''); const a = c.a ?? 1;
   const n = parseInt(hex, 16); return `rgba(${(n >> 16) & 255},${(n >> 8) & 255},${n & 255},${a})`; };
 const SYM = { calendar: '▦', video: '▶', 'mappin.and.ellipse': '⌖', 'person.2': '⚇', plus: '+', repeat: '↻' };
+// une pile qui contient un espaceur souple prend toute la place disponible (comme dans Scriptable)
+const grows = (n) => (n.children || []).some((c) => (c.kind === 'spacer' && c.n == null && n.layout === 'h') || (c.kind === 'stack' && grows(c)));
 function node(n, dark, parentLayout) {
   if (n.kind === 'text') {
     const f = n.font || { k: 'systemFont', n: 14 };
@@ -60,7 +62,7 @@ function node(n, dark, parentLayout) {
   if (n.kind === 'spacer') return n.n == null ? '<span style="flex:1"></span>' : `<span style="flex:none;${parentLayout === 'v' ? 'height' : 'width'}:${n.n}px"></span>`;
   if (n.kind === 'image') { const s = n.img.symbol; return `<span style="flex:none;font-size:${(n.imageSize?.w || 14) - 1}px;color:${col(n.tintColor, dark)};width:${n.imageSize?.w || 14}px;text-align:center">${SYM[s] || '•'}</span>`; }
   const v = n.layout === 'v', p = n.padding;
-  const st = [`display:flex;flex-direction:${v ? 'column' : 'row'};align-items:${v ? 'stretch' : 'center'};min-width:0`,
+  const st = [`display:flex;flex-direction:${v ? 'column' : 'row'};align-items:${v ? 'stretch' : 'center'};min-width:0${parentLayout === 'h' && grows(n) ? ';flex:1 1 0' : ''}${n._size ? ';justify-content:center' : ''}`,
     n._size ? `${n._size.w ? `width:${n._size.w}px;flex:none;` : ''}${n._size.h ? `height:${n._size.h}px;` : ''}` : '',
     p ? `padding:${p[0]}px ${p[3]}px ${p[2]}px ${p[1]}px` : '', n.backgroundColor ? `background:${col(n.backgroundColor, dark)}` : '',
     n.cornerRadius ? `border-radius:${n.cornerRadius}px;overflow:hidden` : '', n.borderWidth ? `box-shadow:inset 0 0 0 ${n.borderWidth}px ${col(n.borderColor, dark)}` : ''].join(';');

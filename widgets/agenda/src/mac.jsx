@@ -113,7 +113,7 @@ const Btn = ({ onClick, cls = "", title, children }) => <div data-btn="1" classN
 // ------------------------------------------------------------------ morceaux
 function Header({ m, dispatch, now, link }) {
   return <div className="hd">
-    <span className="ink3"><Icon n="cal" s={22} /></span>
+    <span className="ink3 calicon"><Icon n="cal" s={22} /></span>
     <b className="num">{m.header.num}</b>
     <div className="hdt"><div className="month">{m.header.month}</div><div className="sub">{m.header.sub}</div></div>
     <div className="grow" />
@@ -134,20 +134,27 @@ function Week({ m, dispatch, compact }) {
     <Btn cls={`nav${w.canNext ? "" : " off"}`} title="Semaine suivante" onClick={() => w.canNext && dispatch({ type: "NAV", sel: w.nextKey })}><Icon n="right" s={14} /></Btn>
   </div>;
 }
-function EventCard({ e, fmt, dispatch }) {
+function EventCard({ e, fmt, day, dispatch }) {
   const flags = [];
   if (e.recurring) flags.push(<span key="r" className="flag" title="Récurrent"><Icon n="repeat" s={11} /></span>);
   if (e.ongoing) flags.push(<span key="o" className="flag live">en cours</span>);
   if (e.overlap && fmt !== "compact") flags.push(<span key="p" className="flag">en parallèle</span>);
   if (e.status === "tentative") flags.push(<span key="t" className="flag">à confirmer</span>);
   if (e.modified) flags.push(<span key="m" className="flag">modifié</span>);
+  const d = fromKey(day), wide = fmt === "etendu";
+  // étendu : colonne des heures à gauche (début, fin, durée), puis titre, calendrier et repères
+  const tcol = !wide ? null : e.allDay ? <div className="tcol"><b>Journée</b>{e.e - e.s > 1.5 * DAY ? <span>→ {new Date(addDays(e.e, -1)).getDate()} {monthName(addDays(e.e, -1)).slice(0, 4)}.</span> : null}</div>
+    : e.s < d ? <div className="tcol"><b>…</b><span>→ {hm(e.e)}</span></div>
+    : <div className="tcol"><b>{hm(e.s)}</b>{e.e > e.s ? <span>{e.e > addDays(d, 1) ? "→ " : ""}{hm(e.e)}</span> : null}{e.dur ? <span className="dur">{e.dur}</span> : null}</div>;
+  const where = e.location && e.kind.k !== "lieu" && !/^\s*(https?:|www\.)/i.test(e.location) ? ` · ${e.location.split(/[\n,]/)[0]}` : "";
   return <div data-btn="1" className={`ev${e.ended ? " ended" : ""}${e.ongoing ? " ongoing" : ""}`} style={{ background: rgba(e.color, e.ongoing ? 0.26 : 0.15), "--hov": rgba(e.color, 0.26) }}
     onClick={stop(() => dispatch({ type: "DETAIL", key: evKey(e) }))}>
     <i className="bar" style={{ background: e.color }} />
+    {tcol}
     <div className="evm">
-      <div className="time">{e.time}{fmt === "etendu" && e.dur ? <span className="dur"> · {e.dur}</span> : null}{flags}</div>
+      {wide ? null : <div className="time">{e.time}{flags}</div>}
       <div className="title">{e.title}</div>
-      {fmt === "etendu" ? <div className="calname">{e.cal}{e.location && e.kind.k !== "lieu" && !/^\s*(https?:|www\.)/i.test(e.location) ? ` · ${e.location.split(/[\n,]/)[0]}` : ""}</div> : null}
+      {wide ? <div className="calname"><span className="cn">{e.cal}{where}</span>{flags}</div> : null}
     </div>
     {e.kind.k && fmt !== "compact" ? <div className="kind"><Icon n={KIND_ICON[e.kind.k]} s={15} /><span>{e.kind.label}</span></div> : null}
     <span className="chev"><Icon n="right" s={13} /></span>
@@ -194,7 +201,7 @@ function Settings({ m, prefs, dispatch, status, src }) {
         onDrop={(e) => { e.preventDefault(); const n = e.dataTransfer.getData("text/plain"); if (n && n !== c.name) set(moveCalendar(prefs, m.calendars, n, i)); }}>
         <div data-btn="1" className={`box${c.visible ? " on" : ""}`} onClick={stop(() => set(toggleCalendar(prefs, c)))}>{c.visible ? <Icon n="check" s={13} /> : null}</div>
         <i className="dot" style={{ background: c.color }} />
-        <span className="cname">{c.name}{c.selected ? "" : <em> · masqué dans Google</em>}</span>
+        <span className="cname">{c.name}{c.selected ? null : <em>décoché dans Google Agenda</em>}</span>
         <div data-btn="1" className={`star${c.isDefault ? " on" : ""}`} title="Calendrier par défaut" onClick={stop(() => set({ ...prefs, def: c.isDefault ? null : c.name }))}><Icon n="star" s={14} fill={c.isDefault} /></div>
         <span className="handle" title="Glisser pour réordonner"><Icon n="grip" s={15} /></span>
       </div>) : <div className="ink3 small">Aucun calendrier reçu pour l'instant.</div>}
@@ -222,7 +229,7 @@ export function view(state, dispatch = () => {}, now = Date.now()) {
   const w = state.size ? state.size.w : prefs.w || WIDTH[fmt], h = state.size ? state.size.h : prefs.h;
   const theme = prefs.theme === "clair" ? "light" : prefs.theme === "sombre" ? "dark" : "auto";
   const foot = m.state === "ok" && m.hidden ? <div data-btn="1" className="more" onClick={stop(() => dispatch({ type: "EXPAND" }))}>
-    <span className="dots">{m.hiddenColors.map((c) => <i key={c} style={{ background: c }} />)}</span>{m.hidden} autre{m.hidden > 1 ? "s" : ""} événement{m.hidden > 1 ? "s" : ""}<Icon n="down" s={13} /></div>
+    <span className="dots">{m.hiddenColors.map((c) => <i key={c} style={{ background: c }} />)}</span>{fmt === "compact" ? `${m.hidden} autre${m.hidden > 1 ? "s" : ""}` : `${m.hidden} autre${m.hidden > 1 ? "s" : ""} événement${m.hidden > 1 ? "s" : ""}`}<Icon n="down" s={13} /></div>
     : m.state === "ok" && m.expanded ? <div data-btn="1" className="more" onClick={stop(() => dispatch({ type: "EXPAND" }))}>Réduire<Icon n="up" s={13} /></div> : <span />;
   const warn = src && status.error ? status.error : null;
   return <div className={`ag ${theme} f-${fmt}`} style={{ left: x, top: y }}>
@@ -238,7 +245,7 @@ export function view(state, dispatch = () => {}, now = Date.now()) {
             {m.groups.map((g, i) => <div key={g.key} className="group">
               {i ? <div className="sep" /> : null}
               <div className="gh"><span>{g.title}</span><span className="ink3 small">{g.countText}</span></div>
-              {g.items.length ? g.items.map((e) => <EventCard key={evKey(e) + g.key} e={e} fmt={fmt} dispatch={dispatch} />) : <div className="none ink3">Rien de prévu</div>}
+              {g.items.length ? g.items.map((e) => <EventCard key={evKey(e) + g.key} e={e} fmt={fmt} day={g.key} dispatch={dispatch} />) : <div className="none ink3">Rien de prévu</div>}
             </div>)}
             {m.state === "vide" && m.period !== "jour" ? <StateView m={m} dispatch={dispatch} /> : null}
           </div>}
@@ -326,7 +333,7 @@ const STYLE = `
 .ag .cal:hover{background:var(--s2)} .ag .cal.hid .cname{color:var(--ink3)}
 .ag .box{width:20px;height:20px;border-radius:6px;box-shadow:inset 0 0 0 1.5px var(--line);display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none;transition:background .16s}
 .ag .box.on{background:var(--acc);color:var(--accink);box-shadow:none}
-.ag .cname{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13.5px} .ag .cname em{font-style:normal;color:var(--ink3);font-size:11px}
+.ag .cname{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13.5px} .ag .cname em{font-style:normal;color:var(--ink3)}
 .ag .star{color:var(--ink3);cursor:pointer;opacity:.5;transition:opacity .16s} .ag .star:hover,.ag .star.on{opacity:1} .ag .star.on{color:var(--acc)}
 .ag .handle{color:var(--ink3);cursor:grab}
 .ag .sh2{font-size:14px;margin:6px 0 2px} .ag .lab{font-size:11.5px;color:var(--ink3);margin:8px 0 4px}
@@ -335,4 +342,14 @@ const STYLE = `
 .ag .seg div.on{background:var(--bg);color:var(--ink);font-weight:600;box-shadow:0 1px 3px var(--shadow)}
 .ag .settings .sync{display:flex;align-items:center;justify-content:space-between;gap:8px;max-width:none;margin-top:6px}
 .ag .linkbtn{color:var(--acc);font-size:12px;justify-content:flex-start;margin-top:10px}
+.ag .tcol{width:58px;flex:none;display:flex;flex-direction:column;gap:1px;font-size:12px;color:var(--ink3);padding-left:2px}
+.ag .tcol b{font-size:14px;color:var(--ink);font-weight:600} .ag .tcol .dur{font-size:11px}
+.ag .calname{display:flex;align-items:center;gap:6px} .ag .calname .cn{overflow:hidden;text-overflow:ellipsis;min-width:0}
+.ag .body{-webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 22px),transparent);mask-image:linear-gradient(to bottom,#000 calc(100% - 22px),transparent);padding-bottom:14px}
+.ag.f-compact .calicon{display:none} .ag.f-compact .round{width:30px;height:30px;border-radius:15px}
+.ag .hdt{min-width:0} .ag .sub,.ag .month{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ag.f-compact .sub{font-size:12px} .ag.f-compact .foot .sync{display:none}
+.ag .settings{width:316px} .ag .settings .sync{flex-wrap:wrap}
+.ag .cname em{display:block;font-size:10.5px;line-height:1.1}
+.ag .seg div{overflow:hidden;text-overflow:ellipsis}
 `;
