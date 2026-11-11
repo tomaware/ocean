@@ -226,7 +226,30 @@ function Get-VentModel($data, $spot, [string]$level, $live, [double]$now) {
   $nowV = $null
   if ($live -and -not $live.panne) { $nowV = $live }
   elseif ($cur) { $nowV = [pscustomobject]@{ t = $cur.t; kn = $cur.kn; gust = $cur.gust; dir = $cur.dir; dirTxt = (Get-Compass $cur.dir); src = 'prévu'; panne = $false } }
-  [pscustomobject]@{ spot = $spot; level = $level; now = $nowV; panne = [bool]($live -and $live.panne); in2 = $in2; days = $days
+  # grand format : aujourd'hui et demain heure par heure, 7 h → 21 h (Tom, 11/11 : « juste le jour même et le lendemain, avec plus de détail »)
+  $k0 = if ((To-Local $now).Hour -ge 21) { 1 } else { 0 }        # après 21 h : demain et après-demain
+  $detail = @(foreach ($k in $k0, ($k0 + 1)) {
+    $d = Get-DayKey ($now + $k * 86400000)
+    $rr = @($rows | Where-Object { (Get-DayKey $_.t) -eq $d })
+    $hours = @(foreach ($hr in 7..21) {
+      $r = $rr | Where-Object { (Get-Hour $_.t) -eq $hr } | Select-Object -First 1
+      [pscustomobject]@{ h = $hr; kn = $(if ($r) { $r.kn } else { $null }); gust = $(if ($r) { $r.gust } else { $null }); dir = $(if ($r) { $r.dir } else { $null })
+        stars = $(if ($r -and $r.day) { Get-Stars $r.score } else { 0 }); has = [bool]$r; past = [bool]($r -and $r.t + 3600000 -le $now) }
+    })
+    $have = @($hours | Where-Object { $_.has -and -not $_.past })
+    $max = $null; $gmax = $null; $best = 0
+    foreach ($x in $have) {
+      if ($null -ne $x.kn -and (-not $max -or $x.kn -gt $max.kn)) { $max = $x }
+      if ($null -ne $x.gust -and ($null -eq $gmax -or $x.gust -gt $gmax)) { $gmax = $x.gust }
+      if ($x.stars -gt $best) { $best = $x.stars }
+    }
+    $ss = @($sess | Where-Object { (Get-DayKey $_.s) -eq $d -and [double]$_.e -gt $now })
+    [pscustomobject]@{ key = $d; label = $(if ($k -eq 0) { "Aujourd'hui" } elseif ($k -eq 1) { 'Demain' } else { 'Après-demain' })
+      date = ([datetime]::ParseExact($d, 'yyyy-MM-dd', $INV)).ToString('dddd d', [Globalization.CultureInfo]::new('fr-FR'))
+      stars = $best; kn = $(if ($max) { $max.kn } else { $null }); dir = $(if ($max) { $max.dir } else { $null }); gust = $gmax
+      cr = $(if ($ss.Count) { ($ss | ForEach-Object { Get-Span $_ }) -join ' · ' } else { 'pas de créneau' }); hours = $hours }
+  })
+  [pscustomobject]@{ spot = $spot; level = $level; now = $nowV; panne = [bool]($live -and $live.panne); in2 = $in2; days = $days; detail = $detail
     next = @($rows | Where-Object { $_.t -ge $now - 3600000 } | Select-Object -First 12) }
 }
 
@@ -276,7 +299,10 @@ if ($Model) {
       now = $(if ($vm.now) { [pscustomobject]@{ kn = $vm.now.kn; gust = $vm.now.gust; dir = $vm.now.dirTxt; src = $vm.now.src } } else { $null })
       panne = $vm.panne; in2 = $(if ($vm.in2) { $vm.in2.kn } else { $null })
       days = @($vm.days | ForEach-Object { [pscustomobject]@{ label = $_.label; stars = $_.stars; kn = $_.kn; cr = $_.cr; strip = ($_.strip -join ',') } })
-      next = @($vm.next | ForEach-Object { Get-Hour $_.t }) }
+      next = @($vm.next | ForEach-Object { Get-Hour $_.t })
+      detail = @($vm.detail | ForEach-Object { [pscustomobject]@{ label = $_.label; date = $_.date; stars = $_.stars; kn = $_.kn; gust = $_.gust; cr = $_.cr
+        kns = (($_.hours | ForEach-Object { if ($_.has) { Get-Round $_.kn } else { '' } }) -join ','); starsH = (($_.hours | ForEach-Object { $_.stars }) -join ',')
+        past = (($_.hours | Where-Object { $_.past } | ForEach-Object { $_.h }) -join ',') } }) }
     creneaux = [pscustomobject]@{ label = $cm.label; days = $cm.dayLabels
       list = @($cm.list | Select-Object -First 4 | ForEach-Object { [pscustomobject]@{ spot = $_.spot.short; when = (Get-CreneauWhen $_ $now); stars = $_.stars; kn = $_.kn; dir = (Get-Compass $_.dir); link = (Get-CreneauLink $_) } })
       grid = @($cm.grid | ForEach-Object { [pscustomobject]@{ spot = $_.spot.short; cells = (($_.cells | ForEach-Object { $_.label }) -join ',') } }) }
@@ -442,29 +468,44 @@ function New-VentCard($m, [string]$size, [double]$now) {
   [void](Add $rr (T (Get-GustText $m) 12 (C 'INK2') 'SemiBold'))
   [void](Add $rr (T $(if ($m.in2) { "dans 2 h : $(Get-Round $m.in2.kn) nd $(Get-Compass $m.in2.dir)" } else { '' }) 12 (C 'INK2') 'SemiBold'))
   [void](Add $r (New-BigNow $m 34))
-  # prochaines 12 h : barres colorées (hauteur = vent)
-  $box = Add $st (New-Box (C 'CELL') 12 (Th 8 8 8 6)); $box.Margin = Th 0 0 0 8
-  $bs = New-Stack; $box.Child = $bs
-  [void](Add $bs (T 'PROCHAINES HEURES · VENT CORRIGÉ' 9 (C 'INK3') 'Bold'))
-  $bars = Add $bs (New-Stack 'Horizontal'); $bars.Margin = Th 0 3 0 0
-  $bw = [math]::Floor((310 - 3 * 11) / 12)
-  foreach ($h in $m.next) {
-    $c = Add $bars (New-Dock); $c.Width = $bw; $c.Height = 74; $c.Margin = Th 0 0 3 0
-    [void](Add $c (Dock (Center (T ([string](Get-Hour $h.t)) 9 (C 'INK3'))) 'Bottom'))
-    $kn = if ($null -eq $h.kn) { 0 } else { [double]$h.kn }
-    $bar = Add $c (Dock (New-Box (Get-Brush (Get-WindColors $h.kn)[1]) 3 $null) 'Bottom'); $bar.Height = [math]::Max(3, [math]::Round([math]::Min(1, $kn / 30) * 44))
-    $n = Add $c (Center (T (Get-Round $h.kn) 9 (C 'INK') 'Black')); $n.VerticalAlignment = 'Bottom'
+  # aujourd'hui et demain, heure par heure de 7 h à 21 h : vent, rafales, direction, étoiles (heures passées estompées)
+  $cw = 21.6
+  foreach ($d in $m.detail) {
+    $hd = Add $st (New-Dock); $hd.Margin = Th 0 6 0 3
+    $right = Add $hd (Dock (New-Stack 'Horizontal') 'Right')
+    if ($null -ne $d.kn) {
+      [void](Add $right (T "max $(Get-Round $d.kn) nd $(Get-Compass $d.dir)" 11 (C 'INK') 'Bold'))
+      if ($null -ne $d.gust) { [void](Add $right (T " · raf. $(Get-Round $d.gust)" 11 (C 'INK2'))) }
+    }
+    $left = Add $hd (New-Stack 'Horizontal')
+    [void](Add $left (T $d.label 13 (C 'INK') 'Black'))
+    $dt = Add $left (T " $($d.date)" 11 (C 'INK3')); $dt.VerticalAlignment = 'Bottom'
+    $sx = Add $left (New-Stars $d.stars 11 $false); $sx.Margin = Th 6 0 0 0; $sx.VerticalAlignment = 'Center'
+    $box = Add $st (New-Box (C 'CELL') 10 (Th 4 5 4 4))
+    $g = [System.Windows.Controls.Grid]::new(); $box.Child = $g
+    foreach ($i in 0..4) { $rd = [System.Windows.Controls.RowDefinition]::new(); $rd.Height = [System.Windows.GridLength]::Auto; $g.RowDefinitions.Add($rd) }
+    $col = 0
+    foreach ($x in $d.hours) {
+      $cd = [System.Windows.Controls.ColumnDefinition]::new(); $cd.Width = [System.Windows.GridLength]::new($cw); $g.ColumnDefinitions.Add($cd)
+      $cells = @()
+      $hl = T ([string]$x.h) 9 (C 'INK3') 'SemiBold'; $hl.HorizontalAlignment = 'Center'; $cells += , @($hl, 0)
+      if ($x.has) {
+        $n = New-CellNum $x.kn ($cw - 2) 18 11; $n.HorizontalAlignment = 'Center'; $n.Margin = Th 0 1 0 1; $cells += , @($n, 1)
+        $gt = T $(if ($null -ne $x.gust) { Get-Round $x.gust } else { '' }) 9 (C 'INK2'); $gt.HorizontalAlignment = 'Center'; $cells += , @($gt, 2)
+        $ar = New-Arrow $x.dir 11 (C 'INK2'); if ($ar) { $ar.HorizontalAlignment = 'Center'; $ar.Margin = Th 0 1 0 2; $cells += , @($ar, 3) }
+      }
+      $sb = New-Box $(if ($x.stars -gt 0) { C "S$($x.stars)" } else { C 'NONE' }) 2 $null; $sb.Height = 5; $sb.Margin = Th 1 1 1 0; $cells += , @($sb, 4)
+      foreach ($c in $cells) {
+        [System.Windows.Controls.Grid]::SetColumn($c[0], $col); [System.Windows.Controls.Grid]::SetRow($c[0], $c[1])
+        if ($x.past -or -not $x.has) { $c[0].Opacity = 0.35 }
+        [void]$g.Children.Add($c[0])
+      }
+      $col++
+    }
+    $cr = Add $st (T "Créneau : $($d.cr)" 11 (C 'INK2') 'SemiBold'); $cr.Margin = Th 2 3 0 0
   }
-  foreach ($d in $m.days) {
-    $line = Add $st (New-Stack 'Horizontal'); $line.Margin = Th 0 0 0 4
-    $l = Add $line (T $d.label 12 (C 'INK') 'Black'); $l.Width = 38; $l.VerticalAlignment = 'Center'
-    $s = Add $line (New-Stars $d.stars 10); $s.Width = 40; $s.VerticalAlignment = 'Center'
-    foreach ($k in $d.strip) { $c = Add $line (New-Box $(if ($k -gt 0) { C "S$k" } else { C 'NONE' }) 2 $null); $c.Width = 9; $c.Height = 14; $c.Margin = Th 0 0 1 0 }
-    $cn = Add $line (New-CellNum $d.kn 30 18 12); $cn.Margin = Th 6 0 6 0
-    $cr = Add $line (T $d.cr 10 (C 'INK2') 'SemiBold'); $cr.VerticalAlignment = 'Center'
-  }
-  [void](Add $st (T '7 h → 21 h · vert ★ · orange ★★ · violet ★★★' 9 (C 'INK3')))
-  $root
+  $lg = Add $st (T 'nœuds · rafales · direction · étoiles (vert ★, orange ★★, violet ★★★)' 9 (C 'INK3')); $lg.Margin = Th 0 6 0 0
+  return $root
 }
 
 # ------------------------------------------------ Carte Créneaux

@@ -201,3 +201,6 @@ Les apps actuelles restent en ligne jusqu'à ce que leur remplaçante soit véri
 ### D-29 (11/11/2026) — contrôle de confidentialité : relevé à la même minute qu'un METAR
 - Le contrôle bloquant de publication signalait « horodatage du relevé » pour La Grande-Motte et Beauduc : leurs relevés Winds-Up tombaient à la même minute (hh:30) qu'un METAR de Marignane, publié pour Le Jaï (`obs`, NOAA, public). L'instant publié est celui du METAR, il ne révèle rien du relevé.
 - Règle : un horodatage de relevé présent dans les fichiers publics n'est ignoré que s'il est identique à l'heure d'un METAR collecté ; le journal l'indique (« n relevé(s) à la même minute qu'un METAR publié, ignoré(s) »). Toute autre minute reste bloquante (tests).
+
+### D-30 (11/11/2026, Tom) — widget Windows, carte Vent en grand : aujourd'hui et demain en détail
+- « Ne me fais pas tous les jours, juste le jour même et le lendemain, avec plus de détail » : la grande carte Vent remplace « prochaines heures » + 4 jours par deux blocs (aujourd'hui, demain ; après 21 h : demain, après-demain), heure par heure de 7 h à 21 h : vent (échelle de couleurs), rafales, direction, étoiles ; en tête vent max, rafale max et étoiles des heures à venir, puis le créneau. Heures passées estompées. Petit et moyen formats inchangés (4 jours).

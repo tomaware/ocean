@@ -19,9 +19,9 @@ const DATA = widgetWind(wingFixture(), { 'le-jai': { t: NOW - 25 * 60e3, kn: 14,
 const DATA_FILE = join(DIR, 'data.json');
 writeFileSync(DATA_FILE, JSON.stringify(DATA));
 
-function model(reg: object = {}, live?: object): any {
+function model(reg: object = {}, live?: object, now = NOW): any {
   const out = join(DIR, `m-${Math.random().toString(36).slice(2)}.json`);
-  const args = ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', PS, '-Model', out, '-DataFile', DATA_FILE, '-Now', String(NOW), '-Reglages', JSON.stringify(reg)];
+  const args = ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', PS, '-Model', out, '-DataFile', DATA_FILE, '-Now', String(now), '-Reglages', JSON.stringify(reg)];
   if (live) { const f = join(DIR, 'live.json'); writeFileSync(f, JSON.stringify(live)); args.push('-LiveFile', f); }
   execFileSync(PWSH, args, { env: { ...process.env, TZ: 'Europe/Paris', LOCALAPPDATA: DIR }, encoding: 'utf8' });
   return JSON.parse(readFileSync(out, 'utf8'));
@@ -33,7 +33,7 @@ test('widget Windows : script enregistré en UTF-8 avec BOM (sinon accents cass�
   assert.doesNotMatch(b.toString('utf8'), /\?\?|\?\.|\bclass\s+\w+\s*\{/);   // syntaxe absente de PowerShell 5.1
 });
 
-test('widget Windows : carte Vent par défaut (La Grande-Motte), prévision de l’heure, 4 jours', { skip: !hasPwsh && 'pwsh absent' }, () => {
+test('widget Windows : carte Vent par défaut (La Grande-Motte), prévision de l’heure, 4 jours ; en grand, aujourd’hui et demain heure par heure', { skip: !hasPwsh && 'pwsh absent' }, () => {
   const m = model();
   assert.equal(m.vent.spot, 'la-grande-motte'); assert.equal(m.vent.short, 'G-Motte'); assert.equal(m.vent.level, 'secu');
   assert.deepEqual(m.vent.now, { kn: 12, gust: 18, dir: 'NO', src: 'prévu' });
@@ -43,6 +43,17 @@ test('widget Windows : carte Vent par défaut (La Grande-Motte), prévision de l
   assert.equal(m.vent.days[2].stars, 2);                                   // vendredi : 22 nd à midi → note 7,5
   assert.equal(m.vent.days[0].strip.split(',').length, 15);                 // 7 h → 21 h
   assert.deepEqual(m.vent.next.slice(0, 3), [10, 11, 12]);
+  // grand format : aujourd'hui et demain heure par heure, 7 h → 21 h, heures passées marquées
+  assert.deepEqual(m.vent.detail.map((d: any) => d.label), ['Aujourd\'hui', 'Demain']);
+  assert.equal(m.vent.detail[0].date, 'mercredi 11'); assert.equal(m.vent.detail[1].date, 'jeudi 12');
+  const today = m.vent.detail[0], tomorrow = m.vent.detail[1];
+  assert.equal(today.kns.split(',').length, 15);
+  assert.equal(today.kns.split(',').slice(0, 4).join(','), ',,,12');         // 10 h 20 : 7, 8, 9 h passées (plus publiées), vides
+  assert.equal(today.kn, 16); assert.equal(today.gust, 22); assert.equal(today.cr, '13–16 h');   // max sur les heures à venir
+  assert.equal(tomorrow.kns.split(',').slice(0, 11).join(','), '15,15,15,15,15,19,19,19,19,15,15');   // 7 h → 17 h
+  assert.equal(tomorrow.cr, 'pas de créneau'); assert.equal(tomorrow.past, '');
+  const late = model({}, undefined, NOW + 11 * 3600e3);                      // 21 h 20 : demain et après-demain
+  assert.deepEqual(late.vent.detail.map((d: any) => `${d.label} ${d.date}`), ['Demain jeudi 12', 'Après-demain vendredi 13']);
 });
 
 test('widget Windows : mêmes créneaux et même ordre que le widget iPhone', { skip: !hasPwsh && 'pwsh absent' }, () => {
