@@ -16,10 +16,11 @@
   Pour les tests : -Model <sortie.json> -DataFile <données.json> -Now <ms> [-Reglages '{json}'] [-LiveFile <balises.json>]
                    -Capture <dossier> (images PNG de chaque carte, sans fenêtre)
 #>
-param([switch]$Install, [switch]$Uninstall, [string]$Model, [string]$Capture, [string]$DataFile, [double]$Now = 0, [string]$Reglages, [string]$LiveFile)
+param([switch]$Install, [switch]$Uninstall, [string]$Model, [string]$Capture, [string]$DataFile, [double]$Now = 0, [string]$Reglages, [string]$LiveFile, [string]$SurfFile)
 
 # ---------------------------------------------------------------- Constantes
 $DATA_URL = 'https://tomaware.github.io/ocean/data/widget-wind.json'
+$SURF_URL = 'https://tomaware.github.io/ocean/data/widget-surf.json'
 $APP_URL  = 'https://tomaware.github.io/ocean/'
 $NEAR     = @('la-grande-motte', 'le-ponant', 'port-camargue')   # < 55 km de Montpellier (comme les Sessions 2H)
 $LIVE_MAX_MIN = 90                                               # balise plus vieille : on affiche la prévision de l'heure
@@ -34,10 +35,11 @@ $RUN_KEY     = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run'
 $POWERSHELL  = if ($env:SystemRoot) { Join-Path $env:SystemRoot 'System32\WindowsPowerShell\v1.0\powershell.exe' } else { 'powershell' }
 $SETTINGS_FILE = Join-Path $INSTALL_DIR 'reglages.json'
 $CACHE_FILE    = Join-Path $INSTALL_DIR 'donnees.json'
+$SURF_CACHE    = Join-Path $INSTALL_DIR 'donnees-vague.json'
 $SP_FILE       = Join-Path $INSTALL_DIR 'superprevision.dat'   # lien privé, chiffré pour ton compte Windows (DPAPI)
 $OLD_SP_FILE   = Join-Path (Join-Path $BASE_DIR 'WindsUp') 'prevision.txt'   # lien déjà saisi dans l'ancien widget Winds-Up
 
-$DEFAULTS = [ordered]@{ spot = 'la-grande-motte'; mode = 'secu'; vent = 'moyen'; creneaux = 'moyen'; creneauxSpots = 'tous'
+$DEFAULTS = [ordered]@{ spot = 'la-grande-motte'; mode = 'secu'; vent = 'moyen'; creneaux = 'moyen'; creneauxSpots = 'tous'; vague = 'masque'; vagueSpot = 'carnon'
   disposition = 'cote'; theme = 'auto'; ecran = 1; x = $null; y = $null }
 
 # ---------------------------------------------------------------- Installation
@@ -286,6 +288,54 @@ function Get-CreneauxModel($data, $reg, [double]$now) {
 function Get-CreneauLink($c) { "$($APP_URL)#/spot/$($c.spot.id)?day=$([uri]::EscapeDataString((To-Local $c.s).ToString('dd/MM/yyyy', $INV)))" }
 function Get-CreneauWhen($c, [double]$now) { "$(Get-DayLabel (Get-DayKey $c.s) $now -Demain) $(Get-Span $c)" }
 
+# ---------------------------------------------------------------- Vague (surf) : mêmes règles que le widget iPhone « OCEAN Vague »
+$WIND_KIND = @{ 'offshore' = 'vent de terre'; 'side-off' = 'side-off'; 'side' = 'vent de côté'; 'side-on' = 'side-on'; 'onshore' = 'vent de mer'; 'pétole' = 'pas de vent' }
+function Get-M1($x) { if ($null -eq $x) { '–' } else { ([math]::Round([double]$x, 1)).ToString('0.#', [Globalization.CultureInfo]::new('fr-FR')) } }
+function Find-SurfSpot($surf, [string]$q) {
+  $n = Get-Norm $q
+  $s = $surf.spots | Where-Object { $_.id -eq $n } | Select-Object -First 1
+  if (-not $s) { $s = $surf.spots | Where-Object { (Get-Norm $_.short) -eq $n -or (Get-Norm $_.name) -eq $n -or (Get-Norm $_.name).Contains($n) } | Select-Object -First 1 }
+  if (-not $s) { $s = $surf.spots | Where-Object { $_.id -eq 'carnon' } | Select-Object -First 1 }
+  if (-not $s) { $s = @($surf.spots)[0] }
+  $s
+}
+function Get-VagueModel($surf, $spot, [double]$now) {
+  $rows = @(foreach ($h in $spot.hours) { [pscustomobject]@{ t = [double]$h[0]; hb = $h[1]; lo = $h[2]; hi = $h[3]; tp = $h[4]; sd = $h[5]; ws = $h[6]; wd = $h[7]; wk = $h[8]; day = [bool]$h[9]; score = $h[10] } })
+  $cur = $null
+  foreach ($r in $rows) { if (-not $cur -or [math]::Abs($r.t - $now) -lt [math]::Abs($cur.t - $now)) { $cur = $r } }
+  if ($cur -and [math]::Abs($cur.t - $now) -gt 3600000) { $cur = $null }
+  $sess = @($spot.sessions | Where-Object { $_ })
+  $days = @(foreach ($d in @($surf.days)[0..3]) {
+    $rr = @($rows | Where-Object { $_.day -and (Get-DayKey $_.t) -eq $d })
+    $best = $null; foreach ($r in $rr) { if ($null -ne $r.score -and (-not $best -or $r.score -gt $best.score)) { $best = $r } }
+    $ss = @($sess | Where-Object { (Get-DayKey $_.s) -eq $d })
+    [pscustomobject]@{ key = $d; label = (Get-DayLabel $d $now); stars = $(if ($best) { Get-Stars $best.score } else { 0 }); hb = $(if ($best) { $best.hb } else { $null }); tp = $(if ($best) { $best.tp } else { $null })
+      cr = $(if ($ss.Count) { Get-Span $ss[0] } else { '—' }) }
+  })
+  $k0 = if ((To-Local $now).Hour -ge 21) { 1 } else { 0 }
+  $detail = @(foreach ($k in $k0, ($k0 + 1)) {
+    $d = Get-DayKey ($now + $k * 86400000)
+    $rr = @($rows | Where-Object { (Get-DayKey $_.t) -eq $d })
+    $hours = @(foreach ($hr in 7..21) {
+      $r = $rr | Where-Object { (Get-Hour $_.t) -eq $hr } | Select-Object -First 1
+      $has = [bool]($r -and $r.t + 3600000 -gt $now)
+      [pscustomobject]@{ h = $hr; has = $has; hb = $(if ($r) { $r.hb } else { $null }); tp = $(if ($r) { $r.tp } else { $null }); ws = $(if ($r) { $r.ws } else { $null }); wd = $(if ($r) { $r.wd } else { $null })
+        stars = $(if ($r -and $r.day) { Get-Stars $r.score } else { 0 }) }
+    })
+    $up = @($hours | Where-Object { $_.has })
+    $ss = @($sess | Where-Object { (Get-DayKey $_.s) -eq $d -and [double]$_.e -gt $now })
+    [pscustomobject]@{ label = $(if ($k -eq 0) { "Aujourd'hui" } elseif ($k -eq 1) { 'Demain' } else { 'Après-demain' })
+      date = ([datetime]::ParseExact($d, 'yyyy-MM-dd', $INV)).ToString('dddd d', [Globalization.CultureInfo]::new('fr-FR'))
+      stars = [int](($up | Measure-Object -Property stars -Maximum).Maximum); hbMax = ($up | Where-Object { $null -ne $_.hb } | Measure-Object -Property hb -Maximum).Maximum
+      cr = $(if ($ss.Count) { ($ss | ForEach-Object { Get-Span $_ }) -join ' · ' } else { 'pas de créneau' }); hours = $hours }
+  })
+  # meilleur créneau surf à venir, tous spots : étoiles, puis durée, puis note, puis le plus tôt
+  $all = @(foreach ($sp in $surf.spots) { foreach ($x in @($sp.sessions | Where-Object { $_ })) { if ([double]$x.e -gt $now) {
+    [pscustomobject]@{ spot = $sp; s = [double]$x.s; e = [double]$x.e; h = $x.h; p = $x.p; hb = $x.hb; tp = $x.tp; ws = $x.ws; wd = $x.wd; stars = (Get-Stars $x.p) } } } })
+  $best = @($all | Sort-Object -Property @{ Expression = 'stars'; Descending = $true }, @{ Expression = 'h'; Descending = $true }, @{ Expression = 'p'; Descending = $true }, @{ Expression = 's'; Descending = $false }) | Select-Object -First 1
+  [pscustomobject]@{ spot = $spot; now = $cur; days = $days; detail = $detail; best = $best }
+}
+
 # ---------------------------------------------------------------- Sortie pour les tests (sans interface)
 if ($Model) {
   $data = Get-Content $DataFile -Raw -Encoding UTF8 | ConvertFrom-Json
@@ -308,6 +358,15 @@ if ($Model) {
     creneaux = [pscustomobject]@{ label = $cm.label; days = $cm.dayLabels
       list = @($cm.list | Select-Object -First 4 | ForEach-Object { [pscustomobject]@{ spot = $_.spot.short; when = (Get-CreneauWhen $_ $now); stars = $_.stars; kn = $_.kn; dir = (Get-Compass $_.dir); link = (Get-CreneauLink $_) } })
       grid = @($cm.grid | ForEach-Object { [pscustomobject]@{ spot = $_.spot.short; cells = (($_.cells | ForEach-Object { $_.label }) -join ','); kn = (($_.cells | ForEach-Object { Get-Round $_.kn }) -join ',') } }) }
+  }
+  if ($SurfFile) {
+    $surf = Get-Content $SurfFile -Raw -Encoding UTF8 | ConvertFrom-Json
+    $qm = Get-VagueModel $surf (Find-SurfSpot $surf $script:reg.vagueSpot) $now
+    $out | Add-Member -NotePropertyName vague -NotePropertyValue ([pscustomobject]@{ spot = $qm.spot.id; short = $qm.spot.short
+      now = $(if ($qm.now) { "$(Get-M1 $qm.now.lo)–$(Get-M1 $qm.now.hi) m · $($qm.now.tp) s · $(if ($WIND_KIND.ContainsKey([string]$qm.now.wk)) { $WIND_KIND[[string]$qm.now.wk] } else { Get-Compass $qm.now.wd }) $($qm.now.ws) nd" } else { $null })
+      days = @($qm.days | ForEach-Object { "$($_.label) $($_.stars) $(Get-M1 $_.hb) $($_.cr)" })
+      detail = @($qm.detail | ForEach-Object { [pscustomobject]@{ label = $_.label; date = $_.date; stars = $_.stars; hbMax = $_.hbMax; cr = $_.cr; hb = (($_.hours | ForEach-Object { if ($_.has) { Get-M1 $_.hb } else { '' } }) -join ',') } })
+      best = $(if ($qm.best) { "$($qm.best.spot.short) $(Get-CreneauWhen $qm.best $now) $($qm.best.stars) $(Get-M1 $qm.best.hb) m $($qm.best.tp) s" } else { $null }) })
   }
   [IO.File]::WriteAllText($Model, ($out | ConvertTo-Json -Depth 6), [Text.UTF8Encoding]::new($false))
   exit 0
@@ -619,6 +678,101 @@ function New-CreneauxCard($cm, [string]$size, [double]$now) {
   $st
 }
 
+# ------------------------------------------------ Carte Vague (surf)
+$WAVE = @{ clair = '#2F8FB0'; sombre = '#5BB8D6' }
+function Get-KindText($r) { if ($WIND_KIND.ContainsKey([string]$r.wk)) { $WIND_KIND[[string]$r.wk] } else { Get-Compass $r.wd } }
+function New-VagueNow($m, [double]$size) {
+  $st = New-Stack; $n = $m.now
+  $a = Add $st (New-Stack 'Horizontal')
+  [void](Add $a (T $(if ($n) { "$(Get-M1 $n.lo)–$(Get-M1 $n.hi)" } else { '–' }) $size (C 'INK') 'Black'))
+  $u = Add $a (T ' m' 13 (C 'INK2') 'Bold'); $u.VerticalAlignment = 'Bottom'; $u.Margin = Th 0 0 0 4
+  [void](Add $st (T $(if ($n) { "$($n.tp) s · houle $(Get-Compass $n.sd)" } else { ' ' }) 12 (C 'INK2') 'SemiBold'))
+  if ($n -and $null -ne $n.ws) {
+    $w = Add $st (New-Stack 'Horizontal'); $w.Margin = Th 0 3 0 0
+    [void](Add $w (New-CellNum $n.ws 24 16 10))
+    $ar = Add $w (New-Arrow $n.wd 11 (C 'INK2')); if ($ar) { $ar.Margin = Th 4 0 4 0; $ar.VerticalAlignment = 'Center' }
+    $k = Add $w (T (Get-KindText $n) 11 (C 'INK2') 'SemiBold'); $k.VerticalAlignment = 'Center'
+  }
+  $st
+}
+function New-VagueCard($m, [string]$size, [double]$now) {
+  $spot = $m.spot
+  if ($size -eq 'petit') {
+    $d = New-Dock
+    $top = Add $d (Dock (New-Dock) 'Top'); [void](Add $top (Dock (T 'maintenant' 9 (C 'INK3') 'Bold') 'Right')); [void](Add $top (T $spot.short 14 (C 'INK') 'Black'))
+    $b = Add $d (Dock (New-Dock) 'Bottom'); $d0 = $m.days[0]
+    [void](Add $b (Dock (New-Stars $(if ($d0) { $d0.stars } else { 0 }) 12) 'Right'))
+    [void](Add $b (T $(if ($d0 -and $d0.cr -ne '—') { $d0.cr } else { 'pas de créneau' }) 11 (C 'INK2') 'SemiBold'))
+    $nw = Add $d (New-VagueNow $m 26); $nw.VerticalAlignment = 'Center'
+    return $d
+  }
+  if ($size -eq 'moyen') {
+    $row = New-Stack 'Horizontal'
+    $left = Add $row (New-Dock); $left.Width = 112; $left.Margin = Th 0 0 10 0
+    [void](Add $left (Dock (T $spot.short 14 (C 'INK') 'Black') 'Top')); [void](Add $left (Dock (T 'maintenant' 9 (C 'INK3') 'Bold') 'Top'))
+    $nw = Add $left (New-VagueNow $m 24); $nw.VerticalAlignment = 'Center'
+    foreach ($d in $m.days) {
+      $col = Add $row (New-Box (C 'CELL') 10 (Th 2 6 2 6)); $col.Width = 48; $col.Margin = Th 0 0 4 0
+      $st = New-Stack; $col.Child = $st
+      [void](Add $st (Center (T $d.label 11 (C 'INK') 'Black')))
+      $x = Add $st (Center (New-Stars $d.stars 9)); $x.Margin = Th 0 3 0 3
+      [void](Add $st (Center (T $(if ($null -eq $d.hb) { '–' } else { "$(Get-M1 $d.hb) m" }) 12 (C 'INK') 'Black')))
+      [void](Add $st (Center (T $(if ($d.tp) { "$($d.tp) s" } else { '' }) 10 (C 'INK2'))))
+      $c = Add $st (Center (T $d.cr 10 (C 'INK2') 'SemiBold')); $c.Margin = Th 0 3 0 0
+    }
+    return $row
+  }
+  $st = New-Stack
+  $top = Add $st (New-Dock); [void](Add $top (Dock (T 'maintenant' 9 (C 'INK3') 'Bold') 'Right')); [void](Add $top (T $spot.name 15 (C 'INK') 'Black'))
+  $nw = Add $st (New-VagueNow $m 30); $nw.Margin = Th 0 2 0 2
+  $cw = 21.6
+  foreach ($d in $m.detail) {
+    $hd = Add $st (New-Dock); $hd.Margin = Th 0 6 0 3
+    if ($d.hbMax) { [void](Add $hd (Dock (T "jusqu'à $(Get-M1 $d.hbMax) m" 11 (C 'INK') 'Bold') 'Right')) }
+    $left = Add $hd (New-Stack 'Horizontal')
+    [void](Add $left (T $d.label 13 (C 'INK') 'Black')); $dt = Add $left (T " $($d.date)" 11 (C 'INK3')); $dt.VerticalAlignment = 'Bottom'
+    if ($d.stars) { $sx = Add $left (New-Stars $d.stars 11 $false); $sx.Margin = Th 6 0 0 0; $sx.VerticalAlignment = 'Center' }
+    $box = Add $st (New-Box (C 'CELL') 10 (Th 4 5 4 4))
+    $g = [System.Windows.Controls.Grid]::new(); $box.Child = $g
+    foreach ($i in 0..6) { $rd = [System.Windows.Controls.RowDefinition]::new(); $rd.Height = [System.Windows.GridLength]::Auto; $g.RowDefinitions.Add($rd) }
+    $hMax = [math]::Max(1.2, [double](($d.hours | Where-Object { $_.has -and $null -ne $_.hb } | Measure-Object -Property hb -Maximum).Maximum))
+    $col = 0
+    foreach ($x in $d.hours) {
+      $cd = [System.Windows.Controls.ColumnDefinition]::new(); $cd.Width = [System.Windows.GridLength]::new($cw); $g.ColumnDefinitions.Add($cd)
+      $cells = @()
+      $hl = T ([string]$x.h) 9 (C 'INK3') 'SemiBold'; $hl.HorizontalAlignment = 'Center'; $cells += , @($hl, 0)
+      if ($x.has) {
+        $v = T (Get-M1 $x.hb) 8 (C 'INK') 'Bold'; $v.HorizontalAlignment = 'Center'; $cells += , @($v, 1)
+        $bx = [System.Windows.Controls.Border]::new(); $bx.Height = 22; $bx.Width = $cw - 5
+        $bar = New-Box (Get-Brush $WAVE[$(if ($script:isDark) { 'sombre' } else { 'clair' })]) 2 $null; $bar.VerticalAlignment = 'Bottom'
+        $bar.Height = [math]::Max(2, [math]::Round(([double]$(if ($null -eq $x.hb) { 0 } else { $x.hb }) / $hMax) * 22)); $bx.Child = $bar; $cells += , @($bx, 2)
+        $p = T $(if ($x.tp) { [string]$x.tp } else { '' }) 8 (C 'INK2'); $p.HorizontalAlignment = 'Center'; $cells += , @($p, 3)
+        $n = New-CellNum $x.ws ($cw - 3) 14 9; $n.HorizontalAlignment = 'Center'; $n.Margin = Th 0 1 0 1; $cells += , @($n, 4)
+        $ar = New-Arrow $x.wd 9 (C 'INK2'); if ($ar) { $ar.HorizontalAlignment = 'Center'; $ar.Margin = Th 0 1 0 2; $cells += , @($ar, 5) }
+      }
+      $sb = New-Box $(if ($x.stars -gt 0 -and $x.has) { C "S$($x.stars)" } else { C 'NONE' }) 2 $null; $sb.Height = 5; $sb.Margin = Th 1 1 1 0; $cells += , @($sb, 6)
+      foreach ($c in $cells) {
+        [System.Windows.Controls.Grid]::SetColumn($c[0], $col); [System.Windows.Controls.Grid]::SetRow($c[0], $c[1])
+        if (-not $x.has) { $c[0].Opacity = 0.35 }
+        [void]$g.Children.Add($c[0])
+      }
+      $col++
+    }
+    $cr = Add $st (T "Créneau : $($d.cr)" 11 (C 'INK2') 'SemiBold'); $cr.Margin = Th 2 3 0 0
+  }
+  if ($m.best) {
+    $b = $m.best
+    $bb = Add $st (New-Box (C 'CELL') 10 (Th 8 6 8 6)); $bb.Margin = Th 0 8 0 4; $bb.Tag = Get-CreneauLink $b
+    $bs = New-Stack; $bb.Child = $bs
+    [void](Add $bs (T 'MEILLEUR CRÉNEAU SURF' 9 (C 'INK3') 'Bold'))
+    $l = Add $bs (New-Stack 'Horizontal')
+    if ($b.stars) { $sx = Add $l (New-Stars $b.stars 12 $false); $sx.Margin = Th 0 0 4 0 }
+    [void](Add $l (T "$($b.spot.short) · $(Get-CreneauWhen $b $now) · $(Get-M1 $b.hb) m · $($b.tp) s" 12 (C 'INK') 'Bold'))
+  }
+  [void](Add $st (T 'vagues m · période s · vent nd · étoiles (vert ★, orange ★★, violet ★★★)' 9 (C 'INK3')))
+  $st
+}
+
 # ------------------------------------------------ Assemblage
 function New-Card($content, [string]$size, [string]$url, [string]$foot) {
   $wh = $SIZES[$size]
@@ -636,7 +790,7 @@ function New-Message([string]$title, [string]$msg) {
   $s = New-Stack; [void](Add $s (T $title 14 (C 'INK') 'Black')); $t = Add $s (T $msg 12 (C 'INK2')); $t.TextWrapping = 'Wrap'; $t.Margin = Th 0 6 0 0
   New-Card $s 'petit' $APP_URL $null
 }
-function New-WidgetContent($data, $superLive, [bool]$cached, [double]$now) {
+function New-WidgetContent($data, $superLive, [bool]$cached, [double]$now, $surf = $null) {
   $reg = $script:reg
   Set-Palette $reg.theme
   $panel = New-Stack $(if ($reg.disposition -eq 'colonne') { 'Vertical' } else { 'Horizontal' })
@@ -651,6 +805,11 @@ function New-WidgetContent($data, $superLive, [bool]$cached, [double]$now) {
   if ($reg.creneaux -ne 'masque') {
     $cm = Get-CreneauxModel $data $reg $now
     [void](Add $panel (New-Card (New-CreneauxCard $cm $reg.creneaux $now) $reg.creneaux "$($APP_URL)#/wind/prevision" $foot))
+  }
+  if ($reg.vague -ne 'masque' -and $surf) {
+    $qs = Find-SurfSpot $surf $reg.vagueSpot
+    $qm = Get-VagueModel $surf $qs $now
+    [void](Add $panel (New-Card (New-VagueCard $qm $reg.vague $now) $reg.vague "$($APP_URL)#/spot/$($qs.id)" $foot))
   }
   $panel
 }
@@ -670,7 +829,12 @@ if ($Capture) {
   $data = if ($DataFile) { Get-Content $DataFile -Raw -Encoding UTF8 | ConvertFrom-Json } else { $null }
   $now = if ($Now) { $Now } else { Get-NowMs }
   $base = Read-Reglages
+  $surf = if ($SurfFile) { Get-Content $SurfFile -Raw -Encoding UTF8 | ConvertFrom-Json } else { $null }
   $cases = @(
+    @{ n = 'vague-petit-clair'; r = @{ vent = 'masque'; creneaux = 'masque'; vague = 'petit'; theme = 'clair' } },
+    @{ n = 'vague-moyen-sombre'; r = @{ vent = 'masque'; creneaux = 'masque'; vague = 'moyen'; theme = 'sombre' } },
+    @{ n = 'vague-grand-sombre'; r = @{ vent = 'masque'; creneaux = 'masque'; vague = 'grand'; theme = 'sombre' } },
+    @{ n = 'vague-grand-clair-sete'; r = @{ vent = 'masque'; creneaux = 'masque'; vague = 'grand'; theme = 'clair'; vagueSpot = 'Sète' } },
     @{ n = 'vent-petit-clair'; r = @{ vent = 'petit'; creneaux = 'masque'; theme = 'clair' } },
     @{ n = 'vent-moyen-clair'; r = @{ vent = 'moyen'; creneaux = 'masque'; theme = 'clair' } },
     @{ n = 'vent-grand-sombre'; r = @{ vent = 'grand'; creneaux = 'masque'; theme = 'sombre' } },
@@ -682,7 +846,7 @@ if ($Capture) {
     @{ n = 'hors-ligne'; r = @{ vent = 'moyen'; creneaux = 'moyen'; theme = 'clair' }; nodata = $true })
   foreach ($c in $cases) {
     $script:reg = [ordered]@{}; foreach ($k in $base.Keys) { $script:reg[$k] = $base[$k] }; foreach ($k in $c.r.Keys) { $script:reg[$k] = $c.r[$k] }
-    $el = New-WidgetContent $(if ($c.nodata) { $null } else { $data }) $null $false $now
+    $el = New-WidgetContent $(if ($c.nodata) { $null } else { $data }) $null $false $now $surf
     $frame = New-Box $(if ($script:isDark) { Get-Brush '#0B1418' } else { Get-Brush '#D9DED9' }) 0 (Th 8 8 8 8); $frame.Child = $el
     Save-Png $frame (Join-Path $Capture "$($c.n).png")
     Write-Host "[image] $($c.n).png"
@@ -693,14 +857,18 @@ if ($Capture) {
 # ---------------------------------------------------------------- Fenêtre
 $script:reg = Read-Reglages
 $script:data = $null; $script:cached = $false; $script:superLive = $null
-$script:fetch = $null; $script:liveFetch = $null
+$script:fetch = $null; $script:liveFetch = $null; $script:surf = $null; $script:surfFetch = $null
 $script:http = [System.Net.Http.HttpClient]::new(); $script:http.Timeout = [TimeSpan]::FromSeconds(20)
 
 function Read-Cache {
+  try { if (Test-Path $SURF_CACHE) { $script:surf = Get-Content $SURF_CACHE -Raw -Encoding UTF8 | ConvertFrom-Json } } catch {}
   try { if (Test-Path $CACHE_FILE) { $script:data = Get-Content $CACHE_FILE -Raw -Encoding UTF8 | ConvertFrom-Json; $script:cached = $true } }
   catch { Write-Log "Cache illisible : $_" }
 }
-function Start-DataFetch { if (-not $script:fetch) { $script:fetch = $script:http.GetByteArrayAsync($DATA_URL + '?t=' + [int64](Get-NowMs)) } }
+function Start-DataFetch {
+  if (-not $script:fetch) { $script:fetch = $script:http.GetByteArrayAsync($DATA_URL + '?t=' + [int64](Get-NowMs)) }
+  if ($script:reg.vague -ne 'masque' -and -not $script:surfFetch) { $script:surfFetch = $script:http.GetByteArrayAsync($SURF_URL + '?t=' + [int64](Get-NowMs)) }
+}
 function Start-LiveFetch {
   $u = Get-SuperPrevisionUrl
   if (-not $u) { $script:superLive = $null; return }
@@ -721,6 +889,16 @@ function Receive-Fetches {
       Write-Log "Données OCEAN : $_"
       if (-not $script:cached -and $script:data) { $script:cached = $true; $changed = $true }
     }
+  }
+  if ($script:surfFetch -and $script:surfFetch.IsCompleted) {
+    $f = $script:surfFetch; $script:surfFetch = $null
+    try {
+      if ($f.IsFaulted) { throw $f.Exception.GetBaseException() }
+      $txt = [Text.Encoding]::UTF8.GetString($f.Result); $j = $txt | ConvertFrom-Json
+      if (-not $j.spots) { throw 'données vides' }
+      $script:surf = $j; $changed = $true
+      try { [IO.File]::WriteAllText($SURF_CACHE, $txt, [Text.UTF8Encoding]::new($false)) } catch {}
+    } catch { Write-Log "Données vague : $_" }
   }
   if ($script:liveFetch -and $script:liveFetch.IsCompleted) {
     $f = $script:liveFetch; $script:liveFetch = $null
@@ -805,9 +983,10 @@ function New-ChoiceMenu([string]$header, [string]$key, $choices) {
 }
 function Set-Reglage([string]$key, $value) {
   # jamais les deux cartes masquées
-  if ($value -eq 'masque' -and (($key -eq 'vent' -and $script:reg.creneaux -eq 'masque') -or ($key -eq 'creneaux' -and $script:reg.vent -eq 'masque'))) { return }
+  if ($value -eq 'masque' -and @('vent', 'creneaux', 'vague' | Where-Object { $_ -ne $key -and $script:reg[$_] -ne 'masque' }).Count -eq 0) { return }   # jamais tout masqué
   $script:reg[$key] = $value
   if ($key -eq 'ecran') { $script:reg.x = $null; $script:reg.y = $null }
+  if ($key -eq 'vague' -and $value -ne 'masque' -and -not $script:surf) { Save-Reglages; Start-DataFetch }
   Save-Reglages; Update-Widget
 }
 function New-WidgetMenu {
@@ -821,6 +1000,9 @@ function New-WidgetMenu {
   $tailles = @(@('petit', 'Petit'), @('moyen', 'Moyen'), @('grand', 'Grand'), @('masque', 'Masquée'))
   [void]$menu.Items.Add((New-ChoiceMenu 'Carte Vent' 'vent' $tailles))
   [void]$menu.Items.Add((New-ChoiceMenu 'Carte Créneaux' 'creneaux' $tailles))
+  [void]$menu.Items.Add((New-ChoiceMenu 'Carte Vague (surf)' 'vague' $tailles))
+  $surfSpots = if ($script:surf) { @($script:surf.spots | ForEach-Object { , @($_.id, $_.name) }) } else { @(, @($script:reg.vagueSpot, $script:reg.vagueSpot)) }
+  [void]$menu.Items.Add((New-ChoiceMenu 'Spot de la vague' 'vagueSpot' $surfSpots))
   [void]$menu.Items.Add((New-ChoiceMenu 'Spots des créneaux' 'creneauxSpots' @(@('tous', 'Tous les spots'), @('proches', 'Proches de Montpellier (< 55 km)'))))
   [void]$menu.Items.Add((New-ChoiceMenu 'Disposition' 'disposition' @(@('cote', 'Côte à côte'), @('colonne', 'L''une sous l''autre'))))
   [void]$menu.Items.Add((New-ChoiceMenu 'Thème' 'theme' @(@('auto', 'Comme Windows'), @('clair', 'Clair'), @('sombre', 'Sombre'))))
@@ -844,7 +1026,7 @@ function New-WidgetMenu {
 function Update-Widget {
   try {
     $now = Get-NowMs
-    $win.Content = New-WidgetContent $script:data $script:superLive $script:cached $now
+    $win.Content = New-WidgetContent $script:data $script:superLive $script:cached $now $script:surf
     if (-not ($win.ContextMenu -and $win.ContextMenu.IsOpen)) { $win.ContextMenu = New-WidgetMenu }
   } catch {
     Write-Log "Affichage : $_ $($_.ScriptStackTrace)"

@@ -30,7 +30,10 @@ jobs:
         shell: pwsh
         run: |
           git show origin/data:public/widget-wind.json > real.json
-          powershell -NoProfile -ExecutionPolicy Bypass -STA -File widgets/windows/ocean-widget.ps1 -Capture captures -DataFile real.json
+          $surf = @()
+          git show origin/data:public/widget-surf.json > real-surf.json 2>$null
+          if ($LASTEXITCODE -eq 0) { $surf = @('-SurfFile', 'real-surf.json') }
+          powershell -NoProfile -ExecutionPolicy Bypass -STA -File widgets/windows/ocean-widget.ps1 -Capture captures -DataFile real.json @surf
           if ((Get-ChildItem captures -Filter *.png).Count -lt 9) { throw 'images manquantes' }
       - name: Installation, widget lancé au démarrage, désinstallation
         shell: pwsh

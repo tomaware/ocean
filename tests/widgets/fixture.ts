@@ -24,3 +24,18 @@ export function wingFixture() {
     ],
   };
 }
+
+/** Moteur surf fictif : Carnon (petit, vent de terre le vendredi) et Sète (plus gros), 7 h – 18 h sur 5 jours. */
+export function surfFixture() {
+  const mk = (id: string, name: string, base: number) => {
+    const h: Record<string, any[]> = { t: [], score: [], hb: [], lo: [], hi: [], hs: [], tp: [], dir: [], ws: [], wd: [], wk: [], day: [], conf: [] };
+    for (let d = 0; d < 5; d++) for (let hr = 6; hr <= 21; hr++) {
+      const fri = d === 2, hb = base + (fri ? 0.6 : 0);
+      h.t.push(Date.UTC(2026, 10, 11 + d, hr - 1)); h.hb.push(hb); h.lo.push(hb - 0.2); h.hi.push(hb + 0.3); h.hs.push(hb + 0.3); h.tp.push(fri ? 9 : 6);
+      h.dir.push(200); h.ws.push(fri ? 22.2 : 18.5); h.wd.push(fri ? 0 : 160); h.wk.push(fri ? 'offshore' : 'onshore');
+      h.day.push(hr >= 7 && hr <= 18); h.score.push(fri && hr >= 8 && hr <= 15 ? (hr <= 10 ? 9.2 : 7.4) : 3); h.conf.push(0.8);
+    }
+    return { id, name, h };
+  };
+  return { spots: [mk('carnon', 'Carnon', 0.6), mk('sete', 'Sète', 1.0)] };
+}

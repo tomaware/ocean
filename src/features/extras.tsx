@@ -84,6 +84,7 @@ const detectOs = (): Os => { const ua = navigator.userAgent; return /Windows/.te
 export const WIDGETS = [
   { file: 'ocean-vent.js', name: 'OCEAN Vent', what: 'Un spot au choix : le vent maintenant (balise) et dans 2 h, puis 4 jours (étoiles, vent max, direction).', sizes: 'petit, moyen, grand, écran verrouillé' },
   { file: 'ocean-creneaux.js', name: 'OCEAN Créneaux', what: 'Les meilleurs créneaux wing tous spots confondus ; en grand, la grille spots × 5 jours remplie par étoiles.', sizes: 'petit, moyen, grand, écran verrouillé' },
+  { file: 'ocean-vague.js', name: 'OCEAN Vague', what: 'Un spot surf au choix : les vagues maintenant (taille, période, houle, vent), 4 jours ; en grand, aujourd’hui et demain heure par heure et le meilleur créneau surf.', sizes: 'petit, moyen, grand, écran verrouillé' },
 ];
 
 function useScripts(): Record<string, string | null> {
@@ -155,6 +156,7 @@ export function WidgetsPage() {
               <thead><tr><th>Widget</th><th>Parameter</th><th>Effet</th></tr></thead>
               <tbody>
                 <tr><td>Vent</td><td><code>Beauduc</code>, <code>Le Jaï</code>, <code>G-Motte</code>…</td><td>Spot affiché (par défaut : La Grande-Motte)</td></tr>
+                <tr><td>Vague</td><td><code>Sète</code>, <code>Palavas</code>, <code>Stes-Maries</code>…</td><td>Spot surf affiché (par défaut : Carnon)</td></tr>
                 <tr><td>Vent / Créneaux</td><td><code>offshore</code></td><td>Mode OffShore au lieu de Sécu first (ex. <code>Beauduc offshore</code>)</td></tr>
                 <tr><td>Créneaux</td><td><code>proches</code></td><td>Seulement les spots à moins de 55 km de Montpellier</td></tr>
                 <tr><td>Créneaux</td><td><code>G-Motte, Beauduc, Le Jaï</code></td><td>Seulement ces spots</td></tr>
@@ -176,7 +178,7 @@ export function WidgetsPage() {
               <li>Menu Pomme → <b>Réglages Système</b> → <b>Bureau et Dock</b> → section Widgets : active <b>Utiliser des widgets pour iPhone</b>.</li>
               <li>Clic sur le fond d’écran en maintenant la touche <b>Contrôle</b> → <b>Modifier les widgets</b>.</li>
               <li>Cherche <b>Scriptable</b> (widgets de l’iPhone), clique sur la taille voulue ou fais-la glisser sur le bureau, puis <b>Terminé</b>.</li>
-              <li>Contrôle-clic sur le widget → <b>Modifier « Scriptable »</b> → Script : « OCEAN Vent » ou « OCEAN Créneaux » (et Parameter si besoin) → <b>OK</b>.</li>
+              <li>Contrôle-clic sur le widget → <b>Modifier « Scriptable »</b> → Script : « OCEAN Vent », « OCEAN Créneaux » ou « OCEAN Vague » (et Parameter si besoin) → <b>OK</b>.</li>
             </Steps>
             <span class="faint">Les données viennent de l’iPhone : s’il est éteint ou loin, le widget garde son dernier affichage.</span>
           </div>
@@ -195,7 +197,7 @@ export function WidgetsPage() {
         <Section title={<span class="row"><Monitor size={18} /> Windows</span>}>
           <div class="card stack">
             <strong>Le widget OCEAN sur le bureau</strong>
-            <span class="small">Les cartes <b>Vent</b> (ton spot, maintenant, dans 2 h et 4 jours) et <b>Créneaux</b> (les meilleurs créneaux, ou la grille spots × 5 jours), chacune en petit, moyen ou grand. Windows 10 ou 11, rien d’autre à installer.</span>
+            <span class="small">Les cartes <b>Vent</b> (ton spot, maintenant, dans 2 h et 4 jours), <b>Créneaux</b> (les meilleurs créneaux, ou la grille spots × 5 jours) et <b>Vague</b> (surf : à afficher au clic droit → Carte Vague), chacune en petit, moyen ou grand. Windows 10 ou 11, rien d’autre à installer.</span>
             <div class="row"><a class="btn primary" href="./widgets/ocean-widget-windows.zip" download><Download size={16} /> Télécharger le widget Windows (.zip)</a></div>
             <Steps>
               <li>Clic droit sur le fichier téléchargé → <b>Extraire tout…</b> → <b>Extraire</b>.</li>
@@ -205,7 +207,7 @@ export function WidgetsPage() {
           </div>
           <div class="card stack">
             <strong>Régler le widget</strong>
-            <span class="small"><b>Clic droit</b> sur le widget : spot du vent, mode Sécu first ou OffShore, taille de chaque carte (petit, moyen, grand, masquée), spots des créneaux (tous ou proches de Montpellier), côte à côte ou l’une sous l’autre, thème, écran.</span>
+            <span class="small"><b>Clic droit</b> sur le widget : spot du vent, spot de la vague, mode Sécu first ou OffShore, taille de chaque carte (Vent, Créneaux, Vague : petit, moyen, grand, masquée), spots des créneaux (tous ou proches de Montpellier), côte à côte ou l’une sous l’autre, thème, écran.</span>
             <span class="small"><b>Glisser</b> pour le déplacer ; <b>clic</b> sur une carte, un créneau ou une case : ouvre la fiche du spot dans OCEAN, au bon jour.</span>
             {prefs.perso.enabled && <span class="small"><b>Mode perso</b> : clic droit → <b>Brancher ma super prévision…</b> et colle ton lien privé (gardé chiffré sur le PC). Le widget affiche alors les balises Winds-Up en direct ; s’il trouve le lien de ton ancien widget Winds-Up, il le reprend tout seul.</span>}
             <span class="faint">Pour l’enlever : double-clic sur <b>desinstaller.cmd</b> dans le même dossier.</span>

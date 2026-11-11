@@ -7,7 +7,7 @@ import { WIND_GRID } from '../collect/openmeteo.ts';
 import { privacyEngines } from '../engines/run.ts';
 import type { CollectBundle, ForecastBlock, Registry } from '../../src/types/contracts.ts';
 import { allSessions, bestByDiscipline, ALL_LEVELS, publicSpots } from './sessions.ts';
-import { widgetWind } from './widgets.ts';
+import { widgetSurf, widgetWind } from './widgets.ts';
 
 const ROOT = new URL('../../', import.meta.url);
 const OUT = new URL('data/v1/public/', ROOT);
@@ -121,6 +121,7 @@ function main(): void {
     'wind-grid.json': JSON.stringify(windGridPublic(opt('data/v1/collect/bundle.json') as CollectBundle | null, now)),
     'meteo.json': JSON.stringify({ ...meteoPublic(opt('data/v1/collect/bundle.json') as CollectBundle | null, now), obs: liveObsPublic(opt('data/v1/collect/bundle.json') as CollectBundle | null, registry, now) }),
     'widget-wind.json': JSON.stringify(widgetWind(wing, liveObsPublic(opt('data/v1/collect/bundle.json') as CollectBundle | null, registry, now), now)),
+    'widget-surf.json': JSON.stringify(widgetSurf(surf, sessions, now)),
   };
   const live = opt('data/private/super-prevision-live.json');
   const legacyIds = registry.spots.map((s) => s.legacy.superPrevisionVent).filter(Boolean) as string[];

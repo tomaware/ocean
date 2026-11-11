@@ -8,8 +8,9 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { mkdtempSync, readFileSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { widgetWind } from '../pipeline/publish/widgets.ts';
-import { NOW, wingFixture } from './widgets/fixture.ts';
+import { widgetSurf, widgetWind } from '../pipeline/publish/widgets.ts';
+import { surfSessions } from '../pipeline/publish/sessions.ts';
+import { NOW, surfFixture, wingFixture } from './widgets/fixture.ts';
 
 const PS = 'widgets/windows/ocean-widget.ps1';
 const PWSH = process.env.OCEAN_PS ?? 'pwsh';   // en CI Windows : powershell (Windows PowerShell 5.1, celui des PC)
@@ -18,10 +19,12 @@ const DIR = mkdtempSync(join(tmpdir(), 'ocean-win-'));
 const DATA = widgetWind(wingFixture(), { 'le-jai': { t: NOW - 25 * 60e3, kn: 14, gust: 18, dir: 310, station: 'LFML', source: 'METAR Marseille-Marignane' } }, NOW);
 const DATA_FILE = join(DIR, 'data.json');
 writeFileSync(DATA_FILE, JSON.stringify(DATA));
+const SURF = surfFixture(), SURF_FILE = join(DIR, 'surf.json');
+writeFileSync(SURF_FILE, JSON.stringify(widgetSurf(SURF, surfSessions(SURF, NOW), NOW)));
 
 function model(reg: object = {}, live?: object, now = NOW): any {
   const out = join(DIR, `m-${Math.random().toString(36).slice(2)}.json`);
-  const args = ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', PS, '-Model', out, '-DataFile', DATA_FILE, '-Now', String(now), '-Reglages', JSON.stringify(reg)];
+  const args = ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', PS, '-Model', out, '-DataFile', DATA_FILE, '-Now', String(now), '-Reglages', JSON.stringify(reg), '-SurfFile', SURF_FILE];
   if (live) { const f = join(DIR, 'live.json'); writeFileSync(f, JSON.stringify(live)); args.push('-LiveFile', f); }
   execFileSync(PWSH, args, { env: { ...process.env, TZ: 'Europe/Paris', LOCALAPPDATA: DIR }, encoding: 'utf8' });
   return JSON.parse(readFileSync(out, 'utf8'));
@@ -82,4 +85,15 @@ test('widget Windows : réglages (spot, OffShore, proches) et vent en direct', {
   assert.equal(m.vent.panne, true); assert.equal(m.vent.now.src, 'prévu');
   m = model({ spot: 'beauduc' }, { spots: { '61-beauduc': { nom: 'Beauduc', t: NOW - 3 * 3600e3, v: 30, o: 'SE' } } });
   assert.equal(m.vent.now.src, 'prévu');                                     // balise trop vieille
+});
+
+test('widget Windows : carte Vague, mêmes règles que le widget iPhone « OCEAN Vague »', { skip: !hasPwsh && 'pwsh absent' }, () => {
+  let m = model();
+  assert.equal(m.vague.spot, 'carnon');
+  assert.equal(m.vague.now, '0,4–0,9 m · 6 s · vent de mer 10 nd');
+  assert.deepEqual(m.vague.days, ['Auj. 0 0,6 —', 'Jeu. 0 0,6 —', 'Ven. 3 1,2 8–16 h', 'Sam. 0 0,6 —']);
+  assert.deepEqual(m.vague.detail.map((d: any) => `${d.label} ${d.date}`), ['Aujourd\'hui mercredi 11', 'Demain jeudi 12']);
+  assert.equal(m.vague.best, 'Carnon Ven. 8–16 h 3 1,2 m 9 s');
+  m = model({ vagueSpot: 'Sète' });
+  assert.equal(m.vague.spot, 'sete');
 });

@@ -40,3 +40,38 @@ export function widgetWind(wing: any, obs: Record<string, unknown>, now: number)
     obs,
   };
 }
+
+// ------------------------------------------------------------------ widget Vague (surf)
+export const SHORT_SURF: Record<string, string> = { carnon: 'Carnon', palavas: 'Palavas', sete: 'Sète', vias: 'Vias', 'saintes-maries': 'Stes-Maries', 'la-couronne': 'Couronne' };
+const r1 = (x: number | null | undefined) => (x == null ? null : Math.round(x * 10) / 10);
+const kn = (kmh: number | null | undefined) => (kmh == null ? null : Math.round(kmh / 1.852));
+
+/** Données du widget Vague : notes, créneaux et étoiles du moteur surf (rien n'est recalculé sauf des comptes). */
+export function widgetSurf(surf: any, sessions: { discipline: string; spot: string; start: number; end: number; hours: number; peak: number; mean: number }[], now: number) {
+  const days: string[] = [];
+  for (let k = 0; days.length < 5 && k < 8; k++) { const d = dayKeyParis(now + k * 86400e3); if (!days.includes(d)) days.push(d); }
+  const until = now + 5 * 86400e3;
+  return {
+    version: 1, generatedAt: now, days, app: 'https://tomaware.github.io/ocean/',
+    note: 'Vagues au bord (m) du moteur Super Prévi Surf, vent en nœuds ; note surf sur 10',
+    spots: (surf.spots ?? []).map((s: any) => {
+      const h = s.h, idx = h.t.map((_: number, i: number) => i).filter((i: number) => h.t[i] >= now - 3600e3 && h.t[i] <= until);
+      const daily = days.map((d) => {
+        const ii = idx.filter((i: number) => h.day[i] && dayKeyParis(h.t[i]) === d);
+        return [1, 2, 3].map((st) => ii.filter((i: number) => stars(h.score[i]) === st).length).concat(ii.length);
+      });
+      const ses = sessions.filter((w) => w.discipline === 'surf' && w.spot === s.id && w.end > now && w.start <= until).map((w) => {
+        const ii = idx.filter((i: number) => h.t[i] >= w.start && h.t[i] < w.end);
+        const avg = (k: string) => { const v = ii.map((i: number) => h[k][i]).filter((x: any) => x != null); return v.length ? v.reduce((a: number, b: number) => a + b, 0) / v.length : null; };
+        return { s: w.start, e: w.end, h: w.hours, p: w.peak, hb: r1(avg('hb')), tp: avg('tp') == null ? null : Math.round(avg('tp')!), ws: kn(avg('ws')),
+          wd: circ(ii.map((i: number) => h.wd[i]).filter((x: any) => x != null)), sd: circ(ii.map((i: number) => h.dir[i]).filter((x: any) => x != null)) };
+      });
+      return {
+        id: s.id, name: s.name, short: SHORT_SURF[s.id] ?? s.name,
+        // [heure, vagues m, mini m, maxi m, période s, houle de °, vent nd, vent de °, type de vent, jour 1/0, note]
+        hours: idx.map((i: number) => [h.t[i], r1(h.hb[i]), r1(h.lo[i]), r1(h.hi[i]), h.tp[i] == null ? null : Math.round(h.tp[i]), h.dir[i], kn(h.ws[i]), h.wd[i], h.wk?.[i] ?? null, h.day[i] ? 1 : 0, h.score[i]]),
+        sessions: ses, daily,
+      };
+    }),
+  };
+}

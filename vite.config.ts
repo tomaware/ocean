@@ -4,7 +4,7 @@ import { defineConfig, type Plugin } from 'vite';
 import preact from '@preact/preset-vite';
 
 /** Scripts des widgets iPhone publiés avec le site (onglet « Widgets » : copier / télécharger). Noms sans espace ni accent. */
-export const WIDGET_FILES: [string, string][] = [['widgets/iphone/OCEAN Vent.js', 'ocean-vent.js'], ['widgets/iphone/OCEAN Créneaux.js', 'ocean-creneaux.js']];
+export const WIDGET_FILES: [string, string][] = [['widgets/iphone/OCEAN Vent.js', 'ocean-vent.js'], ['widgets/iphone/OCEAN Créneaux.js', 'ocean-creneaux.js'], ['widgets/iphone/OCEAN Vague.js', 'ocean-vague.js']];
 /** Widget Windows : un .zip à extraire puis installer.cmd (fins de ligne Windows pour les .cmd et le LISEZ-MOI). */
 export const WINDOWS_ZIP = 'ocean-widget-windows.zip';
 const WINDOWS_FILES = ['installer.cmd', 'desinstaller.cmd', 'ocean-widget.ps1', 'LISEZ-MOI.txt'];

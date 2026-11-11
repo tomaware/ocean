@@ -214,3 +214,9 @@ Les apps actuelles restent en ligne jusqu'à ce que leur remplaçante soit véri
 
 ### D-33 (11/11/2026, Tom) — orientations confirmées
 - Tom confirme les orientations de Saintes-Maries-de-la-Mer, La Couronne, Le Jaï, Beauduc et l'Almanarre : `orientation.confidence` passe à `high` (registre). Les notes ne changent pas (la confiance d'orientation n'entre dans aucun calcul) ; l'app n'affiche plus « orientation à confirmer » pour ces spots. Taille et niveau des deux spots surf restent ceux des guides de spots.
+
+### D-34 (11/11/2026, Tom) — widget VAGUE
+- Données : `widget-surf.json` (≈ 45 Ko) : pour chaque spot surf, heures sur 5 jours [heure, vagues au bord, mini, maxi, période, houle de, vent nd, vent de, type de vent, jour, note], créneaux surf de l'app (mêmes que `sessions.json`) et comptes d'heures par étoiles. Rien n'est recalculé.
+- iPhone : script Scriptable « OCEAN Vague » (Carnon par défaut, Parameter ou ▶︎ → Choisir le spot) : petit (vagues maintenant, période, houle, vent), moyen (+ 4 jours), grand (aujourd'hui et demain heure par heure 7 h → 21 h + meilleur créneau surf tous spots), écran verrouillé.
+- Windows : carte « Vague » (petit / moyen / grand), masquée par défaut, à afficher au clic droit ; spot au clic droit.
+- Vérifié : banc d'essai Scriptable et PowerShell sur un jeu d'essai commun et sur les données réelles ; rendu Windows en CI.
