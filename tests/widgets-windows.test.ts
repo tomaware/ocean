@@ -65,6 +65,7 @@ test('widget Windows : mêmes créneaux et même ordre que le widget iPhone', { 
   assert.equal(m.creneaux.list[0].link, 'https://tomaware.github.io/ocean/#/spot/beauduc?day=13%2F11%2F2026');
   const bd = m.creneaux.grid.find((g: any) => g.spot === 'Beauduc');
   assert.equal(bd.cells, ',,4h,,');                                          // vendredi : 4 h à 3 étoiles
+  assert.equal(bd.kn, '20,23,26,29,32');                                     // cases sans créneau : vent max du jour
   assert.doesNotMatch(m.creneaux.grid.map((g: any) => g.cells).join(','), /\b0h\b/);
 });
 

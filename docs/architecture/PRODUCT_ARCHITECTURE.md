@@ -204,3 +204,6 @@ Les apps actuelles restent en ligne jusqu'à ce que leur remplaçante soit véri
 
 ### D-30 (11/11/2026, Tom) — widget Windows, carte Vent en grand : aujourd'hui et demain en détail
 - « Ne me fais pas tous les jours, juste le jour même et le lendemain, avec plus de détail » : la grande carte Vent remplace « prochaines heures » + 4 jours par deux blocs (aujourd'hui, demain ; après 21 h : demain, après-demain), heure par heure de 7 h à 21 h : vent (échelle de couleurs), rafales, direction, étoiles ; en tête vent max, rafale max et étoiles des heures à venir, puis le créneau. Heures passées estompées. Petit et moyen formats inchangés (4 jours).
+
+### D-31 (11/11/2026, Tom) — widget Windows, carte Créneaux en grand : disposition de l'ancien widget
+- Meilleur créneau en haut, en grand (jour et heures, spot, étoiles, vent et rafales, durée), puis la grille avec les spots en colonnes et les jours en lignes. Cases avec créneau : remplissage par étoiles et heures au meilleur niveau ; cases sans créneau : vent max du jour (heures de jour), comme l'ancien widget.

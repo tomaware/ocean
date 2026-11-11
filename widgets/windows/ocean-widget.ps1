@@ -268,11 +268,13 @@ function Get-CreneauxModel($data, $reg, [double]$now) {
     $cells = @(for ($i = 0; $i -lt $days.Count; $i++) {
       $x = @($sp.daily.$level)[$i]
       $ses = @($sess | Where-Object { (Get-DayKey $_.s) -eq $days[$i] })
-      if (-not $ses.Count -or -not $x) { [pscustomobject]@{ has = $false; n = @(0, 0, 0, 1); label = '' } }
+      # vent max de la journée (heures de jour), affiché dans les cases sans créneau, comme l'ancien widget
+      $kmax = ($sp.hours | Where-Object { $_[4] -and (Get-DayKey $_[0]) -eq $days[$i] -and $null -ne $_[1] } | ForEach-Object { [double]$_[1] } | Measure-Object -Maximum).Maximum
+      if (-not $ses.Count -or -not $x) { [pscustomobject]@{ has = $false; n = @(0, 0, 0, 1); label = ''; kn = $kmax } }
       else {
         $top = if ($x[2]) { 3 } elseif ($x[1]) { 2 } else { 1 }
         $hours = if ($x[$top - 1]) { $x[$top - 1] } else { ($ses | Measure-Object -Property h -Sum).Sum }
-        [pscustomobject]@{ has = $true; n = @($x); label = "${hours}h" }
+        [pscustomobject]@{ has = $true; n = @($x); label = "${hours}h"; kn = $kmax }
       }
     })
     [pscustomobject]@{ spot = $sp; cells = $cells }
@@ -305,7 +307,7 @@ if ($Model) {
         past = (($_.hours | Where-Object { $_.past } | ForEach-Object { $_.h }) -join ',') } }) }
     creneaux = [pscustomobject]@{ label = $cm.label; days = $cm.dayLabels
       list = @($cm.list | Select-Object -First 4 | ForEach-Object { [pscustomobject]@{ spot = $_.spot.short; when = (Get-CreneauWhen $_ $now); stars = $_.stars; kn = $_.kn; dir = (Get-Compass $_.dir); link = (Get-CreneauLink $_) } })
-      grid = @($cm.grid | ForEach-Object { [pscustomobject]@{ spot = $_.spot.short; cells = (($_.cells | ForEach-Object { $_.label }) -join ',') } }) }
+      grid = @($cm.grid | ForEach-Object { [pscustomobject]@{ spot = $_.spot.short; cells = (($_.cells | ForEach-Object { $_.label }) -join ','); kn = (($_.cells | ForEach-Object { Get-Round $_.kn }) -join ',') } }) }
   }
   [IO.File]::WriteAllText($Model, ($out | ConvertTo-Json -Depth 6), [Text.UTF8Encoding]::new($false))
   exit 0
@@ -568,38 +570,52 @@ function New-CreneauxCard($cm, [string]$size, [double]$now) {
     if ($list.Count -lt 2) { [void](Add $rs (T "Pas d'autre créneau en vue" 11 (C 'INK3'))) }
     return $row
   }
-  # grand : grille spots × 5 jours
+  # grand (Tom, 11/11 : « comme l'ancien ») : meilleur créneau en haut, puis spots en colonnes et jours en lignes
   $st = New-Stack
-  $head = Add $st (New-Dock); $head.Margin = Th 0 0 0 6
+  $head = Add $st (New-Dock); $head.Margin = Th 0 0 0 8
   [void](Add $head (Dock (T $cm.label 10 (C 'INK3')) 'Right')); [void](Add $head (T 'Créneaux vent' 15 (C 'INK') 'Black'))
-  $cw = 47; $nameW = 66
+  if ($list.Count) {
+    $c = $list[0]
+    $b = Add $st (New-Box $(if ($c.stars) { C "SOFT$($c.stars)" } else { C 'CELL' }) 14 (Th 12 9 12 10)); $b.Margin = Th 0 0 0 10; $b.Tag = Get-CreneauLink $c
+    $bs = New-Stack; $b.Child = $bs
+    $l1 = Add $bs (New-Dock)
+    $pill = Add $l1 (Dock (New-Box $(if ($c.stars) { Get-Brush $FILL[[int]$c.stars] } else { C 'OFF' }) 8 (Th 7 1 7 1)) 'Right'); $pill.Child = T "$($c.h)h" 11 (Get-Brush '#FFFFFF') 'Black'
+    [void](Add $l1 (T 'MEILLEUR CRÉNEAU' 10 (C 'INK3') 'Bold'))
+    $day = (To-Local $c.s).ToString('dddd d', [Globalization.CultureInfo]::new('fr-FR'))
+    $day = $day.Substring(0, 1).ToUpper() + $day.Substring(1)
+    $w = Add $bs (T "$day · $(Get-Hour $c.s) h – $(Get-Hour $c.e) h" 19 (C 'INK') 'Black'); $w.Margin = Th 0 2 0 0
+    $l3 = Add $bs (New-Stack 'Horizontal'); $l3.Margin = Th 0 1 0 2
+    [void](Add $l3 (T $c.spot.name 13 (C 'INK') 'SemiBold'))
+    $sx = Add $l3 (New-Stars $c.stars 13 $false); $sx.Margin = Th 8 0 0 0
+    [void](Add $bs (T "$(Get-Round $c.kn) nd $(Get-Compass $c.dir)$(if ($c.g) { " · raf. $(Get-Round $c.g)" } else { '' })" 12 (C 'INK2') 'Bold'))
+  } else { $t = Add $st (T 'Pas de créneau dans les 5 jours' 13 (C 'INK2') 'SemiBold'); $t.Margin = Th 0 0 0 10 }
+  $HEAD = @{ 'la-franqui' = 'Franqui'; 'espiguette' = 'Espig.'; 'almanarre' = 'Alman.'; 'la-grande-motte' = 'G-Motte' }
+  $nameW = 40; $n = [math]::Max(1, $cm.grid.Count); $cw = [math]::Floor((336 - $nameW) / $n) - 3
   $hdr = Add $st (New-Stack 'Horizontal'); $hdr.Margin = Th $nameW 0 0 3
-  foreach ($l in $cm.dayLabels) { $h = Add $hdr (T $l 10 (C 'INK3') 'Bold'); $h.Width = $cw; $h.Margin = Th 3 0 0 0; $h.TextAlignment = 'Center' }
   foreach ($g in $cm.grid) {
+    $lab = if ($HEAD.ContainsKey($g.spot.id)) { $HEAD[$g.spot.id] } else { $g.spot.short }
+    $h = Add $hdr (T $lab 9 (C 'INK3') 'Bold'); $h.Width = $cw; $h.Margin = Th 3 0 0 0; $h.TextAlignment = 'Center'; $h.TextTrimming = 'None'
+  }
+  for ($i = 0; $i -lt $cm.days.Count; $i++) {
     $r = Add $st (New-Stack 'Horizontal'); $r.Margin = Th 0 0 0 3
-    $n = Add $r (T $g.spot.short 11 (C 'INK') 'Black'); $n.Width = $nameW; $n.VerticalAlignment = 'Center'
-    for ($i = 0; $i -lt $g.cells.Count; $i++) {
+    $dl = [datetime]::ParseExact($cm.days[$i], 'yyyy-MM-dd', $INV)
+    $lab = if ($i -eq 0) { 'Auj.' } else { $dl.ToString('ddd d', [Globalization.CultureInfo]::new('fr-FR')).Replace('.', '') }
+    $dn = Add $r (T ($lab.Substring(0, 1).ToUpper() + $lab.Substring(1)) 11 (C 'INK') 'Black'); $dn.Width = $nameW; $dn.VerticalAlignment = 'Center'
+    foreach ($g in $cm.grid) {
       $x = $g.cells[$i]
-      $cell = Add $r (New-Box (C 'CELL') 6 $null); $cell.Width = $cw; $cell.Height = 26; $cell.Margin = Th 3 0 0 0
+      $cell = Add $r (New-Box (C 'CELL') 6 $null); $cell.Width = $cw; $cell.Height = 28; $cell.Margin = Th 3 0 0 0
       if ($x.has) {
-        $cell.Tag = "$($APP_URL)#/spot/$($g.spot.id)?day=$([uri]::EscapeDataString([datetime]::ParseExact($cm.days[$i], 'yyyy-MM-dd', $INV).ToString('dd/MM/yyyy', $INV)))"
+        $cell.Tag = "$($APP_URL)#/spot/$($g.spot.id)?day=$([uri]::EscapeDataString($dl.ToString('dd/MM/yyyy', $INV)))"
         $layers = [System.Windows.Controls.Grid]::new(); $cell.Child = $layers
-        [void]$layers.Children.Add((New-Fill $x.n $cw 26))
-        $pill = New-Box (C 'BG') 7 (Th 5 1 5 1); $pill.HorizontalAlignment = 'Center'; $pill.VerticalAlignment = 'Center'
+        [void]$layers.Children.Add((New-Fill $x.n $cw 28))
+        $pill = New-Box (C 'BG') 7 (Th 4 1 4 1); $pill.HorizontalAlignment = 'Center'; $pill.VerticalAlignment = 'Center'
         $pill.Child = T $x.label 10 (C 'INK') 'Black'; [void]$layers.Children.Add($pill)
+      } elseif ($null -ne $x.kn) {
+        $t = T (Get-Round $x.kn) 10 (C 'INK3') 'SemiBold'; $t.HorizontalAlignment = 'Center'; $t.VerticalAlignment = 'Center'; $cell.Child = $t
       }
     }
   }
-  if ($list.Count) {
-    $c = $list[0]
-    $b = Add $st (New-Box (C 'CELL') 10 (Th 8 6 8 6)); $b.Margin = Th 0 4 0 4; $b.Tag = Get-CreneauLink $c
-    $bs = New-Stack; $b.Child = $bs
-    [void](Add $bs (T 'MEILLEUR' 9 (C 'INK3') 'Bold'))
-    $l = Add $bs (New-Stack 'Horizontal')
-    $s = Add $l (New-Stars $c.stars 12 $false); $s.Margin = Th 0 0 4 0
-    [void](Add $l (T "$($c.spot.short) · $(Get-CreneauWhen $c $now) · $(Get-Round $c.kn) nd $(Get-Compass $c.dir)" 12 (C 'INK') 'Bold'))
-  } else { $t = Add $st (T 'Pas de créneau dans les 5 jours' 12 (C 'INK2') 'SemiBold'); $t.Margin = Th 0 4 0 4 }
-  [void](Add $st (T 'vert ★ · orange ★★ · violet ★★★ (part des heures de jour)' 9 (C 'INK3')))
+  $lg = Add $st (T 'case : heures au meilleur niveau (vert ★, orange ★★, violet ★★★) ; sinon vent max du jour' 9 (C 'INK3')); $lg.Margin = Th 0 4 0 0; $lg.TextWrapping = 'Wrap'
   $st
 }
 
