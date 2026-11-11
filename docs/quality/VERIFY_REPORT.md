@@ -1,6 +1,6 @@
 # Remise en question (③)
 
-Généré le 2026-11-11 07:30 UTC par `pipeline/verify/run.ts`.
+Généré le 2026-11-11 07:57 UTC par `pipeline/verify/run.ts`.
 
 Erreur = prévu − mesuré. Vent en m/s aux stations METAR (aéroports), vagues : hauteur significative en m aux bouées Candhis. « courtTerme » = modèles sur les 3 derniers jours (pas une vraie prévision) ; « archive » = prévisions réellement émises N h avant.
 
@@ -16,10 +16,10 @@ Erreur = prévu − mesuré. Vent en m/s aux stations METAR (aéroports), vagues
 
 | Station | Classement |
 |---|---|
-| LFMT | meteofrance_arpege_europe 1,6 · meteofrance_arome_france 1,6 · gfs_seamless 1,7 · icon_eu 2,0 · meteofrance_arome_france_hd 2,3 · icon_d2 2,6 · ecmwf_ifs025 4,9 |
-| LFMP | gfs_seamless 1,4 · icon_eu 1,4 · meteofrance_arpege_europe 1,4 · ecmwf_ifs025 1,5 · meteofrance_arome_france 1,7 · meteofrance_arome_france_hd 1,8 |
-| LFTH | icon_eu 2,3 · ecmwf_ifs025 2,5 · meteofrance_arome_france_hd 3,4 · meteofrance_arome_france 3,4 · gfs_seamless 3,6 · meteofrance_arpege_europe 3,7 |
-| LFML | ecmwf_ifs025 2,0 · meteofrance_arome_france_hd 2,0 · meteofrance_arome_france 2,1 · icon_eu 2,7 · meteofrance_arpege_europe 3,1 · gfs_seamless 3,8 |
+| LFMT | meteofrance_arpege_europe 1,5 · gfs_seamless 1,6 · meteofrance_arome_france 1,6 · icon_eu 2,0 · meteofrance_arome_france_hd 2,2 · icon_d2 2,5 · ecmwf_ifs025 4,8 |
+| LFMP | gfs_seamless 1,4 · ecmwf_ifs025 1,4 · icon_eu 1,4 · meteofrance_arpege_europe 1,4 · meteofrance_arome_france 1,7 · meteofrance_arome_france_hd 1,8 |
+| LFTH | icon_eu 2,4 · ecmwf_ifs025 2,6 · meteofrance_arome_france_hd 3,4 · meteofrance_arome_france 3,4 · gfs_seamless 3,6 · meteofrance_arpege_europe 3,7 |
+| LFML | ecmwf_ifs025 2,0 · meteofrance_arome_france_hd 2,1 · meteofrance_arome_france 2,1 · icon_eu 2,7 · meteofrance_arpege_europe 3,1 · gfs_seamless 3,8 |
 
 ## Vagues : modèles classés par erreur moyenne (3 derniers jours, en m)
 
@@ -33,12 +33,12 @@ Erreur = prévu − mesuré. Vent en m/s aux stations METAR (aéroports), vagues
 ## Ce que les moteurs en font
 
 - Vagues : chaque modèle reçoit un poids et un facteur de biais appris aux bouées (moteur surf, inchangé).
-  - 03001 : meteofrance_wave poids 8.6, ×1.17 (MAE 0.32 m, n 158) ; ecmwf_wam025 poids 8.24, ×1.13 (MAE 0.29 m, n 158) ; ewam poids 11.5, ×1.08 (MAE 0.22 m, n 158) ; gwam poids 6.45, ×1.05 (MAE 0.23 m, n 158) ; copernicus poids 20.78, ×1.03 (MAE 0.17 m, n 107)
+  - 03001 : meteofrance_wave poids 8.6, ×1.17 (MAE 0.32 m, n 158) ; ecmwf_wam025 poids 8.23, ×1.13 (MAE 0.29 m, n 158) ; ewam poids 11.5, ×1.08 (MAE 0.22 m, n 158) ; gwam poids 6.45, ×1.05 (MAE 0.23 m, n 158) ; copernicus poids 20.78, ×1.03 (MAE 0.17 m, n 107)
   - 03404 : meteofrance_wave poids 13.09, ×1.14 (MAE 0.23 m, n 141) ; ecmwf_wam025 poids 14.92, ×1.08 (MAE 0.16 m, n 141) ; ewam poids 15.94, ×1.03 (MAE 0.15 m, n 141) ; gwam poids 9.4, ×1.05 (MAE 0.15 m, n 141) ; ncep_gfswave025 poids 7.88, ×1.08 (MAE 0.19 m, n 141) ; copernicus poids 28.77, ×0.99 (MAE 0.09 m, n 87)
   - 01102 : meteofrance_wave poids —, ×— (MAE 0.46 m, n 76) ; ecmwf_wam025 poids —, ×— (MAE 0.26 m, n 76) ; ewam poids —, ×— (MAE 0.37 m, n 76) ; gwam poids —, ×— (MAE 0.53 m, n 76) ; copernicus poids —, ×— (MAE 0.12 m, n 24)
-  - 01101 : meteofrance_wave poids 9.49, ×1.25 (MAE 0.29 m, n 161) ; ecmwf_wam025 poids 16.74, ×0.98 (MAE 0.14 m, n 161) ; ewam poids 11.75, ×1.1 (MAE 0.21 m, n 161) ; gwam poids 8.65, ×1.1 (MAE 0.17 m, n 161) ; ncep_gfswave025 poids 8.76, ×1.04 (MAE 0.17 m, n 161) ; copernicus poids 26.21, ×0.98 (MAE 0.12 m, n 107)
+  - 01101 : meteofrance_wave poids 9.49, ×1.25 (MAE 0.29 m, n 161) ; ecmwf_wam025 poids 16.73, ×0.98 (MAE 0.14 m, n 161) ; ewam poids 11.75, ×1.1 (MAE 0.21 m, n 161) ; gwam poids 8.65, ×1.1 (MAE 0.17 m, n 161) ; ncep_gfswave025 poids 8.76, ×1.04 (MAE 0.17 m, n 161) ; copernicus poids 26.21, ×0.98 (MAE 0.12 m, n 107)
   - 06601 : 
-- Vent downwind : La Grande-Motte × 0.98, Port Camargue × 0.97 (super prévision + relevé récent).
+- Vent downwind : La Grande-Motte × 1.02, Port Camargue × 1 (super prévision + relevé récent).
 
 ## Prévisions archivées (vraie échéance)
 
