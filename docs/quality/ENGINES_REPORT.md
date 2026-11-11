@@ -1,6 +1,6 @@
 # Rapport d'analyse (② ANALYSE)
 
-Généré le 2026-11-11 13:25 UTC par `pipeline/engines/run.ts`, juste après la collecte.
+Généré le 2026-11-11 13:31 UTC par `pipeline/engines/run.ts`, juste après la collecte.
 
 Les moteurs des apps actuelles (copies non modifiées dans `legacy/`) sont alimentés par la collecte commune. Le test golden refait le calcul comme les apps actuelles, avec leurs propres parseurs sur les mêmes réponses brutes, et exige les mêmes notes à ±0.1.
 
@@ -10,12 +10,12 @@ Les moteurs des apps actuelles (copies non modifiées dans `legacy/`) sont alime
 |---|---|---|
 | golden-surf | ✅ | 3114 valeurs (note, hauteur, vent × 6 spots), écart max 0 ; créneaux identiques (tolérance 0.1) |
 | golden-downwind | ✅ | 1440 valeurs (vent, houle, 3 notes × 3 parcours), écart max 0 ; créneaux identiques ; correction du vent identique (tolérance 0.1) |
-| correction-vent-downwind | ✅ | 2 spot(s) de recalage : La Grande-Motte 47 h (× 1.09 en moyenne) + relevé récent, Port Camargue 55 h (× 1.1 en moyenne) + relevé récent |
+| correction-vent-downwind | ✅ | 2 spot(s) de recalage : La Grande-Motte 47 h (× 1.1 en moyenne) + relevé récent, Port Camargue 55 h (× 1.09 en moyenne) + relevé récent |
 | sorties-surf | ✅ | 6/6 spots notés ; 12 créneaux |
 | houle-direction-downwind | ✅ | direction de la houle (affichage, carte) : 288/288 heures |
 | sorties-downwind | ✅ | 3/3 parcours notés ; 1 meilleurs créneaux |
-| ecart-prod-surf | ✅ | notes surf OCEAN vs app en service (calcul prod. 21 min avant, même extrait Copernicus) : médiane 0.10, 90 % ≤ 1.40, max 7.40 sur 668 heures (max : carnon dim. 16:00, OCEAN 0.3 / prod 7.7) |
-| ecart-prod-downwind | ✅ | notes downwind (intermédiaire, de jour) OCEAN vs app en service (calcul prod. 74 min avant) : médiane 0.00, 90 % ≤ 0.30, max 7.40 sur 114 heures |
+| ecart-prod-surf | ✅ | notes surf OCEAN vs app en service (calcul prod. 27 min avant, même extrait Copernicus) : médiane 0.10, 90 % ≤ 1.40, max 7.40 sur 668 heures (max : carnon dim. 16:00, OCEAN 0.3 / prod 7.7) |
+| ecart-prod-downwind | ✅ | notes downwind (intermédiaire, de jour) OCEAN vs app en service (calcul prod. 80 min avant) : médiane 0.00, 90 % ≤ 0.30, max 7.40 sur 114 heures |
 | sorties-wing | ✅ | 7 spots notés (wing v2.0.0) ; 4 session(s) 2H en mode Sécu first sur les heures prévues |
 | confidentialite-moteurs | ✅ | aucun relevé Winds-Up ni clé dans les sorties (seuls les facteurs de correction dérivés y figurent, comme dans l’app downwind actuelle) |
 | copernicus-surf | ✅ | Copernicus Med-WAV inclus dans le moteur surf (comme l’app en service) |
