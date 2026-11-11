@@ -1,8 +1,8 @@
 // Avis et commentaires : envoyés au script Google de Tom (retours/ocean-retours.gs), qui les transfère sur sa boîte mail.
 // Le site ne connaît que l'adresse /exec du script, jamais l'adresse e-mail.
 
-/** Adresse /exec du script déployé par Tom. Vide tant qu'il n'est pas déployé : le formulaire l'indique et n'envoie rien. */
-export const FEEDBACK_URL = '';
+/** Adresse /exec du script déployé par Tom. Déployé par Tom le 11/11/2026 (n'expose pas son adresse e-mail). */
+export const FEEDBACK_URL = 'https://script.google.com/macros/s/AKfycbxMi8WKJw6AjH352FCPARhqyz28lvTIJks75y5KXsOUzT-j77imoRfl8rYbDQYj37iEig/exec';
 
 export type FeedbackType = 'commentaire' | 'bug' | 'idee' | 'prevision';
 export const FEEDBACK_TYPES: [FeedbackType, string][] = [['commentaire', 'Avis'], ['idee', 'Idée'], ['bug', 'Bug'], ['prevision', 'Prévision ratée']];
