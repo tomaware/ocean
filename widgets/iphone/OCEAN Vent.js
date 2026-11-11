@@ -104,7 +104,7 @@ async function loadLive(spot, data, now) {
         const abo = !!j.connecte;   // relevés de ton abonnement Winds-Up (sinon pages publiques, 2 h de retard)
         if (x.panne) return { panne: true, src: "balise", abo };
         if (Number.isFinite(x.t) && now - x.t < LIVE_MAX_MIN * 60000) return { t: x.t, kn: x.v, gust: x.max ?? null, dir: fromText(x.o), dirTxt: x.o, src: "balise", abo };
-        if (Number.isFinite(x.t)) return { stale: true, t: x.t, abo };   // balise trop vieille : prévision affichée
+        if (Number.isFinite(x.t)) return { stale: true, t: x.t, kn: x.v, gust: x.max ?? null, dir: fromText(x.o), dirTxt: x.o, src: "balise", abo };   // balise trop vieille : prévision affichée (la nuit, à défaut, ce relevé)
       }
     } catch (e) { /* hors ligne : on passe à la suite */ }
   }
@@ -162,7 +162,7 @@ function model(data, spot, level, live, now) {
       stars: up.reduce((b, x) => Math.max(b, x.stars), 0), kn: max ? max.kn : null, dir: max ? max.dir : null, gust: gmax,
       cr: ss.length ? ss.map((x) => `${new Date(x.s).getHours()}–${new Date(x.e).getHours()} h`).join(" · ") : "pas de créneau", hours };
   });
-  return { spot, stale: live && live.stale ? live.t : null, detail, rows, now: live && !live.panne && !live.stale ? live : nowRow ? { t: nowRow.t, kn: nowRow.kn, gust: nowRow.gust, dir: nowRow.dir, dirTxt: compass(nowRow.dir), src: "prévu" } : null,
+  return { spot, stale: live && live.stale ? live.t : null, detail, rows, now: live && !live.panne && !live.stale ? live : nowRow ? { t: nowRow.t, kn: nowRow.kn, gust: nowRow.gust, dir: nowRow.dir, dirTxt: compass(nowRow.dir), src: "prévu" } : live && live.stale ? live : null,
     panne: live && live.panne, in2: twoRow, days, next };
 }
 
@@ -182,7 +182,7 @@ function header(w, spot, m, now, big) {
   text(top, big ? spot.name : spot.short, F.h(big ? 15 : 14), INK, { scale: 0.7 });
   top.addSpacer();
   const src = srcText(m, now, !big);
-  text(top, src, F.b(10), m.now && m.now.src !== "prévu" ? LIVE : INK3);
+  text(top, src, F.b(10), m.now && m.now.src !== "prévu" && !m.now.stale ? LIVE : INK3);
 }
 function bigNow(stack, m, size) {
   const s = stack.addStack(); s.centerAlignContent(); s.spacing = 6;
@@ -214,7 +214,7 @@ function medium(w, data, spot, m, now) {
   const row = w.addStack(); row.spacing = 10;
   const left = row.addStack(); left.layoutVertically(); left.size = new Size(108, 0);
   text(left, spot.short, F.h(14), INK, { scale: 0.7 });
-  text(left, srcText(m, now, true), F.b(10), m.now && m.now.src !== "prévu" ? LIVE : INK3, { scale: 0.7 });
+  text(left, srcText(m, now, true), F.b(10), m.now && m.now.src !== "prévu" && !m.now.stale ? LIVE : INK3, { scale: 0.7 });
   left.addSpacer(); bigNow(left, m, 38); left.addSpacer();
   text(left, `${m.now && m.now.gust != null ? `raf. ${Math.round(m.now.gust)} · ` : ""}2 h : ${m.in2 ? Math.round(m.in2.kn) : "–"}`, F.r(11), INK2, { scale: 0.7 });
   const right = row.addStack(); right.spacing = 4; dayCols(right, m, 50);

@@ -91,6 +91,9 @@ test('widget Windows : réglages (spot, OffShore, proches) et vent en direct', {
   m = model({ spot: 'beauduc' }, { spots: { '61-beauduc': { nom: 'Beauduc', t: NOW - 3 * 3600e3, v: 30, o: 'SE' } } });
   assert.equal(m.vent.now.src, 'prévu');                                     // balise trop vieille
   assert.equal(m.vent.label, 'prévision · balise il y a 3 h 00'); assert.equal(m.vent.labelShort, 'prévision (balise 3 h 00)');
+  // la nuit (pas de prévision de l'heure) : dernier relevé de la balise, avec son âge
+  m = model({ spot: 'beauduc' }, { connecte: true, spots: { '61-beauduc': { nom: 'Beauduc', t: NOW + 10 * 3600e3, v: 14, o: 'SE' } } }, NOW + 12 * 3600e3);
+  assert.deepEqual(m.vent.now, { kn: 14, gust: null, dir: 'SE', src: 'balise' }); assert.equal(m.vent.label, '● Winds-Up abonné · 2 h 00');
 });
 
 test('widget Windows : carte Vague, mêmes règles que le widget iPhone « OCEAN Vague »', { skip: !hasPwsh && 'pwsh absent' }, () => {

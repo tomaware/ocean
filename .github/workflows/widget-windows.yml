@@ -26,6 +26,9 @@ jobs:
         shell: pwsh
         env: { OCEAN_PS: powershell }
         run: node --test tests/widgets-windows.test.ts
+      - name: Lien de la super prévision enregistré chiffré puis relu (mode perso)
+        shell: pwsh
+        run: powershell -NoProfile -ExecutionPolicy Bypass -File widgets/windows/ocean-widget.ps1 -TestLien
       - name: Images des cartes sur les données réelles
         shell: pwsh
         run: |

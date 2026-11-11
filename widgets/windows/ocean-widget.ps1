@@ -16,7 +16,7 @@
   Pour les tests : -Model <sortie.json> -DataFile <données.json> -Now <ms> [-Reglages '{json}'] [-LiveFile <balises.json>]
                    -Capture <dossier> (images PNG de chaque carte, sans fenêtre)
 #>
-param([switch]$Install, [switch]$Uninstall, [string]$Model, [string]$Capture, [string]$DataFile, [double]$Now = 0, [string]$Reglages, [string]$LiveFile, [string]$SurfFile)
+param([switch]$Install, [switch]$Uninstall, [string]$Model, [string]$Capture, [string]$DataFile, [double]$Now = 0, [string]$Reglages, [string]$LiveFile, [string]$SurfFile, [switch]$TestLien)
 
 # ---------------------------------------------------------------- Constantes
 $DATA_URL = 'https://tomaware.github.io/ocean/data/widget-wind.json'
@@ -147,7 +147,7 @@ function Save-Reglages {
 function Get-SuperPrevisionUrl {
   try {
     if (Test-Path $SP_FILE) {
-      $ss = Get-Content $SP_FILE -Raw | ConvertTo-SecureString
+      $ss = (Get-Content $SP_FILE -Raw).Trim() | ConvertTo-SecureString   # sans le retour à la ligne final (sinon « format incorrect »)
       $b = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($ss)
       try { return [Runtime.InteropServices.Marshal]::PtrToStringBSTR($b) } finally { [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($b) }
     }
@@ -162,6 +162,15 @@ function Set-SuperPrevisionUrl([string]$url) {
   New-Item -ItemType Directory -Force -Path $INSTALL_DIR | Out-Null
   if ($url) { ConvertTo-SecureString $url -AsPlainText -Force | ConvertFrom-SecureString | Set-Content -Path $SP_FILE }
   else { Remove-Item $SP_FILE -ErrorAction SilentlyContinue }
+}
+
+# Test (CI Windows) : le lien enregistré chiffré se relit à l'identique
+if ($TestLien) {
+  $u = 'https://script.google.com/macros/s/TEST/exec?key=essai'
+  Set-SuperPrevisionUrl $u
+  $ok = (Get-SuperPrevisionUrl) -eq $u
+  Remove-Item $SP_FILE -ErrorAction SilentlyContinue
+  if ($ok) { Write-Host '[OK] lien relu à l''identique'; exit 0 } else { Write-Host '[ERREUR] lien illisible après enregistrement'; exit 1 }
 }
 
 # ---------------------------------------------------------------- Ce qui est affiché (mêmes règles que les widgets iPhone)
@@ -188,7 +197,7 @@ function Get-Live($spot, $data, $superLive, [double]$now) {
       if ($null -ne $x.t -and ($now - [double]$x.t) -lt $LIVE_MAX_MIN * 60000) {
         return [pscustomobject]@{ t = [double]$x.t; kn = $x.v; gust = $x.max; dir = (Get-FromText $x.o); dirTxt = [string]$x.o; src = 'balise'; panne = $false; abo = $abo }
       }
-      if ($null -ne $x.t) { return [pscustomobject]@{ stale = $true; t = [double]$x.t; panne = $false; abo = $abo } }   # balise trop vieille : prévision affichée
+      if ($null -ne $x.t) { return [pscustomobject]@{ stale = $true; t = [double]$x.t; kn = $x.v; gust = $x.max; dir = (Get-FromText $x.o); dirTxt = [string]$x.o; src = 'balise'; panne = $false; abo = $abo } }   # balise trop vieille : prévision affichée
     }
   }
   $o = $null
@@ -240,6 +249,7 @@ function Get-VentModel($data, $spot, [string]$level, $live, [double]$now) {
   })
   $nowV = $null
   if ($live -and -not $live.panne -and -not $live.stale) { $nowV = $live }
+  elseif ($live -and $live.stale -and -not $cur) { $nowV = $live }      # la nuit, pas de prévision de l'heure : dernier relevé, avec son âge
   elseif ($cur) { $nowV = [pscustomobject]@{ t = $cur.t; kn = $cur.kn; gust = $cur.gust; dir = $cur.dir; dirTxt = (Get-Compass $cur.dir); src = 'prévu'; panne = $false } }
   # grand format : aujourd'hui et demain heure par heure, 7 h → 21 h (Tom, 11/11 : « juste le jour même et le lendemain, avec plus de détail »)
   $k0 = if ((To-Local $now).Hour -ge 21) { 1 } else { 0 }        # après 21 h : demain et après-demain
@@ -480,7 +490,7 @@ function New-CellNum($kn, [double]$w, [double]$h, [double]$size) {
 function Center($el) { if ($null -ne $el) { $el.HorizontalAlignment = 'Center' }; $el }
 
 # ------------------------------------------------ Carte Vent
-function Get-SrcBrush($m) { if ($m.now -and $m.now.src -ne 'prévu') { C 'LIVE' } else { C 'INK3' } }
+function Get-SrcBrush($m) { if ($m.now -and $m.now.src -ne 'prévu' -and -not $m.now.stale) { C 'LIVE' } else { C 'INK3' } }
 function New-BigNow($m, [double]$size) {
   $s = New-Stack 'Horizontal'
   $n = Add $s (T $(if ($m.now) { Get-Round $m.now.kn } else { '–' }) $size (C 'INK') 'Black'); $n.Margin = Th 0 0 6 0
@@ -930,9 +940,10 @@ $win.FontFamily = [System.Windows.Media.FontFamily]::new('Segoe UI Variable Text
 
 function Get-TargetScreen {
   $target = [System.Windows.Forms.Screen]::PrimaryScreen
-  if ([int]$script:reg.ecran -ge 2) {
+  $e = 1; if (-not [int]::TryParse([string]$script:reg.ecran, [ref]$e)) { $e = 1 }   # réglage abîmé (ancienne version) : écran principal
+  if ($e -ge 2) {
     $others = @([System.Windows.Forms.Screen]::AllScreens | Where-Object { -not $_.Primary } | Sort-Object { $_.Bounds.X })
-    if ($others.Count) { $target = $others[[math]::Min($others.Count, [int]$script:reg.ecran - 1) - 1] }
+    if ($others.Count) { $target = $others[[math]::Min($others.Count, $e - 1) - 1] }
   }
   $target
 }
@@ -1011,7 +1022,7 @@ function New-WidgetMenu {
   [void]$menu.Items.Add((New-ChoiceMenu 'Spots des créneaux' 'creneauxSpots' @(@('tous', 'Tous les spots'), @('proches', 'Proches de Montpellier (< 55 km)'))))
   [void]$menu.Items.Add((New-ChoiceMenu 'Disposition' 'disposition' @(@('cote', 'Côte à côte'), @('colonne', 'L''une sous l''autre'))))
   [void]$menu.Items.Add((New-ChoiceMenu 'Thème' 'theme' @(@('auto', 'Comme Windows'), @('clair', 'Clair'), @('sombre', 'Sombre'))))
-  $screens = @(@(1, 'Écran principal'))
+  $screens = @(, @(1, 'Écran principal'))   # la virgule garde une liste de paires (sinon PowerShell aplatit)
   $n = @([System.Windows.Forms.Screen]::AllScreens).Count
   for ($i = 2; $i -le $n; $i++) { $screens += , @($i, $(if ($i -eq 2) { 'Deuxième écran' } else { "Écran $i" })) }
   [void]$menu.Items.Add((New-ChoiceMenu 'Écran' 'ecran' $screens))

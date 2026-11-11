@@ -229,3 +229,8 @@ Les apps actuelles restent en ligne jusqu'à ce que leur remplaçante soit véri
 ### D-36 (11/11/2026, Tom) — widgets : source du vent explicite, sans légende
 - « Pourquoi prévu ? » : l'étiquette en haut des cartes Vent dit d'où vient le chiffre en grand : « ● Winds-Up abonné · 6 min » (relevé de l'abonnement, via la super prévision), « ● Winds-Up public · … » (connexion Winds-Up en échec : pages publiques, 2 h de retard), « ● Marignane · … » (Le Jaï), « prévision corrigée » (pas de balise : vent prévu pour l'heure, corrigé par la super prévision), « prévision · balise il y a 2 h 10 » (balise de plus de 1 h 30). Formats étroits : « ● abonné · 6 min », « prévision ».
 - Légendes en petit retirées des cartes (iPhone, Windows, Mac) ; grande carte un peu moins haute (330 au lieu de 382) sur Windows et Mac.
+
+### D-37 (11/11/2026) — widget Windows : corrections après essai chez Tom
+- Lien de la super prévision illisible (« format de la chaîne d'entrée incorrect », journal du widget) : le fichier chiffré était relu avec son retour à la ligne final. Corrigé (Trim) ; la CI Windows enregistre puis relit un lien d'essai (`-TestLien`). Le lien déjà enregistré par Tom redevient lisible sans le recoller.
+- Menu Écran avec un seul écran : la liste était aplatie par PowerShell (choix « É ») ; corrigé, et un réglage abîmé retombe sur l'écran principal.
+- La nuit, sans prévision pour l'heure, la carte Vent montre le dernier relevé de la balise avec son âge (en gris) au lieu de « pas de vent ». Même règle sur iPhone et Mac.

@@ -71,7 +71,7 @@ export function liveFor(spot, data, live, now) {
     if (x.panne) return { panne: true };
     const abo = !!live.connecte;
     if (Number.isFinite(x.t) && now - x.t < LIVE_MAX_MIN * 60000) return { t: x.t, kn: x.v, gust: x.max ?? null, dir: fromText(x.o), dirTxt: x.o, src: "balise", abo };
-    if (Number.isFinite(x.t)) return { stale: true, t: x.t, abo };
+    if (Number.isFinite(x.t)) return { stale: true, t: x.t, kn: x.v, gust: x.max ?? null, dir: fromText(x.o), dirTxt: x.o, src: "balise", abo };
   }
   const o = data.obs && data.obs[spot.id];
   if (o && now - o.t < LIVE_MAX_MIN * 60000) return { t: o.t, kn: o.kn, gust: o.gust, dir: o.dir, dirTxt: compass(o.dir), src: "Marignane" };
@@ -99,7 +99,7 @@ export function ventModel(data, spot, level, live, now) {
       kn: max ? max.kn : null, dir: max ? max.dir : null, gust: up.reduce((g, x) => (x.gust != null && (g == null || x.gust > g) ? x.gust : g), null),
       cr: ss.length ? ss.map(span).join(" · ") : "pas de créneau", hours };
   });
-  const nowV = live && !live.panne && !live.stale ? live : cur ? { t: cur.t, kn: cur.kn, gust: cur.gust, dir: cur.dir, dirTxt: compass(cur.dir), src: "prévu" } : null;
+  const nowV = live && !live.panne && !live.stale ? live : cur ? { t: cur.t, kn: cur.kn, gust: cur.gust, dir: cur.dir, dirTxt: compass(cur.dir), src: "prévu" } : live && live.stale ? live : null;
   return { spot, now: nowV, panne: !!(live && live.panne), stale: live && live.stale ? live.t : null, in2: near(now + 2 * 3600e3), days, detail };
 }
 export function creneauxModel(data, level, onlyNear, now) {
@@ -170,7 +170,7 @@ function HourGrid({ hours, rows }) {
     <div key={x.h} className={`hcol${x.has ? "" : " dim"}`}><span className="hh">{x.h}</span>{rows(x)}<span className="sb" style={{ background: x.stars > 0 && x.has ? FILL[x.stars] : undefined }} /></div>))}</div>;
 }
 function VentCard({ m, size, now }) {
-  const live = m.now && m.now.src !== "prévu";
+  const live = m.now && m.now.src !== "prévu" && !m.now.stale;
   if (size === "petit") return <Card size={size} url={link(m.spot.id)}>
     <div className="row"><b className="t14">{m.spot.short}</b><span className={`src${live ? " live" : ""}`}>{srcText(m, now, true)}</span></div>
     <Big m={m} size={44} /><div className="ink2">{gustText(m) || " "}</div>
