@@ -16,6 +16,7 @@
 
 const DATA = "https://tomaware.github.io/ocean/data/widget-wind.json";
 const APP = "https://tomaware.github.io/ocean/";
+const VERSION = "2026-11-12c";   // affichée dans les réglages : permet de savoir quelle version tourne
 // ------------------------------------------------------- mise a jour automatique
 // Le widget va chercher sa propre version publiee et reecrit son fichier. La nouvelle version s'applique au
 // rafraichissement suivant : une correction n'oblige plus a recopier le script a la main.
@@ -275,7 +276,7 @@ function large(w, data, spot, m, now) {
     // capture du 12/11), donc deux chiffres tiennent si la police reste sous (cw - 2) / 1,6. Le vent est le plus
     // gros élément de la colonne, l'heure et la rafale restent secondaires.
     const fn = Math.max(9, Math.min(15, Math.floor((cw - 2) / 1.6)));
-    const fh = Math.min(10, fn - 3), fg = Math.min(10, fn - 3), fa = Math.min(15, cw - 6);
+    const fh = Math.min(9, fn - 4), fg = Math.min(9, fn - 4), fa = Math.min(15, cw - 6);
     w.addSpacer(7);
     const hd = w.addStack(); hd.centerAlignContent(); hd.spacing = 4;
     text(hd, d.label, F.h(13), INK, { scale: 0.7 }); text(hd, d.date, F.r(11), INK3, { scale: 0.6 });
@@ -317,7 +318,7 @@ function lock(w, family, spot, m) {
 
 // ------------------------------------------------------------------ réglages dans l'app
 async function setup(data) {
-  const a = new Alert(); a.title = "OCEAN · widget Vent";
+  const a = new Alert(); a.title = "OCEAN · widget Vent · " + VERSION;
   a.message = `Spot par défaut : ${Keychain.contains(K_SPOT) ? Keychain.get(K_SPOT) : DEFAULT_SPOT}\nMode : ${Keychain.contains(K_MODE) && Keychain.get(K_MODE) === "offshore" ? "OffShore" : "Sécu first"}\nBalise en direct : ${Keychain.contains(K_SP) ? "branchée" : "non"}`;
   a.addAction("Choisir le spot"); a.addAction("Mode Sécu first / OffShore"); a.addAction("Brancher ma super prévision"); a.addAction("Aperçu du widget"); a.addCancelAction("Fermer");
   const r = await a.presentSheet();

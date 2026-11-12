@@ -15,6 +15,7 @@
 
 const DATA = "https://tomaware.github.io/ocean/data/widget-wind.json";
 const APP = "https://tomaware.github.io/ocean/";
+const VERSION = "2026-11-12c";   // affichée dans les réglages : permet de savoir quelle version tourne
 // ------------------------------------------------------- mise a jour automatique
 // Le widget va chercher sa propre version publiee et reecrit son fichier. La nouvelle version s'applique au
 // rafraichissement suivant : une correction n'oblige plus a recopier le script a la main.
@@ -244,7 +245,7 @@ function lock(w, family, list, now) {
 }
 
 async function setup(data) {
-  const a = new Alert(); a.title = "OCEAN · Créneaux vent";
+  const a = new Alert(); a.title = "OCEAN · Créneaux vent · " + VERSION;
   a.message = `Mode : ${Keychain.contains(K_MODE) && Keychain.get(K_MODE) === "offshore" ? "OffShore" : "Sécu first"}\nSpots : ${Keychain.contains(K_SPOTS) && Keychain.get(K_SPOTS) ? Keychain.get(K_SPOTS) : "tous"}`;
   a.addAction("Mode Sécu first / OffShore"); a.addAction("Spots suivis"); a.addAction("Aperçu du widget"); a.addCancelAction("Fermer");
   const r = await a.presentSheet();
