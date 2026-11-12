@@ -1,0 +1,57 @@
+{
+  "_lisezmoi": "Webcams par spot. Collecte du 13/11/2026 (D-46). 'integration' : 'lien' = on ouvre la page de l'éditeur, 'lecteur' = lecteur officiel intégrable. 'verif' : 'page' = page de la webcam consultée directement ; 'annuaire' = trouvée via un annuaire (office de tourisme, Webcam Galore), page d'origine non consultée. 'position' : 'spot' = filme le spot, 'proche' = commune ou plage voisine. Aucun flux n'est copié ni hébergé par OCEAN.",
+  "editeurs": {
+    "viewsurf": { "nom": "Viewsurf", "integration": "lien", "droits": "Vidéos protégées par le droit d'auteur, toute diffusion sans autorisation préalable interdite (viewsurf.com/mentions-legales, consulté le 13/11/2026)." },
+    "roundshot": { "nom": "Roundshot (caméra de la commune)", "integration": "lien", "droits": "Caméra exploitée pour la commune ; aucune licence d'intégration publiée trouvée." },
+    "addicted-sports": { "nom": "addicted-sports.com", "integration": "lien", "droits": "« All rights reserved », aucune option d'intégration proposée." },
+    "skylinewebcams": { "nom": "SkylineWebcams", "integration": "lien", "droits": "Propose des intégrations pour certains sites ; conditions non vérifiées, on reste au lien." }
+  },
+  "webcams": {
+    "la-franqui": [
+      { "titre": "La Franqui · spot kitesurf", "editeur": "viewsurf", "type": "video", "url": "https://pv.viewsurf.com/894/Leucate-La-Franqui?i=NzczODo", "position": "spot", "verif": "annuaire", "source": "https://en.tourisme-leucate.com/webcam" },
+      { "titre": "La Franqui · panoramique (Mondial du Vent)", "editeur": "viewsurf", "type": "video", "url": "https://pv.viewsurf.com/894/Leucate-La-Franqui?i=NzczMDo", "position": "spot", "verif": "annuaire", "source": "https://en.tourisme-leucate.com/webcam" },
+      { "titre": "La Franqui · plage des Coussoules", "editeur": "viewsurf", "type": "video", "url": "https://pv.viewsurf.com/894/Leucate-La-Franqui?i=NDQ4Njo", "position": "spot", "verif": "annuaire", "source": "https://en.tourisme-leucate.com/webcam" },
+      { "titre": "La Franqui · spot char à voile", "editeur": "viewsurf", "type": "video", "url": "https://pv.viewsurf.com/894/Leucate-La-Franqui?i=NzczNjo", "position": "spot", "verif": "annuaire", "source": "https://en.tourisme-leucate.com/webcam" }
+    ],
+    "la-grande-motte": [
+      { "titre": "La Grande-Motte · port Ouest, 360°", "editeur": "roundshot", "type": "images", "url": "https://grandemotte.roundshot.com/port-ouest/", "position": "spot", "verif": "annuaire", "source": "https://www.webcamgalore.com/webcam/France/La-Grande-Motte/37328.html" }
+    ],
+    "le-ponant": [
+      { "titre": "Le Grau-du-Roi · live", "editeur": "viewsurf", "type": "video", "url": "https://viewsurf.com/univers/plage/vue/11778-france-languedoc-roussillon-le-grau-du-roi-live", "position": "proche", "verif": "annuaire", "source": "https://m.viewsurf.com/univers/plage/pays/France/region/Languedoc-Roussillon/ville/Le%20Grau-du-Roi" }
+    ],
+    "port-camargue": [
+      { "titre": "Le Grau-du-Roi · live", "editeur": "viewsurf", "type": "video", "url": "https://viewsurf.com/univers/plage/vue/11778-france-languedoc-roussillon-le-grau-du-roi-live", "position": "proche", "verif": "annuaire", "source": "https://m.viewsurf.com/univers/plage/pays/France/region/Languedoc-Roussillon/ville/Le%20Grau-du-Roi" },
+      { "titre": "Le Grau-du-Roi · panoramique HD", "editeur": "viewsurf", "type": "video", "url": "https://www.viewsurf.com/univers/plage/vue/11776-france-languedoc-roussillon-le-grau-du-roi-panoramique-hd", "position": "proche", "verif": "annuaire", "source": "https://m.viewsurf.com/univers/plage/pays/France/region/Languedoc-Roussillon/ville/Le%20Grau-du-Roi" },
+      { "titre": "Le Grau-du-Roi · plage, 360°", "editeur": "roundshot", "type": "images", "url": "https://grauduroi.roundshot.com/plage/", "position": "proche", "verif": "annuaire", "source": "https://www.webcamgalore.com/webcam/France/Le-Grau-du-Roi/31540.html" }
+    ],
+    "beauduc": [],
+    "le-jai": [],
+    "almanarre": [
+      { "titre": "Almanarre · camping International (Giens)", "editeur": "addicted-sports", "type": "images", "url": "https://en.addicted-sports.com/webcam/hyeres/almanarre/", "position": "spot", "verif": "page", "source": "https://en.addicted-sports.com/webcam/hyeres/almanarre/" }
+    ],
+    "carnon": [
+      { "titre": "Palavas · rive gauche, plage de l'Hôtel de ville", "editeur": "viewsurf", "type": "video", "url": "https://www.viewsurf.com/univers/plage/vue/18346-france-languedoc-roussillon-palavas-les-flots-rive-gauche", "position": "proche", "verif": "page", "source": "https://www.viewsurf.com/univers/plage/vue/18346-france-languedoc-roussillon-palavas-les-flots-rive-gauche" }
+    ],
+    "palavas": [
+      { "titre": "Palavas · rive gauche, plage de l'Hôtel de ville", "editeur": "viewsurf", "type": "video", "url": "https://www.viewsurf.com/univers/plage/vue/18346-france-languedoc-roussillon-palavas-les-flots-rive-gauche", "position": "spot", "verif": "page", "source": "https://www.viewsurf.com/univers/plage/vue/18346-france-languedoc-roussillon-palavas-les-flots-rive-gauche" },
+      { "titre": "Palavas · rive droite", "editeur": "viewsurf", "type": "video", "url": "https://www.viewsurf.com/univers/surf/vue/18402-france-languedoc-roussillon-palavas-les-flots-rive-droite", "position": "spot", "verif": "annuaire", "source": "https://www.viewsurf.com/univers/surf/vue/18402-france-languedoc-roussillon-palavas-les-flots-rive-droite" }
+    ],
+    "sete": [
+      { "titre": "Sète · port de plaisance", "editeur": "skylinewebcams", "type": "video", "url": "https://www.skylinewebcams.com/webcam/france/occitanie/sete/port-de-plaisance.html", "position": "proche", "verif": "annuaire", "source": "https://www.archipel-thau.com/en/my-stay/practical-information/webcams/" }
+    ],
+    "vias": [],
+    "saintes-maries": [],
+    "la-couronne": [],
+    "frontignan-palavas": [
+      { "titre": "Frontignan · étang d'Ingril", "editeur": "viewsurf", "type": "video", "url": "https://www.viewsurf.com/univers/plage/vue/6906-france-languedoc-roussillon-frontignan-etang-dingril", "position": "proche", "verif": "annuaire", "source": "https://www.viewsurf.com/univers/plage" },
+      { "titre": "Palavas · rive gauche, plage de l'Hôtel de ville", "editeur": "viewsurf", "type": "video", "url": "https://www.viewsurf.com/univers/plage/vue/18346-france-languedoc-roussillon-palavas-les-flots-rive-gauche", "position": "spot", "verif": "page", "source": "https://www.viewsurf.com/univers/plage/vue/18346-france-languedoc-roussillon-palavas-les-flots-rive-gauche" }
+    ],
+    "palavas-grandemotte": [
+      { "titre": "Palavas · rive gauche, plage de l'Hôtel de ville", "editeur": "viewsurf", "type": "video", "url": "https://www.viewsurf.com/univers/plage/vue/18346-france-languedoc-roussillon-palavas-les-flots-rive-gauche", "position": "spot", "verif": "page", "source": "https://www.viewsurf.com/univers/plage/vue/18346-france-languedoc-roussillon-palavas-les-flots-rive-gauche" },
+      { "titre": "La Grande-Motte · port Ouest, 360°", "editeur": "roundshot", "type": "images", "url": "https://grandemotte.roundshot.com/port-ouest/", "position": "spot", "verif": "annuaire", "source": "https://www.webcamgalore.com/webcam/France/La-Grande-Motte/37328.html" }
+    ],
+    "plagesud-grandemotte": [
+      { "titre": "La Grande-Motte · port Ouest, 360°", "editeur": "roundshot", "type": "images", "url": "https://grandemotte.roundshot.com/port-ouest/", "position": "spot", "verif": "annuaire", "source": "https://www.webcamgalore.com/webcam/France/La-Grande-Motte/37328.html" }
+    ]
+  }
+}
