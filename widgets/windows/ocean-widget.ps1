@@ -561,8 +561,16 @@ function New-VentCard($m, [string]$size, [double]$now) {
   [void](Add $rr (T $(if ($m.in2) { "dans 2 h : $(Get-Round $m.in2.kn) nd $(Get-Compass $m.in2.dir)" } else { '' }) 12 (C 'INK2') 'SemiBold'))
   [void](Add $r (New-BigNow $m 34))
   # aujourd'hui et demain, heure par heure de 7 h à 21 h : vent, rafales, direction, étoiles (heures passées estompées)
-  $cw = 21.6
+  # heures passées retirées ; largeur des colonnes selon leur nombre (la carte fait 364, soit 328 dans la boîte)
   foreach ($d in $m.detail) {
+    $cols = @($d.hours | Where-Object { $_.has -and -not $_.past })
+    if (-not $cols.Count) { continue }
+    $cw = 328 / $cols.Count
+    $fh = [math]::Min(12, [math]::Max(9, [math]::Round($cw * 0.45)))
+    $fn = [math]::Min(16, [math]::Max(11, [math]::Round($cw * 0.52)))
+    $fg = [math]::Min(12, [math]::Max(9, [math]::Round($cw * 0.42)))
+    $fa = [math]::Min(16, [math]::Max(11, [math]::Round($cw * 0.5)))
+    $cellW = [math]::Min($cw - 3, 34)
     $hd = Add $st (New-Dock); $hd.Margin = Th 0 6 0 3
     $right = Add $hd (Dock (New-Stack 'Horizontal') 'Right')
     if ($null -ne $d.kn) {
@@ -577,19 +585,16 @@ function New-VentCard($m, [string]$size, [double]$now) {
     $g = [System.Windows.Controls.Grid]::new(); $box.Child = $g
     foreach ($i in 0..4) { $rd = [System.Windows.Controls.RowDefinition]::new(); $rd.Height = [System.Windows.GridLength]::Auto; $g.RowDefinitions.Add($rd) }
     $col = 0
-    foreach ($x in $d.hours) {
+    foreach ($x in $cols) {
       $cd = [System.Windows.Controls.ColumnDefinition]::new(); $cd.Width = [System.Windows.GridLength]::new($cw); $g.ColumnDefinitions.Add($cd)
       $cells = @()
-      $hl = T ([string]$x.h) 9 (C 'INK3') 'SemiBold'; $hl.HorizontalAlignment = 'Center'; $cells += , @($hl, 0)
-      if ($x.has) {
-        $n = New-CellNum $x.kn ($cw - 2) 18 11; $n.HorizontalAlignment = 'Center'; $n.Margin = Th 0 1 0 1; $cells += , @($n, 1)
-        $gt = T $(if ($null -ne $x.gust) { Get-Round $x.gust } else { '' }) 9 (C 'INK2'); $gt.HorizontalAlignment = 'Center'; $cells += , @($gt, 2)
-        $ar = New-Arrow $x.dir 11 (C 'INK2'); if ($ar) { $ar.HorizontalAlignment = 'Center'; $ar.Margin = Th 0 1 0 2; $cells += , @($ar, 3) }
-      }
-      $sb = New-Box $(if ($x.stars -gt 0) { C "S$($x.stars)" } else { C 'NONE' }) 2 $null; $sb.Height = 5; $sb.Margin = Th 1 1 1 0; $cells += , @($sb, 4)
+      $hl = T ([string]$x.h) $fh (C 'INK3') 'SemiBold'; $hl.HorizontalAlignment = 'Center'; $cells += , @($hl, 0)
+      $n = New-CellNum $x.kn $cellW ($fn + 7) $fn; $n.HorizontalAlignment = 'Center'; $n.Margin = Th 0 1 0 1; $cells += , @($n, 1)
+      $gt = T $(if ($null -ne $x.gust) { Get-Round $x.gust } else { '' }) $fg (C 'INK2'); $gt.HorizontalAlignment = 'Center'; $cells += , @($gt, 2)
+      $ar = New-Arrow $x.dir $fa (C 'INK2'); if ($ar) { $ar.HorizontalAlignment = 'Center'; $ar.Margin = Th 0 1 0 2; $cells += , @($ar, 3) }
+      $sb = New-Box $(if ($x.stars -gt 0) { C "S$($x.stars)" } else { C 'NONE' }) 2 $null; $sb.Height = 5; $sb.Width = [math]::Min($cw - 3, 40); $sb.Margin = Th 0 1 0 0; $cells += , @($sb, 4)
       foreach ($c in $cells) {
         [System.Windows.Controls.Grid]::SetColumn($c[0], $col); [System.Windows.Controls.Grid]::SetRow($c[0], $c[1])
-        if ($x.past -or -not $x.has) { $c[0].Opacity = 0.35 }
         [void]$g.Children.Add($c[0])
       }
       $col++
@@ -751,35 +756,40 @@ function New-VagueCard($m, [string]$size, [double]$now) {
   $st = New-Stack
   $top = Add $st (New-Dock); [void](Add $top (Dock (T 'maintenant' 9 (C 'INK3') 'Bold') 'Right')); [void](Add $top (T (Get-SpotTitle $spot) 15 (C 'INK') 'Black'))
   $nw = Add $st (New-VagueNow $m 30); $nw.Margin = Th 0 2 0 2
-  $cw = 21.6
   foreach ($d in $m.detail) {
+    $cols = @($d.hours | Where-Object { $_.has })
+    if (-not $cols.Count) { continue }
+    $cw = 328 / $cols.Count
+    $fh = [math]::Min(12, [math]::Max(9, [math]::Round($cw * 0.45)))
+    $fv = [math]::Min(13, [math]::Max(8, [math]::Round($cw * 0.42)))
+    $fn = [math]::Min(14, [math]::Max(9, [math]::Round($cw * 0.45)))
     $hd = Add $st (New-Dock); $hd.Margin = Th 0 6 0 3
-    if ($d.hbMax) { [void](Add $hd (Dock (T "jusqu'à $(Get-M1 $d.hbMax) m" 11 (C 'INK') 'Bold') 'Right')) }
+    if ($d.hbMax) {
+      $tps = @($cols | Where-Object { $null -ne $_.tp } | ForEach-Object { [int]$_.tp } | Sort-Object -Unique)
+      $per = if ($tps.Count) { " · $($tps[0])$(if ($tps.Count -gt 1) { "–$($tps[-1])" }) s" } else { '' }
+      [void](Add $hd (Dock (T "jusqu'à $(Get-M1 $d.hbMax) m$per" 11 (C 'INK') 'Bold') 'Right'))
+    }
     $left = Add $hd (New-Stack 'Horizontal')
     [void](Add $left (T $d.label 13 (C 'INK') 'Black')); $dt = Add $left (T " $($d.date)" 11 (C 'INK3')); $dt.VerticalAlignment = 'Bottom'
     if ($d.stars) { $sx = Add $left (New-Stars $d.stars 11 $false); $sx.Margin = Th 6 0 0 0; $sx.VerticalAlignment = 'Center' }
     $box = Add $st (New-Box (C 'CELL') 10 (Th 4 5 4 4))
     $g = [System.Windows.Controls.Grid]::new(); $box.Child = $g
-    foreach ($i in 0..6) { $rd = [System.Windows.Controls.RowDefinition]::new(); $rd.Height = [System.Windows.GridLength]::Auto; $g.RowDefinitions.Add($rd) }
-    $hMax = [math]::Max(1.2, [double](($d.hours | Where-Object { $_.has -and $null -ne $_.hb } | Measure-Object -Property hb -Maximum).Maximum))
+    foreach ($i in 0..5) { $rd = [System.Windows.Controls.RowDefinition]::new(); $rd.Height = [System.Windows.GridLength]::Auto; $g.RowDefinitions.Add($rd) }
+    $hMax = [math]::Max(1.2, [double](($cols | Where-Object { $null -ne $_.hb } | Measure-Object -Property hb -Maximum).Maximum))
     $col = 0
-    foreach ($x in $d.hours) {
+    foreach ($x in $cols) {
       $cd = [System.Windows.Controls.ColumnDefinition]::new(); $cd.Width = [System.Windows.GridLength]::new($cw); $g.ColumnDefinitions.Add($cd)
       $cells = @()
-      $hl = T ([string]$x.h) 9 (C 'INK3') 'SemiBold'; $hl.HorizontalAlignment = 'Center'; $cells += , @($hl, 0)
-      if ($x.has) {
-        $v = T (Get-M1 $x.hb) 8 (C 'INK') 'Bold'; $v.HorizontalAlignment = 'Center'; $cells += , @($v, 1)
-        $bx = [System.Windows.Controls.Border]::new(); $bx.Height = 22; $bx.Width = $cw - 5
-        $bar = New-Box (Get-Brush $WAVE[$(if ($script:isDark) { 'sombre' } else { 'clair' })]) 2 $null; $bar.VerticalAlignment = 'Bottom'
-        $bar.Height = [math]::Max(2, [math]::Round(([double]$(if ($null -eq $x.hb) { 0 } else { $x.hb }) / $hMax) * 22)); $bx.Child = $bar; $cells += , @($bx, 2)
-        $p = T $(if ($x.tp) { [string]$x.tp } else { '' }) 8 (C 'INK2'); $p.HorizontalAlignment = 'Center'; $cells += , @($p, 3)
-        $n = New-CellNum $x.ws ($cw - 3) 14 9; $n.HorizontalAlignment = 'Center'; $n.Margin = Th 0 1 0 1; $cells += , @($n, 4)
-        $ar = New-Arrow $x.wd 9 (C 'INK2'); if ($ar) { $ar.HorizontalAlignment = 'Center'; $ar.Margin = Th 0 1 0 2; $cells += , @($ar, 5) }
-      }
-      $sb = New-Box $(if ($x.stars -gt 0 -and $x.has) { C "S$($x.stars)" } else { C 'NONE' }) 2 $null; $sb.Height = 5; $sb.Margin = Th 1 1 1 0; $cells += , @($sb, 6)
+      $hl = T ([string]$x.h) $fh (C 'INK3') 'SemiBold'; $hl.HorizontalAlignment = 'Center'; $cells += , @($hl, 0)
+      $v = T (Get-M1 $x.hb) $fv (C 'INK') 'Bold'; $v.HorizontalAlignment = 'Center'; $cells += , @($v, 1)
+      $bx = [System.Windows.Controls.Border]::new(); $bx.Height = 14; $bx.Width = [math]::Min($cw - 5, 26)
+      $bar = New-Box (Get-Brush $WAVE[$(if ($script:isDark) { 'sombre' } else { 'clair' })]) 2 $null; $bar.VerticalAlignment = 'Bottom'
+      $bar.Height = [math]::Max(2, [math]::Round(([double]$(if ($null -eq $x.hb) { 0 } else { $x.hb }) / $hMax) * 14)); $bx.Child = $bar; $cells += , @($bx, 2)
+      $n = New-CellNum $x.ws ([math]::Min($cw - 3, 30)) ($fn + 5) $fn; $n.HorizontalAlignment = 'Center'; $n.Margin = Th 0 1 0 1; $cells += , @($n, 3)
+      if ($cw -ge 22) { $ar = New-Arrow $x.wd ([math]::Min(14, $fn + 2)) (C 'INK2'); if ($ar) { $ar.HorizontalAlignment = 'Center'; $ar.Margin = Th 0 1 0 2; $cells += , @($ar, 4) } }
+      $sb = New-Box $(if ($x.stars -gt 0) { C "S$($x.stars)" } else { C 'NONE' }) 2 $null; $sb.Height = 5; $sb.Width = [math]::Min($cw - 3, 40); $sb.Margin = Th 0 1 0 0; $cells += , @($sb, 5)
       foreach ($c in $cells) {
         [System.Windows.Controls.Grid]::SetColumn($c[0], $col); [System.Windows.Controls.Grid]::SetRow($c[0], $c[1])
-        if (-not $x.has) { $c[0].Opacity = 0.35 }
         [void]$g.Children.Add($c[0])
       }
       $col++

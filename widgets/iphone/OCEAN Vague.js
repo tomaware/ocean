@@ -65,7 +65,7 @@ const F = { h: (n) => Font.heavySystemFont(n), b: (n) => Font.boldSystemFont(n),
 function cellNum(stack, kn, w, h, size) {
   const [bg, fg] = windCell(kn);
   const s = stack.addStack(); s.size = new Size(w, h); s.backgroundColor = bg; s.cornerRadius = 5; s.centerAlignContent();
-  s.addSpacer(); text(s, kn == null ? "–" : Math.round(kn), F.h(size), fg); s.addSpacer();
+  s.addSpacer(); text(s, kn == null ? "–" : Math.round(kn), F.h(size), fg, { scale: 0.5 }); s.addSpacer();
   return s;
 }
 function starsText(stack, k, size) {
@@ -145,8 +145,11 @@ function nowBlock(stack, m, big) {
   const a = s.addStack(); a.bottomAlignContent(); a.spacing = 3;
   text(a, n ? `${m1(n.lo)}–${m1(n.hi)}` : "–", F.h(big ? 30 : 26), INK, { scale: 0.6 }); text(a, "m", F.b(13), INK2);
   text(s, n ? `${n.tp ?? "–"} s · houle ${compass(n.sd)}` : " ", F.s(12), INK2, { scale: 0.7 });
-  const w = s.addStack(); w.centerAlignContent(); w.spacing = 3;
-  if (n && n.ws != null) { cellNum(w, n.ws, 24, 16, 10); addArrow(w, n.wd, 11, INK2); text(w, WIND_KIND[n.wk] || compass(n.wd), F.s(11), INK2, { scale: 0.7 }); }
+  if (n && n.ws != null) {
+    const w = (big ? a : s).addStack(); w.centerAlignContent(); w.spacing = 3;
+    if (big) { w.addSpacer(10); }
+    cellNum(w, n.ws, 24, 16, 10); addArrow(w, n.wd, 11, INK2); text(w, WIND_KIND[n.wk] || compass(n.wd), F.s(11), INK2, { scale: 0.6 });
+  }
 }
 function small(w, data, spot, m, now) {
   const top = w.addStack(); top.centerAlignContent(); text(top, spot.short, F.h(14), INK, { scale: 0.7 }); top.addSpacer(); text(top, "maintenant", F.b(9), INK3);
@@ -171,28 +174,35 @@ function medium(w, data, spot, m, now) {
 function large(w, data, spot, m, now) {
   const top = w.addStack(); top.centerAlignContent(); text(top, String(spot.name).split(" / ")[0].replace(/\s*\(.*\)$/, ""), F.h(15), INK, { scale: 0.7 }); top.addSpacer(); text(top, "maintenant", F.b(9), INK3);
   w.addSpacer(4); nowBlock(w, m, true);
-  const cw = 20;
+  // heure par heure, heures passées retirées ; largeur des colonnes selon leur nombre (sinon iOS coupe les chiffres)
   for (const d of m.detail) {
-    w.addSpacer(6);
+    const cols = d.hours.filter((x) => x.has);
+    if (!cols.length) continue;
+    const cw = Math.max(15, Math.min(40, Math.floor(244 / cols.length)));
+    const fh = Math.min(11, Math.round(cw * 0.6)), fv = Math.min(12, Math.round(cw * 0.55));
+    const fn = Math.min(12, Math.round(cw * 0.58)), fa = Math.min(13, Math.round(cw * 0.58));
+    w.addSpacer(7);
     const hd = w.addStack(); hd.centerAlignContent(); hd.spacing = 4;
-    text(hd, d.label, F.h(13), INK); text(hd, d.date, F.r(11), INK3, { scale: 0.7 }); if (d.stars) text(hd, "★".repeat(d.stars), F.b(11), STAR[d.stars]);
-    hd.addSpacer(); if (d.hbMax) text(hd, `jusqu'à ${m1(d.hbMax)} m`, F.b(11), INK);
+    text(hd, d.label, F.h(13), INK, { scale: 0.7 }); text(hd, d.date, F.r(11), INK3, { scale: 0.6 });
+    if (d.stars) text(hd, "★".repeat(d.stars), F.b(11), STAR[d.stars]);
+    hd.addSpacer();
+    const tps = [...new Set(cols.map((x) => x.tp).filter((x) => x != null))].sort((a, b) => a - b);
+    const per = tps.length ? ` · ${tps[0]}${tps.length > 1 ? `–${tps[tps.length - 1]}` : ""} s` : "";
+    if (d.hbMax) text(hd, `jusqu'à ${m1(d.hbMax)} m${per}`, F.b(11), INK, { scale: 0.6 });
     w.addSpacer(3);
-    const box = w.addStack(); box.backgroundColor = CELL; box.cornerRadius = 10; box.setPadding(4, 3, 4, 3); box.spacing = 1;
-    const hMax = Math.max(1.2, ...d.hours.map((x) => x.hb ?? 0));
-    for (const x of d.hours) {
+    const box = w.addStack(); box.backgroundColor = CELL; box.cornerRadius = 10; box.setPadding(5, 5, 5, 5);
+    const hMax = Math.max(1.2, ...cols.map((x) => x.hb ?? 0));
+    cols.forEach((x, i) => {
+      if (i) box.addSpacer();
       const c = box.addStack(); c.layoutVertically(); c.size = new Size(cw, 0); c.spacing = 1;
-      const hl = c.addStack(); hl.addSpacer(); text(hl, x.h, F.s(9), x.has ? INK3 : OFF); hl.addSpacer();
-      if (x.has) {
-        const v = c.addStack(); v.addSpacer(); text(v, m1(x.hb), F.b(8), INK, { scale: 0.7 }); v.addSpacer();
-        const bar = c.addStack(); bar.layoutVertically(); bar.size = new Size(cw - 4, 22); bar.addSpacer();
-        const fill = bar.addStack(); fill.size = new Size(cw - 4, Math.max(2, Math.round(((x.hb ?? 0) / hMax) * 22))); fill.backgroundColor = WAVE; fill.cornerRadius = 2;
-        const p = c.addStack(); p.addSpacer(); text(p, x.tp ?? "", F.r(8), INK2); p.addSpacer();
-        const k = c.addStack(); k.addSpacer(); cellNum(k, x.ws, cw - 2, 14, 9); k.addSpacer();
-        const a = c.addStack(); a.addSpacer(); addArrow(a, x.wd, 9, INK2); a.addSpacer();
-      } else { c.addSpacer(72); }
-      const sb = c.addStack(); sb.size = new Size(cw - 2, 4); sb.cornerRadius = 2; sb.backgroundColor = x.stars > 0 && x.has ? STAR[x.stars] : NONE;
-    }
+      const hl = c.addStack(); hl.addSpacer(); text(hl, x.h, F.s(fh), INK3, { scale: 0.5 }); hl.addSpacer();
+      const v = c.addStack(); v.addSpacer(); text(v, m1(x.hb), F.b(fv), INK, { scale: 0.5 }); v.addSpacer();
+      const bar = c.addStack(); bar.layoutVertically(); bar.size = new Size(Math.min(cw - 4, 24), 13); bar.addSpacer();
+      const fill = bar.addStack(); fill.size = new Size(Math.min(cw - 4, 24), Math.max(2, Math.round(((x.hb ?? 0) / hMax) * 13))); fill.backgroundColor = WAVE; fill.cornerRadius = 2;
+      const k = c.addStack(); k.addSpacer(); cellNum(k, x.ws, Math.min(cw - 3, 28), fn + 4, fn); k.addSpacer();
+      if (cw >= 22) { const a = c.addStack(); a.addSpacer(); addArrow(a, x.wd, fa, INK2); a.addSpacer(); }   // colonnes étroites : la flèche serait illisible
+      const sb = c.addStack(); sb.size = new Size(cw - 3, 5); sb.cornerRadius = 2; sb.backgroundColor = x.stars > 0 ? STAR[x.stars] : NONE;
+    });
   }
   w.addSpacer();
   const b = bestSession(data, now);

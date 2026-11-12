@@ -69,7 +69,7 @@ const F = { h: (n) => Font.heavySystemFont(n), b: (n) => Font.boldSystemFont(n),
 function cellNum(stack, kn, w, h, size) {
   const [bg, fg] = windCell(kn);
   const s = stack.addStack(); s.size = new Size(w, h); s.backgroundColor = bg; s.cornerRadius = 5; s.centerAlignContent();
-  s.addSpacer(); text(s, kn == null ? "–" : Math.round(kn), F.h(size), fg); s.addSpacer();
+  s.addSpacer(); text(s, kn == null ? "–" : Math.round(kn), F.h(size), fg, { scale: 0.5 }); s.addSpacer();
   return s;
 }
 function starsText(stack, k, size) {
@@ -227,27 +227,32 @@ function large(w, data, spot, m, now) {
   const rr = r.addStack(); rr.layoutVertically();
   text(rr, m.now && m.now.gust != null ? `${m.now.src === "balise" ? "max" : "rafales"} ${Math.round(m.now.gust)} nd` : "", F.s(12), INK2);
   text(rr, m.in2 ? `dans 2 h : ${Math.round(m.in2.kn)} nd ${compass(m.in2.dir)}` : "", F.s(12), INK2);
-  // aujourd'hui et demain heure par heure, 7 h → 21 h : vent, rafales, direction, étoiles (heures passées estompées)
-  const cw = 20;
+  // aujourd'hui et demain heure par heure : vent, rafales, direction, étoiles.
+  // Les heures passées sont retirées, et la largeur des colonnes vient de leur nombre : la grille ne déborde jamais
+  // du widget (sinon iOS écrase les colonnes et coupe les chiffres à un caractère).
   for (const d of m.detail) {
-    w.addSpacer(6);
+    const cols = d.hours.filter((x) => x.has && !x.past);
+    if (!cols.length) continue;
+    const cw = Math.max(15, Math.min(40, Math.floor(244 / cols.length)));   // 244 = largeur utile du plus petit grand widget
+    const fh = Math.min(11, Math.round(cw * 0.6)), fn = Math.min(14, Math.round(cw * 0.62));
+    const fg = Math.min(11, Math.round(cw * 0.55)), fa = Math.min(15, Math.round(cw * 0.68));
+    w.addSpacer(7);
     const hd = w.addStack(); hd.centerAlignContent(); hd.spacing = 4;
-    text(hd, d.label, F.h(13), INK); text(hd, d.date, F.r(11), INK3, { scale: 0.7 }); if (d.stars) text(hd, "★".repeat(d.stars), F.b(11), STAR[d.stars]);
+    text(hd, d.label, F.h(13), INK, { scale: 0.7 }); text(hd, d.date, F.r(11), INK3, { scale: 0.6 });
+    if (d.stars) text(hd, "★".repeat(d.stars), F.b(11), STAR[d.stars]);
     hd.addSpacer();
-    if (d.kn != null) text(hd, `max ${Math.round(d.kn)} nd ${compass(d.dir)}${d.gust != null ? ` · raf. ${Math.round(d.gust)}` : ""}`, F.b(11), INK, { scale: 0.7 });
+    if (d.kn != null) text(hd, `max ${Math.round(d.kn)} nd ${compass(d.dir)}${d.gust != null ? ` · raf. ${Math.round(d.gust)}` : ""}`, F.b(11), INK, { scale: 0.6 });
     w.addSpacer(3);
-    const box = w.addStack(); box.backgroundColor = CELL; box.cornerRadius = 10; box.setPadding(4, 3, 4, 3); box.spacing = 1;
-    for (const x of d.hours) {
+    const box = w.addStack(); box.backgroundColor = CELL; box.cornerRadius = 10; box.setPadding(5, 5, 5, 5);
+    cols.forEach((x, i) => {
+      if (i) box.addSpacer();                                              // espace souple : la grille remplit le widget, quelle que soit sa largeur
       const c = box.addStack(); c.layoutVertically(); c.size = new Size(cw, 0); c.spacing = 1;
-      const dim = x.past || !x.has;
-      const hl = c.addStack(); hl.addSpacer(); text(hl, x.h, F.s(9), dim ? OFF : INK3); hl.addSpacer();
-      if (x.has && !x.past) {
-        const k = c.addStack(); k.addSpacer(); cellNum(k, x.kn, cw - 1, 17, 10); k.addSpacer();
-        const g = c.addStack(); g.addSpacer(); text(g, x.gust != null ? Math.round(x.gust) : " ", F.r(9), INK2); g.addSpacer();
-        const a = c.addStack(); a.addSpacer(); addArrow(a, x.dir, 10, INK2); a.addSpacer();
-      } else { c.addSpacer(46); }
-      const sb = c.addStack(); sb.size = new Size(cw - 2, 4); sb.cornerRadius = 2; sb.backgroundColor = x.stars > 0 && !dim ? STAR[x.stars] : NONE;
-    }
+      const hl = c.addStack(); hl.addSpacer(); text(hl, x.h, F.s(fh), INK3, { scale: 0.5 }); hl.addSpacer();
+      const k = c.addStack(); k.addSpacer(); cellNum(k, x.kn, Math.min(cw - 3, 32), fn + 7, fn); k.addSpacer();
+      const g = c.addStack(); g.addSpacer(); text(g, x.gust != null ? Math.round(x.gust) : " ", F.r(fg), INK2, { scale: 0.5 }); g.addSpacer();
+      const a = c.addStack(); a.addSpacer(); addArrow(a, x.dir, fa, INK2); a.addSpacer();
+      const sb = c.addStack(); sb.size = new Size(cw - 3, 5); sb.cornerRadius = 2; sb.backgroundColor = x.stars > 0 ? STAR[x.stars] : NONE;
+    });
   }
 }
 function lock(w, family, spot, m) {

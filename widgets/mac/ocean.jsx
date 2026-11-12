@@ -171,9 +171,12 @@ const Big = ({ m, size }) => (
     <span className="bigside">{m.now && <Arrow from={m.now.dir} size={Math.round(size / 2.2)} />}<b>nd {m.now ? m.now.dirTxt || compass(m.now.dir) : ""}</b></span></div>);
 const gustText = (m) => (m.now && m.now.gust != null ? `${m.now.src === "balise" ? "max" : "rafales"} ${r(m.now.gust)} nd` : "");
 
+// heures passées retirées ; colonnes réparties sur toute la largeur de la carte
 function HourGrid({ hours, rows }) {
-  return <div className="hgrid">{hours.map((x) => (
-    <div key={x.h} className={`hcol${x.has ? "" : " dim"}`}><span className="hh">{x.h}</span>{rows(x)}<span className="sb" style={{ background: x.stars > 0 && x.has ? FILL[x.stars] : undefined }} /></div>))}</div>;
+  const cols = hours.filter((x) => x.has && !x.past);
+  if (!cols.length) return null;
+  return <div className="hgrid">{cols.map((x) => (
+    <div key={x.h} className="hcol"><span className="hh">{x.h}</span>{rows(x)}<span className="sb" style={{ background: x.stars > 0 ? FILL[x.stars] : undefined }} /></div>))}</div>;
 }
 function VentCard({ m, size, now }) {
   const live = m.now && m.now.src !== "prévu" && !m.now.stale;
@@ -192,7 +195,7 @@ function VentCard({ m, size, now }) {
     {m.detail.map((d) => <div key={d.label}>
       <div className="row dh"><span><b className="t13">{d.label}</b> <span className="ink3 s11">{d.date}</span> {d.stars > 0 && <Stars k={d.stars} all={false} />}</span>
         {d.kn != null && <span className="s11"><b>max {r(d.kn)} nd {compass(d.dir)}</b><span className="ink2">{d.gust != null ? ` · raf. ${r(d.gust)}` : ""}</span></span>}</div>
-      <HourGrid hours={d.hours} rows={(x) => x.has && <span className="frag"><Num kn={x.kn} w={19} h={18} size={11} /><span className="ink2 s9">{r(x.gust)}</span><Arrow from={x.dir} size={11} /></span>} /></div>)}</Card>;
+      <HourGrid hours={d.hours} rows={(x) => <span className="frag"><Num kn={x.kn} w={19} h={19} size={12} /><span className="ink2 s10">{r(x.gust)}</span><Arrow from={x.dir} size={12} /></span>} /></div>)}</Card>;
 }
 function CreneauxCard({ cm, size, now }) {
   const c = cm.list[0];
@@ -235,10 +238,10 @@ function VagueCard({ m, size, now }) {
   </div></Card>;
   return <Card size={size} url={url}>
     <div className="row"><b className="t15">{title(m.spot)}</b><span className="src">maintenant</span></div><VagueNow m={m} size={30} />
-    {m.detail.map((d) => { const hMax = Math.max(1.2, ...d.hours.filter((x) => x.has).map((x) => x.hb ?? 0)); return <div key={d.label}>
-      <div className="row dh"><span><b className="t13">{d.label}</b> <span className="ink3 s11">{d.date}</span> {d.stars > 0 && <Stars k={d.stars} all={false} />}</span>{d.hbMax > 0 && <b className="s11">jusqu'à {m1(d.hbMax)} m</b>}</div>
-      <HourGrid hours={d.hours} rows={(x) => x.has && <span className="frag"><b className="s8">{m1(x.hb)}</b><span className="wbar"><i style={{ height: Math.max(2, Math.round(((x.hb ?? 0) / hMax) * 22)) }} /></span>
-        <span className="ink2 s8">{x.tp ?? ""}</span><Num kn={x.ws} w={18} h={14} size={9} /><Arrow from={x.wd} size={9} /></span>} /></div>; })}
+    {m.detail.map((d) => { const hMax = Math.max(1.2, ...d.hours.filter((x) => x.has && !x.past).map((x) => x.hb ?? 0)); return <div key={d.label}>
+      <div className="row dh"><span><b className="t13">{d.label}</b> <span className="ink3 s11">{d.date}</span> {d.stars > 0 && <Stars k={d.stars} all={false} />}</span>{d.hbMax > 0 && <b className="s11">jusqu'à {m1(d.hbMax)} m{(() => { const t = [...new Set(d.hours.filter((x) => x.has && x.tp != null).map((x) => x.tp))].sort((a, b) => a - b); return t.length ? ` · ${t[0]}${t.length > 1 ? `–${t[t.length - 1]}` : ""} s` : ""; })()}</b>}</div>
+      <HourGrid hours={d.hours} rows={(x) => <span className="frag"><b className="s8">{m1(x.hb)}</b><span className="wbar"><i style={{ height: Math.max(2, Math.round(((x.hb ?? 0) / hMax) * 13)) }} /></span>
+        <Num kn={x.ws} w={18} h={15} size={10} /><Arrow from={x.wd} size={10} /></span>} /></div>; })}
     {m.best && <div className="bestline" onClick={open(link(m.best.spot.id, m.best.s))}><span className="eyebrow">MEILLEUR CRÉNEAU SURF</span>
       <div><Stars k={m.best.stars} size={12} all={false} /> <b className="s12">{m.best.spot.short} · {when(m.best, now)} · {m1(m.best.hb)} m · {m.best.tp ?? "–"} s</b></div></div>}</Card>;
 }
@@ -313,7 +316,7 @@ const STYLE = `
 .cgrid .fill { display:flex; align-items:center; justify-content:center; height:100%; } .cgrid .fill i { font-style:normal; font-size:10px; font-weight:900; background:var(--bg); border-radius:7px; padding:1px 4px; }
 .cgrid .kn { font-size:10px; font-weight:600; color:var(--ink3); }
 .vnow { display:flex; flex-direction:column; gap:2px; } .vnow b:first-child { font-weight:900; } .wline { display:flex; align-items:center; gap:4px; margin-top:2px; }
-.wbar { width:16px; height:22px; display:flex; align-items:flex-end; } .wbar i { display:block; width:100%; background:var(--wave); border-radius:2px; }
+.wbar { height:13px; display:flex; align-items:flex-end; } .wbar i { display:block; width:100%; background:var(--wave); border-radius:2px; }
 .bestline { background:var(--cell); border-radius:10px; padding:6px 8px; margin-top:8px; }
 .foot { font-size:10px; color:rgba(255,255,255,.75); text-shadow:0 1px 2px rgba(0,0,0,.5); } .gear { cursor:pointer; }
 `;
