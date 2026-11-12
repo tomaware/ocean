@@ -15,6 +15,27 @@
 
 const DATA = "https://tomaware.github.io/ocean/data/widget-wind.json";
 const APP = "https://tomaware.github.io/ocean/";
+// ------------------------------------------------------- mise a jour automatique
+// Le widget va chercher sa propre version publiee et reecrit son fichier. La nouvelle version s'applique au
+// rafraichissement suivant : une correction n'oblige plus a recopier le script a la main.
+// Garde-fous : on n'ecrit que du code visiblement complet (marqueur + taille), jamais une page d'erreur.
+const SOURCE = APP + "widgets/ocean-creneaux.js";
+const MARQUEUR = "OCEAN_WIDGET_CRENEAUX_FIN";   // derniere ligne du fichier : prouve que le telechargement est complet
+async function majAuto() {
+  try {
+    const chemin = typeof module !== "undefined" && module.filename;
+    if (!chemin) return;
+    const src = await new Request(SOURCE).loadString();
+    if (typeof src !== "string" || src.length < 4000 || !src.trim().endsWith(MARQUEUR)) return;
+    let fm;
+    try { fm = FileManager.iCloud(); } catch (e) { fm = FileManager.local(); }
+    let actuel = null;
+    try { actuel = fm.readString(chemin); } catch (e) { actuel = null; }
+    if (actuel === src) return;
+    fm.writeString(chemin, src);
+  } catch (e) { /* hors ligne ou dossier verrouille : on garde la version en place */ }
+}
+
 const K_MODE = "ocean.creneaux.mode", K_SPOTS = "ocean.creneaux.spots";
 const NEAR = ["la-grande-motte", "le-ponant", "port-camargue"];   // < 55 km de Montpellier (comme les Sessions 2H)
 const REFRESH_MIN = 30;
@@ -105,7 +126,7 @@ function none(w, cfg) {
 function small(w, list, cfg, now) {
   if (!list.length) return none(w, cfg);
   const c = list[0];
-  text(w, "MEILLEUR CRÉNEAU", F.b(10), INK3); w.addSpacer(4);
+  text(w, "MEILLEUR CRÉNEAU", F.b(10), INK3, { scale: 0.6 }); w.addSpacer(4);
   stars(w, starsOf(c.p), 18, false); w.addSpacer();
   text(w, c.spot.short, F.h(18), INK, { scale: 0.6 });
   text(w, `${dayLabel(dayKey(c.s), now)} ${span(c)}`, F.s(13), INK2, { scale: 0.7 });
@@ -157,13 +178,13 @@ function large(w, data, list, cfg, now) {
     const c = list[0], k = starsOf(c.p);
     const b = w.addStack(); b.layoutVertically(); b.backgroundColor = k ? SOFT[k] : CELL; b.cornerRadius = 14; b.setPadding(9, 12, 10, 12); b.url = link(c);
     const l1 = b.addStack(); l1.centerAlignContent();
-    text(l1, "MEILLEUR CRÉNEAU", F.b(10), INK3); l1.addSpacer();
+    text(l1, "MEILLEUR CRÉNEAU", F.b(10), INK3, { scale: 0.6 }); l1.addSpacer();
     const pill = l1.addStack(); pill.backgroundColor = k ? STAR[k] : OFF; pill.cornerRadius = 8; pill.setPadding(1, 7, 1, 7);
     text(pill, `${c.h}h`, F.h(11), Color.white());
     const d = new Date(c.s);
     text(b, `${JOURS[d.getDay()]} ${d.getDate()} · ${span(c)}`, F.h(19), INK, { scale: 0.5 });
     const l3 = b.addStack(); l3.centerAlignContent();
-    l3.spacing = 6; text(l3, c.spot.name, F.s(13), INK, { scale: 0.6 }); stars(l3, k, 13, false); l3.addSpacer();
+    l3.spacing = 6; text(l3, c.spot.name, F.s(13), INK, { scale: 0.6 }); stars(l3, k, 12, false); l3.addSpacer();
     text(b, `${c.kn ?? "–"} nd ${compass(c.dir)}${c.g ? ` · raf. ${c.g}` : ""}`, F.b(12), INK2, { scale: 0.7 });
   } else text(w, "Pas de créneau dans les 5 jours", F.s(13), INK2);
   w.addSpacer(10);
@@ -253,6 +274,7 @@ async function build(family) {
   return w;
 }
 
+await majAuto();   // avant le rendu : même si l'affichage échoue, la correction suivante arrivera seule
 if (config.runsInWidget) Script.setWidget(await build(config.widgetFamily || "medium"));
 else {
   let data = null; try { data = (await loadData()).data; } catch (e) { /* hors ligne */ }
@@ -260,3 +282,5 @@ else {
   if (r === 2) { const w = await build("large"); await w.presentLarge(); }
 }
 Script.complete();
+// OCEAN_WIDGET_CRENEAUX_FIN
+

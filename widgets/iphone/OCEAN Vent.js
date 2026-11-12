@@ -16,6 +16,27 @@
 
 const DATA = "https://tomaware.github.io/ocean/data/widget-wind.json";
 const APP = "https://tomaware.github.io/ocean/";
+// ------------------------------------------------------- mise a jour automatique
+// Le widget va chercher sa propre version publiee et reecrit son fichier. La nouvelle version s'applique au
+// rafraichissement suivant : une correction n'oblige plus a recopier le script a la main.
+// Garde-fous : on n'ecrit que du code visiblement complet (marqueur + taille), jamais une page d'erreur.
+const SOURCE = APP + "widgets/ocean-vent.js";
+const MARQUEUR = "OCEAN_WIDGET_VENT_FIN";   // derniere ligne du fichier : prouve que le telechargement est complet
+async function majAuto() {
+  try {
+    const chemin = typeof module !== "undefined" && module.filename;
+    if (!chemin) return;
+    const src = await new Request(SOURCE).loadString();
+    if (typeof src !== "string" || src.length < 4000 || !src.trim().endsWith(MARQUEUR)) return;
+    let fm;
+    try { fm = FileManager.iCloud(); } catch (e) { fm = FileManager.local(); }
+    let actuel = null;
+    try { actuel = fm.readString(chemin); } catch (e) { actuel = null; }
+    if (actuel === src) return;
+    fm.writeString(chemin, src);
+  } catch (e) { /* hors ligne ou dossier verrouille : on garde la version en place */ }
+}
+
 const DEFAULT_SPOT = "la-grande-motte";
 const K_SPOT = "ocean.vent.spot", K_MODE = "ocean.vent.mode", K_SP = "ocean.superprevision";
 const LIVE_MAX_MIN = 90;          // au-delà, la balise est trop vieille : on affiche la prévision de l'heure
@@ -74,12 +95,12 @@ function text(stack, s, font, color, opts = {}) {
 const F = { h: (n) => Font.heavySystemFont(n), b: (n) => Font.boldSystemFont(n), s: (n) => Font.semiboldSystemFont(n), r: (n) => Font.systemFont(n) };
 function cellNum(stack, kn, w, h, size) {
   const [bg, fg] = windCell(kn);
-  // Pile VERTICALE + centerAlignContent : le texte est centré horizontalement sans espace souple. Un addSpacer()
-  // horizontal dans une pile de largeur fixe prend la place avant le texte, qui devient « … » — c'est ce qui
-  // coupait les nombres à deux chiffres sur l'iPhone de Tom (12/11). Ici les espaces ne jouent que sur la hauteur.
-  const s = stack.addStack(); s.layoutVertically(); s.spacing = 0; s.size = new Size(w, h);
-  s.backgroundColor = bg; s.cornerRadius = 5; s.centerAlignContent();
-  s.addSpacer(); text(s, kn == null ? "–" : Math.round(kn), F.h(size), fg, { scale: 0.5, center: true }); s.addSpacer();
+  // La case prend TOUTE la largeur de la colonne et le chiffre est calé à gauche avec 2 pt : aucun espace souple
+  // ne vient lui prendre la place (c'est ce qui le remplaçait par « … » puis le réduisait, 12/11). Le centrage
+  // horizontal dans une pile n'est pas fiable sous Scriptable, on ne s'y fie plus.
+  const s = stack.addStack(); s.spacing = 0; s.size = new Size(w, h);
+  s.backgroundColor = bg; s.cornerRadius = 5; s.setPadding(0, 2, 0, 0); s.centerAlignContent();
+  text(s, kn == null ? "–" : String(Math.round(kn)), F.h(size), fg, { scale: 0.8 });
   return s;
 }
 function starsText(stack, k, size) {
@@ -194,13 +215,13 @@ function header(w, spot, m, now, big) {
   text(top, big ? String(spot.name).split(" / ")[0].replace(/\s*\(.*\)$/, "") : spot.short, F.h(big ? 15 : 14), INK, { scale: 0.7 });
   top.addSpacer();
   const src = srcText(m, now, !big);
-  text(top, src, F.b(10), m.now && m.now.src !== "prévu" && !m.now.stale ? LIVE : INK3);
+  text(top, src, F.b(10), m.now && m.now.src !== "prévu" && !m.now.stale ? LIVE : INK3, { scale: 0.6 });
 }
 function bigNow(stack, m, size) {
   const s = stack.addStack(); s.centerAlignContent(); s.spacing = 6;
   // vent mesuré en direct : vert dès 15 nd, orange dès 20, violet dès 25
   const live = m.now && m.now.src !== "prévu" && !m.now.stale && m.now.kn != null;
-  text(s, m.now ? Math.round(m.now.kn) : "–", F.h(size), live && m.now.kn >= 25 ? STAR[3] : live && m.now.kn >= 20 ? STAR[2] : live && m.now.kn >= 15 ? STAR[1] : INK);
+  text(s, m.now ? String(Math.round(m.now.kn)) : "–", F.h(size), live && m.now.kn >= 25 ? STAR[3] : live && m.now.kn >= 20 ? STAR[2] : live && m.now.kn >= 15 ? STAR[1] : INK, { scale: 0.7 });
   const c = s.addStack(); c.layoutVertically(); c.spacing = 1;
   if (m.now) addArrow(c, m.now.dir, Math.round(size / 2.2), INK);
   text(c, `nd ${m.now ? m.now.dirTxt || compass(m.now.dir) : ""}`, F.b(Math.max(10, Math.round(size / 3.7))), INK);
@@ -250,8 +271,11 @@ function large(w, data, spot, m, now) {
     const cols = d.hours.filter((x) => x.has && !x.past);
     if (!cols.length) continue;
     const cw = Math.max(15, Math.min(40, Math.floor((UTILE - 26 - 3 * (cols.length - 1)) / cols.length)));   // 26 = marge du bloc + centrage
-    const fh = Math.min(11, Math.round(cw * 0.6)), fn = Math.min(14, Math.round(cw * 0.62));
-    const fg = Math.min(11, Math.round(cw * 0.55)), fa = Math.min(15, Math.round(cw * 0.68));
+    // Tailles déduites de la largeur de colonne : un chiffre fait ~0,80 × la taille de la police (mesuré sur la
+    // capture du 12/11), donc deux chiffres tiennent si la police reste sous (cw - 2) / 1,6. Le vent est le plus
+    // gros élément de la colonne, l'heure et la rafale restent secondaires.
+    const fn = Math.max(9, Math.min(15, Math.floor((cw - 2) / 1.6)));
+    const fh = Math.min(10, fn - 3), fg = Math.min(10, fn - 3), fa = Math.min(15, cw - 6);
     w.addSpacer(7);
     const hd = w.addStack(); hd.centerAlignContent(); hd.spacing = 4;
     text(hd, d.label, F.h(13), INK, { scale: 0.7 }); text(hd, d.date, F.r(11), INK3, { scale: 0.6 });
@@ -266,10 +290,10 @@ function large(w, data, spot, m, now) {
     const wrap = w.addStack(); wrap.addSpacer();
     const box = wrap.addStack(); box.backgroundColor = CELL; box.cornerRadius = 10; box.setPadding(5, 5, 5, 5); box.spacing = 3;
     cols.forEach((x) => {
-      const c = box.addStack(); c.layoutVertically(); c.size = new Size(cw, 0); c.spacing = 1; c.centerAlignContent();
-      text(c, x.h, F.s(fh), INK3, { scale: 0.5, center: true });
-      cellNum(c, x.kn, Math.min(cw - 2, 34), fn + 7, fn);
-      text(c, x.gust != null ? String(Math.round(x.gust)) : " ", F.r(fg), INK2, { scale: 0.5, center: true });
+      const c = box.addStack(); c.layoutVertically(); c.size = new Size(cw, 0); c.spacing = 1;
+      text(c, x.h, F.s(fh), INK3, { scale: 0.7 });
+      cellNum(c, x.kn, cw, fn + 6, fn);                                      // la case occupe toute la colonne
+      text(c, x.gust != null ? String(Math.round(x.gust)) : " ", F.r(fg), INK2, { scale: 0.7 });
       addArrow(c, x.dir, fa, INK2);
       const sb = c.addStack(); sb.size = new Size(cw - 3, 5); sb.cornerRadius = 2; sb.backgroundColor = x.stars > 0 ? STAR[x.stars] : NONE;
     });
@@ -334,6 +358,7 @@ async function build(family) {
   return w;
 }
 
+await majAuto();   // avant le rendu : même si l'affichage échoue, la correction suivante arrivera seule
 if (config.runsInWidget) {
   Script.setWidget(await build(config.widgetFamily || "small"));
 } else {
@@ -342,3 +367,5 @@ if (config.runsInWidget) {
   if (r === 3) { const w = await build("large"); await w.presentLarge(); }
 }
 Script.complete();
+// OCEAN_WIDGET_VENT_FIN
+

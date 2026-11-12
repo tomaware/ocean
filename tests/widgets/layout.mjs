@@ -12,7 +12,10 @@
 // pas, pas à prédire le rendu au point près. Il reste donc volontairement prudent (il surestime un peu).
 
 const ESPACE = 8;                     // longueur minimale d'un addSpacer() souple
-const LARGEUR = { heavySystemFont: 0.62, boldSystemFont: 0.60, semiboldSystemFont: 0.58, systemFont: 0.56 };
+const MARGE = 1.5;                    // tolérance : le modèle de largeur est approché à ~5 % près
+// Facteurs recalés sur la capture de l'iPhone de Tom (12/11) : « 10 » en gras lourd 14 pt ne tenait pas dans une
+// case de 21 pt, donc un chiffre fait au moins 0,78 × la taille de la police — pas 0,65 comme je l'estimais.
+const LARGEUR = { heavySystemFont: 0.80, boldSystemFont: 0.74, semiboldSystemFont: 0.70, systemFont: 0.66 };
 // largeur totale (pt) d'un widget sur le plus petit iPhone ; la marge du widget est retirée par son setPadding
 export const UTILE = { small: 141, medium: 305, large: 292, extraLarge: 292 };
 
@@ -20,7 +23,7 @@ function largeurTexte(n) {
   const f = n.font ?? { k: 'systemFont', n: 12 };
   const par = LARGEUR[f.k] ?? 0.58;
   let w = 0;
-  for (const c of String(n.text)) w += /[0-9A-ZÀ-ÞŒ★➤]/.test(c) ? par * 1.05 : /[iljtr.,:·'’ ]/.test(c) ? par * 0.45 : par;
+  for (const c of String(n.text)) w += /[0-9]/.test(c) ? par : /[A-ZÀ-ÞŒ★➤]/.test(c) ? par * 1.02 : /[iljtr.,:·'’ ]/.test(c) ? par * 0.5 : par * 0.92;
   return w * f.n;
 }
 
@@ -56,7 +59,7 @@ export function verifierMiseEnPage(racine, famille = 'large', chemin = 'widget')
 
     if (n.layout === 'v') {
       for (const c of e) {
-        if (minimale(c) > dedans + 0.5) {
+        if (minimale(c) > dedans + MARGE) {
           if (c.kind === 'text') r.coupe.push(`${ou} › « ${c.text} » : ${naturelle(c).toFixed(0)} pt pour ${dedans.toFixed(0)} pt`);
           else r.deborde.push(`${ou} › bloc ${minimale(c).toFixed(0)} pt pour ${dedans.toFixed(0)} pt`);
         } else if (naturelle(c) > dedans + 0.5 && c.kind === 'text') r.reduit.push(`${ou} › « ${c.text} »`);
@@ -78,7 +81,7 @@ export function verifierMiseEnPage(racine, famille = 'large', chemin = 'widget')
         if (nat <= p + 0.5) continue;
         if (c.kind === 'text') { const mini = nat * (c.minimumScaleFactor ?? 1);
           (mini > p + 0.5 ? r.coupe : r.reduit).push(`${ou} › « ${c.text} » : ${nat.toFixed(0)} pt pour ${p.toFixed(0)} pt`);
-        } else if (minimale(c) > p + 0.5) r.deborde.push(`${ou} › bloc ${minimale(c).toFixed(0)} pt pour ${p.toFixed(0)} pt`);
+        } else if (minimale(c) > p + MARGE) r.deborde.push(`${ou} › bloc ${minimale(c).toFixed(0)} pt pour ${p.toFixed(0)} pt`);
       }
     }
     for (const c of autres) voir(c, Math.max(minimale(c), Math.min(naturelle(c), part(c))) || naturelle(c), `${ou}/h`);

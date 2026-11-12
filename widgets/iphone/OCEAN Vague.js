@@ -13,6 +13,27 @@
 
 const DATA = "https://tomaware.github.io/ocean/data/widget-surf.json";
 const APP = "https://tomaware.github.io/ocean/";
+// ------------------------------------------------------- mise a jour automatique
+// Le widget va chercher sa propre version publiee et reecrit son fichier. La nouvelle version s'applique au
+// rafraichissement suivant : une correction n'oblige plus a recopier le script a la main.
+// Garde-fous : on n'ecrit que du code visiblement complet (marqueur + taille), jamais une page d'erreur.
+const SOURCE = APP + "widgets/ocean-vague.js";
+const MARQUEUR = "OCEAN_WIDGET_VAGUE_FIN";   // derniere ligne du fichier : prouve que le telechargement est complet
+async function majAuto() {
+  try {
+    const chemin = typeof module !== "undefined" && module.filename;
+    if (!chemin) return;
+    const src = await new Request(SOURCE).loadString();
+    if (typeof src !== "string" || src.length < 4000 || !src.trim().endsWith(MARQUEUR)) return;
+    let fm;
+    try { fm = FileManager.iCloud(); } catch (e) { fm = FileManager.local(); }
+    let actuel = null;
+    try { actuel = fm.readString(chemin); } catch (e) { actuel = null; }
+    if (actuel === src) return;
+    fm.writeString(chemin, src);
+  } catch (e) { /* hors ligne ou dossier verrouille : on garde la version en place */ }
+}
+
 const DEFAULT_SPOT = "carnon";
 const K_SPOT = "ocean.vague.spot";
 const REFRESH_MIN = 30;
@@ -70,18 +91,18 @@ function text(stack, s, font, color, opts = {}) {
 const F = { h: (n) => Font.heavySystemFont(n), b: (n) => Font.boldSystemFont(n), s: (n) => Font.semiboldSystemFont(n), r: (n) => Font.systemFont(n) };
 function cellNum(stack, kn, w, h, size) {
   const [bg, fg] = windCell(kn);
-  // Pile VERTICALE + centerAlignContent : le texte est centré horizontalement sans espace souple. Un addSpacer()
-  // horizontal dans une pile de largeur fixe prend la place avant le texte, qui devient « … » — c'est ce qui
-  // coupait les nombres à deux chiffres sur l'iPhone de Tom (12/11). Ici les espaces ne jouent que sur la hauteur.
-  const s = stack.addStack(); s.layoutVertically(); s.spacing = 0; s.size = new Size(w, h);
-  s.backgroundColor = bg; s.cornerRadius = 5; s.centerAlignContent();
-  s.addSpacer(); text(s, kn == null ? "–" : Math.round(kn), F.h(size), fg, { scale: 0.5, center: true }); s.addSpacer();
+  // La case prend TOUTE la largeur de la colonne et le chiffre est calé à gauche avec 2 pt : aucun espace souple
+  // ne vient lui prendre la place (c'est ce qui le remplaçait par « … » puis le réduisait, 12/11). Le centrage
+  // horizontal dans une pile n'est pas fiable sous Scriptable, on ne s'y fie plus.
+  const s = stack.addStack(); s.spacing = 0; s.size = new Size(w, h);
+  s.backgroundColor = bg; s.cornerRadius = 5; s.setPadding(0, 2, 0, 0); s.centerAlignContent();
+  text(s, kn == null ? "–" : String(Math.round(kn)), F.h(size), fg, { scale: 0.8 });
   return s;
 }
 function starsText(stack, k, size) {
   const s = stack.addStack(); s.spacing = 0; s.centerAlignContent();
-  if (k) text(s, "★".repeat(k), F.b(size), STAR[k]);
-  if (k < 3) text(s, "★".repeat(3 - k), F.b(size), OFF);
+  if (k) text(s, "★".repeat(k), F.b(size), STAR[k], { scale: 0.7 });
+  if (k < 3) text(s, "★".repeat(3 - k), F.b(size), OFF, { scale: 0.7 });
 }
 
 const WAVE = dyn("#2F8FB0", "#5BB8D6");   // barres de vagues (comme les tableaux VAGUE de l'app)
@@ -158,22 +179,22 @@ function nowBlock(stack, m, big) {
   text(a, n ? `${m1(n.lo)}–${m1(n.hi)}` : "–", F.h(big ? 30 : 26), INK, { scale: 0.5 }); text(a, "m", F.b(13), INK2, { scale: 0.6 });
   text(s, n ? `${n.tp ?? "–"} s · houle ${compass(n.sd)}` : " ", F.s(12), INK2, { scale: 0.7 });
   if (n && n.ws != null) {
-    const w = (big ? a : s).addStack(); w.centerAlignContent(); w.spacing = 3;
-    if (big) { w.addSpacer(10); }
-    cellNum(w, n.ws, 24, 16, 10); addArrow(w, n.wd, 11, INK2); text(w, WIND_KIND[n.wk] || compass(n.wd), F.s(11), INK2, { scale: 0.6 });
+    const w = (big ? a : s).addStack(); w.centerAlignContent(); w.spacing = 2;
+    if (big) { w.addSpacer(8); }
+    cellNum(w, n.ws, 22, 16, 10); addArrow(w, n.wd, 10, INK2); text(w, WIND_KIND[n.wk] || compass(n.wd), F.s(11), INK2, { scale: 0.6 });
   }
 }
 function small(w, data, spot, m, now) {
-  const top = w.addStack(); top.centerAlignContent(); text(top, spot.short, F.h(14), INK, { scale: 0.7 }); top.addSpacer(); text(top, "maintenant", F.b(9), INK3);
+  const top = w.addStack(); top.centerAlignContent(); text(top, spot.short, F.h(14), INK, { scale: 0.7 }); top.addSpacer(); text(top, "maintenant", F.b(9), INK3, { scale: 0.7 });
   w.addSpacer(); nowBlock(w, m, false); w.addSpacer(6);
   const b = w.addStack(); b.centerAlignContent();
-  const d = m.days[0]; text(b, d && d.cr !== "—" ? d.cr : "pas de créneau", F.s(11), INK2, { scale: 0.7 }); b.addSpacer(); starsText(b, d ? d.stars : 0, 12);
+  const d = m.days[0]; text(b, d && d.cr !== "—" ? d.cr : "pas de créneau", F.s(11), INK2, { scale: 0.7 }); b.addSpacer(); starsText(b, d ? d.stars : 0, 11);
 }
 function medium(w, data, spot, m, now) {
   // largeurs calées sur le plus petit widget moyen (305 pt) : 96 + 8 d'écart + 4 colonnes de 40 + 3 écarts
   const row = w.addStack();
   const left = row.addStack(); left.layoutVertically(); left.size = new Size(96, 0);
-  text(left, spot.short, F.h(14), INK, { scale: 0.7 }); text(left, "maintenant", F.b(9), INK3); left.addSpacer(); nowBlock(left, m, false);
+  text(left, spot.short, F.h(14), INK, { scale: 0.7 }); text(left, "maintenant", F.b(9), INK3, { scale: 0.7 }); left.addSpacer(); nowBlock(left, m, false);
   row.addSpacer();
   const right = row.addStack(); right.spacing = 3;
   for (const d of m.days) {
@@ -187,19 +208,21 @@ function medium(w, data, spot, m, now) {
   }
 }
 function large(w, data, spot, m, now) {
-  const top = w.addStack(); top.centerAlignContent(); text(top, String(spot.name).split(" / ")[0].replace(/\s*\(.*\)$/, ""), F.h(15), INK, { scale: 0.7 }); top.addSpacer(); text(top, "maintenant", F.b(9), INK3);
+  const top = w.addStack(); top.centerAlignContent(); text(top, String(spot.name).split(" / ")[0].replace(/\s*\(.*\)$/, ""), F.h(15), INK, { scale: 0.7 }); top.addSpacer(); text(top, "maintenant", F.b(9), INK3, { scale: 0.7 });
   w.addSpacer(4); nowBlock(w, m, true);
   // heure par heure, heures passées retirées ; largeur des colonnes selon leur nombre (sinon iOS coupe les chiffres)
   for (const d of m.detail) {
     const cols = d.hours.filter((x) => x.has);
     if (!cols.length) continue;
     const cw = Math.max(15, Math.min(40, Math.floor((UTILE - 26 - 3 * (cols.length - 1)) / cols.length)));   // 26 = marge du bloc + centrage
-    const fh = Math.min(11, Math.round(cw * 0.6)), fv = Math.min(12, Math.round(cw * 0.55));
-    const fn = Math.min(12, Math.round(cw * 0.58)), fa = Math.min(13, Math.round(cw * 0.58));
+    // « 1,2 » fait trois caractères : il lui faut un peu plus de place qu'un nombre à deux chiffres (cf. Vent)
+    const fv = Math.max(8, Math.min(13, Math.floor((cw - 2) / 2.1)));
+    const fn = Math.max(8, Math.min(13, Math.floor((cw - 2) / 1.6)));
+    const fh = Math.min(10, fn - 3), fa = Math.min(13, cw - 6);
     w.addSpacer(7);
     const hd = w.addStack(); hd.centerAlignContent(); hd.spacing = 4;
     text(hd, d.label, F.h(13), INK, { scale: 0.7 }); text(hd, d.date, F.r(11), INK3, { scale: 0.6 });
-    if (d.stars) text(hd, "★".repeat(d.stars), F.b(11), STAR[d.stars]);
+    if (d.stars) text(hd, "★".repeat(d.stars), F.b(11), STAR[d.stars], { scale: 0.7 });
     hd.addSpacer();
     const tps = [...new Set(cols.map((x) => x.tp).filter((x) => x != null))].sort((a, b) => a - b);
     const per = tps.length ? ` · ${tps[0]}${tps.length > 1 ? `–${tps[tps.length - 1]}` : ""} s` : "";
@@ -211,12 +234,12 @@ function large(w, data, spot, m, now) {
     const box = wrap.addStack(); box.backgroundColor = CELL; box.cornerRadius = 10; box.setPadding(5, 5, 5, 5); box.spacing = 3;
     const hMax = Math.max(1.2, ...cols.map((x) => x.hb ?? 0));
     cols.forEach((x) => {
-      const c = box.addStack(); c.layoutVertically(); c.size = new Size(cw, 0); c.spacing = 1; c.centerAlignContent();
-      text(c, x.h, F.s(fh), INK3, { scale: 0.5, center: true });
-      text(c, m1(x.hb), F.b(fv), INK, { scale: 0.5, center: true });
+      const c = box.addStack(); c.layoutVertically(); c.size = new Size(cw, 0); c.spacing = 1;
+      text(c, x.h, F.s(fh), INK3, { scale: 0.7 });
+      text(c, m1(x.hb), F.b(fv), INK, { scale: 0.8 });
       const bar = c.addStack(); bar.layoutVertically(); bar.size = new Size(Math.min(cw - 4, 24), 13); bar.addSpacer();
       const fill = bar.addStack(); fill.size = new Size(Math.min(cw - 4, 24), Math.max(2, Math.round(((x.hb ?? 0) / hMax) * 13))); fill.backgroundColor = WAVE; fill.cornerRadius = 2;
-      cellNum(c, x.ws, Math.min(cw - 2, 32), fn + 4, fn);
+      cellNum(c, x.ws, cw, fn + 5, fn);                                       // la case occupe toute la colonne
       if (cw >= 22) addArrow(c, x.wd, fa, INK2);   // colonnes étroites : la flèche serait illisible
       const sb = c.addStack(); sb.size = new Size(cw - 3, 5); sb.cornerRadius = 2; sb.backgroundColor = x.stars > 0 ? STAR[x.stars] : NONE;
     });
@@ -227,7 +250,7 @@ function large(w, data, spot, m, now) {
   if (b) {
     const box = w.addStack(); box.layoutVertically(); box.backgroundColor = CELL; box.cornerRadius = 10; box.setPadding(6, 8, 6, 8); box.url = link(b.spot, b.s);
     text(box, "MEILLEUR CRÉNEAU SURF", F.b(9), INK3);
-    const l = box.addStack(); l.spacing = 4; if (b.stars) text(l, "★".repeat(b.stars), F.b(12), STAR[b.stars]);
+    const l = box.addStack(); l.spacing = 4; if (b.stars) text(l, "★".repeat(b.stars), F.b(12), STAR[b.stars], { scale: 0.7 });
     text(l, `${b.spot.short} · ${when(b, now)} · ${m1(b.hb)} m · ${b.tp ?? "–"} s`, F.b(12), INK, { scale: 0.6 });
   }
 }
@@ -279,6 +302,7 @@ async function build(family) {
   return w;
 }
 
+await majAuto();   // avant le rendu : même si l'affichage échoue, la correction suivante arrivera seule
 if (config.runsInWidget) {
   Script.setWidget(await build(config.widgetFamily || "small"));
 } else {
@@ -287,3 +311,5 @@ if (config.runsInWidget) {
   if (r === 1) { const w = await build("large"); await w.presentLarge(); }
 }
 Script.complete();
+// OCEAN_WIDGET_VAGUE_FIN
+

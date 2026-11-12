@@ -155,3 +155,23 @@ test('contrôle de mise en page : il attrape bien le piège de l’espace souple
   assert.match(problemes(case24(true), 'large'), /COUPÉ.*« 18 »/);
   assert.equal(problemes(case24(false), 'large'), '');
 });
+
+test('widgets iPhone : mise à jour automatique du script, avec garde-fous', async () => {
+  // Une dernière copie à la main, puis le widget va chercher sa propre version publiée et réécrit son fichier.
+  // Il ne doit JAMAIS écrire autre chose que du code complet : une page d'erreur ou un téléchargement coupé
+  // casserait les trois widgets d'un coup, sans moyen de les réparer à distance.
+  const chemin = '/docs/OCEAN Vent.js';
+  const vrai = readFileSync(VENT, 'utf8');
+  const lancer = async (source: string | null, depart = 'ancienne version') => {
+    const o = await run(VENT, { family: 'small', data: DATA, now: NOW, source, filename: chemin, files: { [chemin]: depart } });
+    return o.files[chemin];
+  };
+  assert.equal(await lancer(vrai), vrai);                                  // version publiée complète → écrite
+  assert.equal(await lancer(vrai.slice(0, 5000)), 'ancienne version');     // téléchargement coupé → refusé
+  assert.equal(await lancer('<html>404</html>'), 'ancienne version');      // page d’erreur → refusé
+  assert.equal(await lancer(null), 'ancienne version');                    // hors ligne → refusé
+  assert.equal(await lancer(vrai, vrai), vrai);                            // déjà à jour → rien à écrire
+  // le fichier publié doit finir par son marqueur, sinon aucune mise à jour ne passera jamais
+  for (const [f, m] of [[VENT, 'VENT'], [CREN, 'CRENEAUX'], ['widgets/iphone/OCEAN Vague.js', 'VAGUE']])
+    assert.ok(readFileSync(f, 'utf8').trim().endsWith(`// OCEAN_WIDGET_${m}_FIN`), f);
+});

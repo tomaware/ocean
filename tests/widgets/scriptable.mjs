@@ -2,7 +2,7 @@
 // enregistrent ce que le widget affiche (textes, couleurs, tailles, liens). Sert aux tests, pas à l'iPhone.
 import { readFileSync } from 'node:fs';
 
-export function makeEnv({ family = 'small', parameter = '', inWidget = true, data, live = null, keychain = {}, alerts = [], fail = false, now = Date.now(), calendars = [], events = [], calendarDenied = false, query = {}, files: initFiles = {}, screen = 390 }) {
+export function makeEnv({ family = 'small', parameter = '', inWidget = true, data, live = null, keychain = {}, alerts = [], fail = false, now = Date.now(), calendars = [], events = [], calendarDenied = false, query = {}, files: initFiles = {}, screen = 390, source = null, filename = null }) {
   const out = { widget: null, presented: null, requests: [], keychain: { ...keychain }, edited: null, between: null, files: null };
   class Color { constructor(hex, a = 1) { this.hex = hex; this.a = a; } static dynamic(l, d) { const c = new Color(l.hex); c.dark = d.hex; return c; } static white() { return new Color('#FFFFFF'); } static black() { return new Color('#000000'); } }
   class Size { constructor(w, h) { this.w = w; this.h = h; } }
@@ -35,6 +35,12 @@ export function makeEnv({ family = 'small', parameter = '', inWidget = true, dat
   const SFSymbol = { named: (n) => ({ name: n, image: { image: true, symbol: n }, applyFont() {} }) };
   class Request {
     constructor(url) { this.url = url; }
+    async loadString() {
+      out.requests.push(this.url);
+      if (fail) throw new Error('hors ligne');
+      if (source === null) throw new Error('pas de source publiée');
+      return source;
+    }
     async loadJSON() {
       out.requests.push(this.url);
       if (fail) throw new Error('hors ligne');
@@ -43,7 +49,7 @@ export function makeEnv({ family = 'small', parameter = '', inWidget = true, dat
     }
   }
   const files = { ...initFiles }; out.files = files;
-  const FileManager = { local: () => ({ documentsDirectory: () => '/docs', joinPath: (a, b) => `${a}/${b}`, writeString: (p, s) => { files[p] = s; }, readString: (p) => files[p], fileExists: (p) => p in files }) };
+  const FileManager = { iCloud: () => FileManager.local(), local: () => ({ documentsDirectory: () => '/docs', joinPath: (a, b) => `${a}/${b}`, writeString: (p, s) => { files[p] = s; }, readString: (p) => files[p], fileExists: (p) => p in files }) };
   const Keychain = { contains: (k) => k in out.keychain, get: (k) => out.keychain[k], set: (k, v) => { out.keychain[k] = v; }, remove: (k) => { delete out.keychain[k]; } };
   let ai = 0;
   class Alert {
@@ -54,7 +60,7 @@ export function makeEnv({ family = 'small', parameter = '', inWidget = true, dat
   }
   const Device = { screenSize: () => ({ width: screen, height: Math.round(screen * 2.16) }), isUsingDarkAppearance: () => true };
   const globals = { Color, Size, Point, Rect, Path, DrawContext, Font, ListWidget, Request, FileManager, Keychain, Alert,
-    Calendar, CalendarEvent, SFSymbol, Device,
+    Calendar, CalendarEvent, SFSymbol, Device, module: { filename },
     args: { widgetParameter: parameter || null, queryParameters: query }, config: { widgetFamily: family, runsInWidget: inWidget, runsInApp: !inWidget },
     Script: { setWidget: (w) => { out.widget = w; }, complete: () => {}, name: () => 'Agenda' } };
   return { globals, out, now };
