@@ -3,6 +3,7 @@
 process.env.TZ = 'Europe/Paris';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { widgetWind } from '../pipeline/publish/widgets.ts';
 import { run, texts, urls } from './widgets/scriptable.mjs';
 import { NOW, wingFixture } from './widgets/fixture.ts';
@@ -83,11 +84,17 @@ test('widget Créneaux : meilleur créneau d’abord (étoiles puis note), taill
   o = await run(CREN, { family: 'medium', data: DATA, now: NOW });
   t = texts(o.widget).join(' | ');
   assert.match(t, /Beauduc.*G-Motte.*G-Motte/);
+  // grand (comme le widget Windows) : meilleur créneau en haut, spots en colonnes, jours en lignes
   o = await run(CREN, { family: 'large', data: DATA, now: NOW });
   t = texts(o.widget).join(' | ');
-  for (const x of ['G-Motte', 'Beauduc', 'Le Jaï', 'Auj.', 'Demain', 'MEILLEUR']) assert.ok(t.includes(x), x);
-  assert.match(t, /Beauduc \| 4h/);                               // Beauduc vendredi : 4 h à 3 étoiles (12 h – 15 h)
+  for (const x of ['G-Motte', 'Beauduc', 'Le Jaï', 'Auj.', 'MEILLEUR CRÉNEAU']) assert.ok(t.includes(x), x);
+  assert.match(t, /Vendredi 13 · 9–17 h/);                        // meilleur créneau : jour en toutes lettres
+  assert.match(t, /Jeu 12 \|/); assert.match(t, /Ven 13 \|/);     // lignes = jours
+  assert.match(t, /Ven 13 \| 4h \| 4h \| 18/);                    // vendredi : 4 h pour G-Motte et Beauduc, Le Jaï sans créneau → vent max
   assert.doesNotMatch(t, /\b0h\b/);
+  // la nuit : la ligne du jour, vide, disparaît (comme sur Windows)
+  const night = await run(CREN, { family: 'large', data: DATA, now: NOW + 9 * H });
+  assert.doesNotMatch(texts(night.widget).join(' | '), /Auj\./);
   o = await run(CREN, { family: 'small', parameter: 'proches', data: DATA, now: NOW });
   assert.doesNotMatch(texts(o.widget).join(' '), /Beauduc/);
   o = await run(CREN, { family: 'small', parameter: 'Le Jaï', data: DATA, now: NOW });
@@ -97,4 +104,30 @@ test('widget Créneaux : meilleur créneau d’abord (étoiles puis note), taill
   }
   o = await run(CREN, { family: 'medium', parameter: 'offshore', data: DATA, now: NOW });
   assert.match(texts(o.widget).join(' | '), /OffShore/);
+});
+
+test('widgets iPhone : la grille ne dépasse jamais le widget, sur tous les iPhone', async () => {
+  // largeur utile estimée depuis l'écran ; elle doit rester sous la vraie largeur du grand widget, padding compris
+  const src = readFileSync(CREN, 'utf8');
+  const body = src.match(/function usable\(\) \{[\s\S]*?\n\}/)![0];
+  const make = (screen: number) => new Function('Device', `${body} return usable();`)({ screenSize: () => ({ width: screen, height: screen * 2.2 }) });
+  // écran (pt) → largeur réelle du grand widget (pt), iPhone SE 1 → 16 Pro Max
+  for (const [screen, widget] of [[320, 292], [375, 329], [390, 338], [393, 338], [402, 338], [414, 360], [428, 364], [430, 364], [440, 364]]) {
+    const u = make(screen);
+    assert.ok(u <= widget - 28, `écran ${screen} : ${u} > ${widget - 28}`);
+    assert.ok(u >= 264, `écran ${screen} : ${u} < 264`);
+  }
+  assert.equal(make(0), 264); assert.equal(make(NaN), 264);           // écran illisible : repli sur le plus petit
+  // même garde-fou en hauteur : les lignes de la grille ne doivent jamais pousser la dernière hors du widget
+  const bodyH = src.match(/function usableH\(\) \{[\s\S]*?\n\}/)![0];
+  const makeH = (screen: number) => new Function('Device', `${bodyH} return usableH();`)({ screenSize: () => ({ width: screen, height: screen * 2.2 }) });
+  for (const [screen, hauteur] of [[320, 311], [375, 345], [390, 354], [393, 354], [402, 354], [414, 366], [428, 382], [430, 382], [440, 382]]) {
+    const u = makeH(screen);
+    assert.ok(u <= hauteur - 28, `écran ${screen} : ${u} > ${hauteur - 28}`);
+    const ch = Math.max(25, Math.min(34, Math.floor((u - 135 - 15) / 5)));
+    assert.ok(135 + 5 * (ch + 3) <= Math.max(u, 283), `écran ${screen} : grille ${135 + 5 * (ch + 3)} > ${u}`);
+  }
+  assert.equal(makeH(0), 283); assert.equal(makeH(NaN), 283);
+  // les trois widgets partagent la même fonction, au caractère près
+  for (const f of [VENT, 'widgets/iphone/OCEAN Vague.js']) assert.ok(readFileSync(f, 'utf8').includes(body), f);
 });

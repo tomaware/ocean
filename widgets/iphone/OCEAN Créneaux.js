@@ -31,10 +31,27 @@ const compass = (d) => (d == null ? "" : DIR16[Math.round(d / 22.5) % 16]);
 const norm = (s) => String(s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-");
 const starsOf = (s) => (s == null ? 0 : s >= 8.5 ? 3 : s >= 7 ? 2 : s >= 5 ? 1 : 0);
 const DAYS = ["Dim.", "Lun.", "Mar.", "Mer.", "Jeu.", "Ven.", "Sam."];
+const JOURS = ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
 const dayKey = (t) => { const d = new Date(t); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
 const dayLabel = (key, now) => (key === dayKey(now) ? "Auj." : key === dayKey(now + 86400e3) ? "Demain" : DAYS[new Date(key + "T12:00:00").getDay()]);
 const span = (s) => `${new Date(s.s).getHours()}–${new Date(s.e).getHours()} h`;
 const F = { h: (n) => Font.heavySystemFont(n), b: (n) => Font.boldSystemFont(n), s: (n) => Font.semiboldSystemFont(n), r: (n) => Font.systemFont(n) };
+/** Largeur utile d'un grand widget, estimée à partir de l'écran. Le facteur est volontairement bas : une grille
+ *  un peu étroite reste lisible, une grille plus large que le widget est écrasée par iOS (chiffres coupés). */
+function usable() {
+  try { const s = Device.screenSize(); const w = Math.min(s.width, s.height);
+    if (!(w > 0)) return 264;
+    return Math.max(264, Math.min(336, Math.round(w * 0.82) - 28)); }
+  catch (e) { return 264; }
+}
+/** Hauteur utile d'un grand widget, estimée de la même façon (facteur bas : mieux vaut un peu de blanc en bas
+ *  qu'une dernière ligne coupée par iOS). */
+function usableH() {
+  try { const s = Device.screenSize(); const w = Math.min(s.width, s.height);
+    if (!(w > 0)) return 283;
+    return Math.max(283, Math.min(354, Math.round(w * 0.86) - 28)); }
+  catch (e) { return 283; }
+}
 function text(stack, s, font, color, opts = {}) {
   const t = stack.addText(String(s)); t.font = font; t.textColor = color; t.lineLimit = opts.lines ?? 1;
   if (opts.scale) t.minimumScaleFactor = opts.scale;
@@ -128,42 +145,77 @@ function medium(w, list, cfg, now) {
   text(right, cfg.label, F.r(9), INK3);
   w.url = link(c);
 }
+const HEAD = { "La Franqui": "Franqui", "Espiguette": "Espig.", "Almanarre": "Alman." };   // en-têtes de colonne courts
+const colLabel = (s) => HEAD[s.short] || s.short;
+/** Étiquette de ligne : « Auj. » aujourd'hui, sinon « Jeu 12 » (comme le widget Windows validé le 12/11). */
+function rowLabel(key, now) {
+  if (key === dayKey(now)) return "Auj.";
+  const d = new Date(key + "T12:00:00");
+  return `${DAYS[d.getDay()].replace(".", "")} ${d.getDate()}`;
+}
+/** Vent max du jour (heures de jour), affiché dans les cases sans créneau, comme l'ancien widget. */
+function dayMax(sp, key) {
+  const v = (sp.hours || []).filter((h) => h[4] && dayKey(h[0]) === key && h[1] != null).map((h) => h[1]);
+  return v.length ? Math.max(...v) : null;
+}
+// Grand format (Tom, 11/11 : « comme l'ancien ») : meilleur créneau en haut, puis spots en colonnes et jours en lignes.
+// La largeur des colonnes vient de leur nombre, sur la largeur utile du plus petit grand widget (264 pt) : la grille
+// ne déborde jamais, et les textes peuvent se réduire au lieu d'être coupés.
 function large(w, data, list, cfg, now) {
-  const head = w.addStack(); head.centerAlignContent();
-  text(head, "Créneaux vent", F.h(15), INK); head.addSpacer(); text(head, cfg.label, F.r(10), INK3);
-  w.addSpacer(6);
-  const days = data.days.slice(0, 5), cw = 47, nameW = 66;
-  const hdr = w.addStack(); hdr.spacing = 3; const n0 = hdr.addStack(); n0.size = new Size(nameW, 0);
-  for (const d of days) { const h = hdr.addStack(); h.size = new Size(cw, 12); h.addSpacer(); text(h, dayLabel(d, now), F.b(10), INK3); h.addSpacer(); }
-  w.addSpacer(3);
-  const rows = cfg.spots.slice(0, 8);
-  for (const sp of rows) {
-    const r = w.addStack(); r.spacing = 3; r.centerAlignContent();
-    const n = r.addStack(); n.size = new Size(nameW, 0); text(n, sp.short, F.h(11), INK, { scale: 0.7 });
-    sp.daily[cfg.level].slice(0, 5).forEach((x, i) => {
-      // case remplie selon les heures à 3, 2 et 1 étoiles (comme la Prévision 5 jours de l'app)
-      const ses = (sp.sessions[cfg.level] || []).filter((s) => dayKey(s.s) === days[i]), has = ses.length > 0;
-      const cell = r.addStack(); cell.size = new Size(cw, 26); cell.cornerRadius = 6; cell.backgroundColor = CELL;
-      if (!has) return;
-      // case remplie selon les heures à 3, 2 et 1 étoiles (comme la Prévision 5 jours de l'app), chiffre posé dessus
-      cell.backgroundImage = fillImage(x, cw, 26);
-      const top = x[2] ? 3 : x[1] ? 2 : 1;
-      cell.centerAlignContent(); cell.addSpacer();
-      const pill = cell.addStack(); pill.backgroundColor = BG; pill.cornerRadius = 7; pill.setPadding(1, 5, 1, 5);
-      text(pill, `${x[top - 1] || ses.reduce((a, s) => a + s.h, 0)}h`, F.h(10), INK);   // heures au meilleur niveau
-      cell.addSpacer();
-      cell.url = `${APP}#/spot/${sp.id}`;
-    });
-    w.addSpacer(3);
-  }
-  w.addSpacer(4);
   if (list.length) {
-    const c = list[0], b = w.addStack(); b.layoutVertically(); b.backgroundColor = CELL; b.cornerRadius = 10; b.setPadding(6, 8, 6, 8); b.url = link(c);
-    text(b, "MEILLEUR", F.b(9), INK3);
-    const l = b.addStack(); l.centerAlignContent(); stars(l, starsOf(c.p), 12, false); l.addSpacer(4);
-    text(l, `${c.spot.short} · ${dayLabel(dayKey(c.s), now)} ${span(c)} · ${c.kn ?? "–"} nd ${compass(c.dir)}`, F.b(12), INK, { scale: 0.6 });
-  } else text(w, "Pas de créneau dans les 5 jours", F.s(12), INK2);
+    const c = list[0], k = starsOf(c.p);
+    const b = w.addStack(); b.layoutVertically(); b.backgroundColor = k ? SOFT[k] : CELL; b.cornerRadius = 14; b.setPadding(9, 12, 10, 12); b.url = link(c);
+    const l1 = b.addStack(); l1.centerAlignContent();
+    text(l1, "MEILLEUR CRÉNEAU", F.b(10), INK3); l1.addSpacer();
+    const pill = l1.addStack(); pill.backgroundColor = k ? STAR[k] : OFF; pill.cornerRadius = 8; pill.setPadding(1, 7, 1, 7);
+    text(pill, `${c.h}h`, F.h(11), Color.white());
+    const d = new Date(c.s);
+    text(b, `${JOURS[d.getDay()]} ${d.getDate()} · ${span(c)}`, F.h(19), INK, { scale: 0.5 });
+    const l3 = b.addStack(); l3.centerAlignContent();
+    text(l3, c.spot.name, F.s(13), INK, { scale: 0.6 }); l3.addSpacer(8); stars(l3, k, 13, false); l3.addSpacer();
+    text(b, `${c.kn ?? "–"} nd ${compass(c.dir)}${c.g ? ` · raf. ${c.g}` : ""}`, F.b(12), INK2, { scale: 0.7 });
+  } else text(w, "Pas de créneau dans les 5 jours", F.s(13), INK2);
+  w.addSpacer(10);
+  // la nuit (plus aucune heure de jour à venir aujourd'hui) : la ligne du jour, vide, est retirée
+  const today = dayKey(now);
+  let days = data.days.slice(0, 5), off = 0;
+  const dayLeft = data.spots.some((sp) => (sp.hours || []).some((h) => h[4] && dayKey(h[0]) === today && h[0] + 3600e3 > now));
+  if (days.length > 1 && days[0] === today && !dayLeft) { days = days.slice(1); off = 1; }
+  const cols = cfg.spots.slice(0, 8), nameW = 34, gap = 3;
+  const cw = Math.max(22, Math.floor((usable() - nameW) / Math.max(1, cols.length)) - gap);
+  // hauteur des lignes : la place qui reste sous le meilleur créneau (≈ 135 pt d'en-tête, de pied et d'espaces)
+  const nr = Math.max(1, days.length);
+  const ch = Math.max(25, Math.min(34, Math.floor((usableH() - 135 - nr * gap) / nr)));
+  const hdr = w.addStack(); hdr.spacing = gap;
+  const n0 = hdr.addStack(); n0.size = new Size(nameW, 0);
+  for (const sp of cols) { const h = hdr.addStack(); h.size = new Size(cw, 12); h.addSpacer(); text(h, colLabel(sp), F.b(9), INK3, { scale: 0.5 }); h.addSpacer(); }
+  w.addSpacer(3);
+  days.forEach((key, i) => {
+    const r = w.addStack(); r.spacing = gap; r.centerAlignContent();
+    const n = r.addStack(); n.size = new Size(nameW, 0); text(n, rowLabel(key, now), F.h(11), INK, { scale: 0.5 });
+    for (const sp of cols) {
+      const x = (sp.daily[cfg.level] || [])[i + off];
+      const ses = (sp.sessions[cfg.level] || []).filter((s) => dayKey(s.s) === key);
+      const cell = r.addStack(); cell.size = new Size(cw, ch); cell.cornerRadius = 6; cell.backgroundColor = CELL;
+      cell.centerAlignContent();
+      if (!ses.length || !x) {
+        const kn = dayMax(sp, key);
+        if (kn != null) { cell.addSpacer(); text(cell, String(kn), F.s(10), INK3, { scale: 0.6 }); cell.addSpacer(); }
+        continue;
+      }
+      // case remplie selon les heures à 3, 2 et 1 étoiles (comme la Prévision 5 jours de l'app), heures posées dessus
+      cell.backgroundImage = fillImage(x, cw, ch);
+      const top = x[2] ? 3 : x[1] ? 2 : 1;
+      cell.addSpacer();
+      const pill = cell.addStack(); pill.backgroundColor = BG; pill.cornerRadius = 7; pill.setPadding(1, 4, 1, 4);
+      text(pill, `${x[top - 1] || ses.reduce((a, s) => a + s.h, 0)}h`, F.h(10), INK, { scale: 0.6 });   // heures au meilleur niveau
+      cell.addSpacer();
+      cell.url = `${APP}#/spot/${sp.id}?day=${encodeURIComponent(new Date(key + "T12:00:00").toLocaleDateString("fr-FR"))}`;
+    }
+    w.addSpacer(3);
+  });
   w.addSpacer();
+  text(w, cfg.label, F.r(9), INK3);
 }
 function lock(w, family, list, now) {
   const c = list[0];

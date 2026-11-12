@@ -55,6 +55,14 @@ function addArrow(stack, from, size, color) {
   if (from == null) return;
   const i = stack.addImage(arrow(from, size)); i.imageSize = new Size(size, size); i.tintColor = color;
 }
+/** Largeur utile d'un grand widget, estimée à partir de l'écran. Le facteur est volontairement bas : une grille
+ *  un peu étroite reste lisible, une grille plus large que le widget est écrasée par iOS (chiffres coupés). */
+function usable() {
+  try { const s = Device.screenSize(); const w = Math.min(s.width, s.height);
+    if (!(w > 0)) return 264;
+    return Math.max(264, Math.min(336, Math.round(w * 0.82) - 28)); }
+  catch (e) { return 264; }
+}
 function text(stack, s, font, color, opts = {}) {
   const t = stack.addText(String(s)); t.font = font; t.textColor = color; t.lineLimit = opts.lines ?? 1;
   if (opts.scale) t.minimumScaleFactor = opts.scale;
@@ -178,7 +186,7 @@ function large(w, data, spot, m, now) {
   for (const d of m.detail) {
     const cols = d.hours.filter((x) => x.has);
     if (!cols.length) continue;
-    const cw = Math.max(15, Math.min(40, Math.floor(244 / cols.length)));
+    const cw = Math.max(15, Math.min(40, Math.floor((usable() - 20) / cols.length)));   // la grille tient dans le widget, quel que soit l’iPhone
     const fh = Math.min(11, Math.round(cw * 0.6)), fv = Math.min(12, Math.round(cw * 0.55));
     const fn = Math.min(12, Math.round(cw * 0.58)), fa = Math.min(13, Math.round(cw * 0.58));
     w.addSpacer(7);

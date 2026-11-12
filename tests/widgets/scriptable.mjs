@@ -2,7 +2,7 @@
 // enregistrent ce que le widget affiche (textes, couleurs, tailles, liens). Sert aux tests, pas à l'iPhone.
 import { readFileSync } from 'node:fs';
 
-export function makeEnv({ family = 'small', parameter = '', inWidget = true, data, live = null, keychain = {}, alerts = [], fail = false, now = Date.now(), calendars = [], events = [], calendarDenied = false, query = {}, files: initFiles = {} }) {
+export function makeEnv({ family = 'small', parameter = '', inWidget = true, data, live = null, keychain = {}, alerts = [], fail = false, now = Date.now(), calendars = [], events = [], calendarDenied = false, query = {}, files: initFiles = {}, screen = 390 }) {
   const out = { widget: null, presented: null, requests: [], keychain: { ...keychain }, edited: null, between: null, files: null };
   class Color { constructor(hex, a = 1) { this.hex = hex; this.a = a; } static dynamic(l, d) { const c = new Color(l.hex); c.dark = d.hex; return c; } static white() { return new Color('#FFFFFF'); } static black() { return new Color('#000000'); } }
   class Size { constructor(w, h) { this.w = w; this.h = h; } }
@@ -52,8 +52,9 @@ export function makeEnv({ family = 'small', parameter = '', inWidget = true, dat
     async present() { const a = alerts[ai++]; if (a && typeof a === 'object' && 'text' in a) this.fields[0] = a.text; return a === undefined ? -1 : typeof a === 'object' ? a.choice : a; }
     textFieldValue(i) { return this.fields[i]; }
   }
+  const Device = { screenSize: () => ({ width: screen, height: Math.round(screen * 2.16) }), isUsingDarkAppearance: () => true };
   const globals = { Color, Size, Point, Rect, Path, DrawContext, Font, ListWidget, Request, FileManager, Keychain, Alert,
-    Calendar, CalendarEvent, SFSymbol,
+    Calendar, CalendarEvent, SFSymbol, Device,
     args: { widgetParameter: parameter || null, queryParameters: query }, config: { widgetFamily: family, runsInWidget: inWidget, runsInApp: !inWidget },
     Script: { setWidget: (w) => { out.widget = w; }, complete: () => {}, name: () => 'Agenda' } };
   return { globals, out, now };
