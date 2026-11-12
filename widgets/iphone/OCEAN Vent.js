@@ -74,12 +74,16 @@ function text(stack, s, font, color, opts = {}) {
 const F = { h: (n) => Font.heavySystemFont(n), b: (n) => Font.boldSystemFont(n), s: (n) => Font.semiboldSystemFont(n), r: (n) => Font.systemFont(n) };
 function cellNum(stack, kn, w, h, size) {
   const [bg, fg] = windCell(kn);
-  const s = stack.addStack(); s.size = new Size(w, h); s.backgroundColor = bg; s.cornerRadius = 5; s.centerAlignContent();
-  s.addSpacer(); text(s, kn == null ? "–" : Math.round(kn), F.h(size), fg, { scale: 0.5 }); s.addSpacer();
+  // Pile VERTICALE + centerAlignContent : le texte est centré horizontalement sans espace souple. Un addSpacer()
+  // horizontal dans une pile de largeur fixe prend la place avant le texte, qui devient « … » — c'est ce qui
+  // coupait les nombres à deux chiffres sur l'iPhone de Tom (12/11). Ici les espaces ne jouent que sur la hauteur.
+  const s = stack.addStack(); s.layoutVertically(); s.spacing = 0; s.size = new Size(w, h);
+  s.backgroundColor = bg; s.cornerRadius = 5; s.centerAlignContent();
+  s.addSpacer(); text(s, kn == null ? "–" : Math.round(kn), F.h(size), fg, { scale: 0.5, center: true }); s.addSpacer();
   return s;
 }
 function starsText(stack, k, size) {
-  const s = stack.addStack(); s.spacing = 0;
+  const s = stack.addStack(); s.spacing = 0; s.centerAlignContent();
   if (k) text(s, "★".repeat(k), F.b(size), STAR[k]);
   if (k < 3) text(s, "★".repeat(3 - k), F.b(size), OFF);
 }
@@ -212,22 +216,26 @@ function small(w, data, spot, m, now) {
 }
 function dayCols(stack, m, cellW) {
   for (const d of m.days) {
-    const c = stack.addStack(); c.layoutVertically(); c.size = new Size(cellW, 0); c.backgroundColor = CELL; c.cornerRadius = 10; c.setPadding(6, 2, 6, 2); c.spacing = 4;
-    const l = c.addStack(); l.addSpacer(); text(l, d.label, F.h(11), INK); l.addSpacer();
-    const st = c.addStack(); st.addSpacer(); starsText(st, d.stars, 10); st.addSpacer();
-    const k = c.addStack(); k.addSpacer(); cellNum(k, d.kn, cellW - 14, 20, 13); k.addSpacer();
-    const a = c.addStack(); a.addSpacer(); addArrow(a, d.dir, 13, INK2); a.addSpacer();
-    const cr = c.addStack(); cr.addSpacer(); text(cr, d.cr, F.s(10), INK2, { scale: 0.7 }); cr.addSpacer();
+    // contenu centré par centerAlignContent() : aucun espace souple ne vient prendre la place des textes
+    const c = stack.addStack(); c.layoutVertically(); c.size = new Size(cellW, 0); c.backgroundColor = CELL;
+    c.cornerRadius = 10; c.setPadding(6, 2, 6, 2); c.spacing = 4; c.centerAlignContent();
+    text(c, d.label, F.h(11), INK, { scale: 0.6, center: true });
+    starsText(c, d.stars, 10);
+    cellNum(c, d.kn, cellW - 8, 20, 13);
+    addArrow(c, d.dir, 13, INK2);
+    text(c, d.cr, F.s(10), INK2, { scale: 0.6, center: true });
   }
 }
 function medium(w, data, spot, m, now) {
-  const row = w.addStack(); row.spacing = 10;
-  const left = row.addStack(); left.layoutVertically(); left.size = new Size(108, 0);
+  // largeurs calées sur le plus petit widget moyen (305 pt) : 96 + 8 d'écart + 4 colonnes de 40 + 3 écarts = 273
+  const row = w.addStack();
+  const left = row.addStack(); left.layoutVertically(); left.size = new Size(96, 0);
   text(left, spot.short, F.h(14), INK, { scale: 0.7 });
   text(left, srcText(m, now, true), F.b(10), m.now && m.now.src !== "prévu" && !m.now.stale ? LIVE : INK3, { scale: 0.7 });
   left.addSpacer(); bigNow(left, m, 38); left.addSpacer();
   text(left, `${m.now && m.now.gust != null ? `raf. ${Math.round(m.now.gust)} · ` : ""}2 h : ${m.in2 ? Math.round(m.in2.kn) : "–"}`, F.r(11), INK2, { scale: 0.7 });
-  const right = row.addStack(); right.spacing = 4; dayCols(right, m, 50);
+  row.addSpacer();
+  const right = row.addStack(); right.spacing = 3; dayCols(right, m, 40);
 }
 function large(w, data, spot, m, now) {
   header(w, spot, m, now, true); w.addSpacer(4);
@@ -241,7 +249,7 @@ function large(w, data, spot, m, now) {
   for (const d of m.detail) {
     const cols = d.hours.filter((x) => x.has && !x.past);
     if (!cols.length) continue;
-    const cw = Math.max(15, Math.min(40, Math.floor((UTILE - 20) / cols.length)));   // la grille tient dans le widget, quel que soit l’iPhone
+    const cw = Math.max(15, Math.min(40, Math.floor((UTILE - 26 - 3 * (cols.length - 1)) / cols.length)));   // 26 = marge du bloc + centrage
     const fh = Math.min(11, Math.round(cw * 0.6)), fn = Math.min(14, Math.round(cw * 0.62));
     const fg = Math.min(11, Math.round(cw * 0.55)), fa = Math.min(15, Math.round(cw * 0.68));
     w.addSpacer(7);
@@ -251,16 +259,21 @@ function large(w, data, spot, m, now) {
     hd.addSpacer();
     if (d.kn != null) text(hd, `max ${Math.round(d.kn)} nd ${compass(d.dir)}${d.gust != null ? ` · raf. ${Math.round(d.gust)}` : ""}`, F.b(11), INK, { scale: 0.6 });
     w.addSpacer(3);
-    const box = w.addStack(); box.backgroundColor = CELL; box.cornerRadius = 10; box.setPadding(5, 5, 5, 5);
-    cols.forEach((x, i) => {
-      if (i) box.addSpacer();                                              // espace souple : la grille remplit le widget, quelle que soit sa largeur
-      const c = box.addStack(); c.layoutVertically(); c.size = new Size(cw, 0); c.spacing = 1;
-      const hl = c.addStack(); hl.addSpacer(); text(hl, x.h, F.s(fh), INK3, { scale: 0.5 }); hl.addSpacer();
-      const k = c.addStack(); k.addSpacer(); cellNum(k, x.kn, Math.min(cw - 3, 32), fn + 7, fn); k.addSpacer();
-      const g = c.addStack(); g.addSpacer(); text(g, x.gust != null ? Math.round(x.gust) : " ", F.r(fg), INK2, { scale: 0.5 }); g.addSpacer();
-      const a = c.addStack(); a.addSpacer(); addArrow(a, x.dir, fa, INK2); a.addSpacer();
+    // La grille est centrée dans la carte : sa largeur est calculée sur le plus petit grand widget, espaces
+    // compris. Un addSpacer() souple coûte au moins 8 pt — ne pas les compter faisait dépasser la grille, qui
+    // écrasait alors les colonnes (12/11). Ici les écarts sont explicites (3 pt) et le contenu des colonnes est
+    // centré par centerAlignContent(), sans aucun espace souple qui prendrait la place des chiffres.
+    const wrap = w.addStack(); wrap.addSpacer();
+    const box = wrap.addStack(); box.backgroundColor = CELL; box.cornerRadius = 10; box.setPadding(5, 5, 5, 5); box.spacing = 3;
+    cols.forEach((x) => {
+      const c = box.addStack(); c.layoutVertically(); c.size = new Size(cw, 0); c.spacing = 1; c.centerAlignContent();
+      text(c, x.h, F.s(fh), INK3, { scale: 0.5, center: true });
+      cellNum(c, x.kn, Math.min(cw - 2, 34), fn + 7, fn);
+      text(c, x.gust != null ? String(Math.round(x.gust)) : " ", F.r(fg), INK2, { scale: 0.5, center: true });
+      addArrow(c, x.dir, fa, INK2);
       const sb = c.addStack(); sb.size = new Size(cw - 3, 5); sb.cornerRadius = 2; sb.backgroundColor = x.stars > 0 ? STAR[x.stars] : NONE;
     });
+    wrap.addSpacer();
   }
 }
 function lock(w, family, spot, m) {

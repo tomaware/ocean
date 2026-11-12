@@ -4,9 +4,11 @@ process.env.TZ = 'Europe/Paris';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
-import { widgetWind } from '../pipeline/publish/widgets.ts';
+import { problemes } from './widgets/layout.mjs';
+import { widgetSurf, widgetWind } from '../pipeline/publish/widgets.ts';
+import { surfSessions } from '../pipeline/publish/sessions.ts';
 import { run, texts, urls } from './widgets/scriptable.mjs';
-import { NOW, wingFixture } from './widgets/fixture.ts';
+import { NOW, surfFixture, wingFixture } from './widgets/fixture.ts';
 
 const VENT = 'widgets/iphone/OCEAN Vent.js', CREN = 'widgets/iphone/OCEAN Créneaux.js';
 const H = 3600e3;
@@ -118,6 +120,20 @@ test('widget Vent : la grille heure par heure du grand format va de 9 h à 17 h'
   for (const f of [VENT, 'widgets/iphone/OCEAN Vague.js']) assert.match(readFileSync(f, 'utf8'), /const GRILLE = \[9, 17\];/, f);
 });
 
+test('widgets iPhone : tout tient dans la carte, même sur le plus petit iPhone', async () => {
+  // Contrôle de mise en page : un addSpacer() souple réclame au moins 8 pt AVANT le texte. Ne pas les compter a
+  // fait déborder la grille, puis remplacer les nombres à deux chiffres par « … » sur l'iPhone de Tom (12/11).
+  // Les captures HTML ne pouvaient pas le voir : c'est une règle de Scriptable, pas de géométrie.
+  const SURF = surfFixture();
+  const cas: [string, any, string][] = [[VENT, DATA, ''], [CREN, DATA, ''], [CREN, DATA, 'proches'],
+    ['widgets/iphone/OCEAN Vague.js', widgetSurf(SURF, surfSessions(SURF, NOW), NOW), '']];
+  for (const [f, data, parameter] of cas)
+    for (const family of ['small', 'medium', 'large']) {
+      const o = await run(f, { family, data, now: NOW, parameter });
+      assert.equal(problemes(o.widget, family), '', `${f.split('/').pop()} ${family} ${parameter}`);
+    }
+});
+
 test('widgets iPhone : aucune dimension du widget n’est devinée depuis l’écran', () => {
   // 12/11 : estimer la largeur depuis Device.screenSize() a fait déborder la carte sur l’iPhone de Tom.
   // Les grilles partent de la largeur du plus petit grand widget et se détendent avec des espaces souples.
@@ -127,4 +143,15 @@ test('widgets iPhone : aucune dimension du widget n’est devinée depuis l’é
     assert.match(src, /const UTILE = 264;/, f);
   }
   assert.match(readFileSync(CREN, 'utf8'), /r[.]addSpacer[(][)];\s+\/\/ espace souple/);
+});
+
+test('contrôle de mise en page : il attrape bien le piège de l’espace souple', () => {
+  // Le bug du 12/11, reproduit en miniature : une case de 24 pt, deux espaces souples (8 pt chacun) et « 18 ».
+  // Il ne reste que 8 pt pour un texte qui en demande 20 : iOS affiche « … ». Sans les espaces, ça tient.
+  const texte = (t: string, n: number) => ({ kind: 'text', text: t, font: { k: 'heavySystemFont', n }, minimumScaleFactor: 0.5 });
+  const case24 = (avecEspaces: boolean) => ({ kind: 'widget', layout: 'v', children: [{
+    kind: 'stack', layout: 'h', _size: { w: 24, h: 21 }, children: avecEspaces
+      ? [{ kind: 'spacer' }, texte('18', 14), { kind: 'spacer' }] : [texte('18', 14)] }] });
+  assert.match(problemes(case24(true), 'large'), /COUPÉ.*« 18 »/);
+  assert.equal(problemes(case24(false), 'large'), '');
 });

@@ -118,15 +118,17 @@ function medium(w, list, cfg, now) {
   const row = w.addStack(); row.spacing = 12;
   const c = list[0], k = starsOf(c.p);
   const best = row.addStack(); best.layoutVertically(); best.size = new Size(120, 0); best.backgroundColor = SOFT[k]; best.cornerRadius = 14; best.setPadding(10, 10, 10, 10);
-  stars(best, k, 16, false); best.addSpacer();
+  // Tom, 12/11 : étoiles collées au nom du spot, l'ensemble centré dans le bloc plutôt qu'écartelé haut / bas
+  best.addSpacer(); stars(best, k, 16, false); best.addSpacer(5);
   text(best, c.spot.short, F.h(15), INK, { scale: 0.6 });
   text(best, `${dayLabel(dayKey(c.s), now)} ${span(c)}`, F.s(12), INK2, { scale: 0.7 });
-  best.addSpacer(4); text(best, `${c.kn ?? "–"} nd ${compass(c.dir)}`, F.b(12), INK);
+  best.addSpacer(4); text(best, `${c.kn ?? "–"} nd ${compass(c.dir)}`, F.b(12), INK); best.addSpacer();
   best.url = link(c);
   const right = row.addStack(); right.layoutVertically(); right.spacing = 6;
   for (const x of list.slice(1, 4)) {
     const r = right.addStack(); r.layoutVertically(); r.url = link(x);
-    const a = r.addStack(); text(a, x.spot.short, F.h(13), INK); a.addSpacer(); stars(a, starsOf(x.p), 11, false);
+    const a = r.addStack(); a.spacing = 6; a.centerAlignContent();
+    text(a, x.spot.short, F.h(13), INK, { scale: 0.7 }); stars(a, starsOf(x.p), 11, false); a.addSpacer();
     const b = r.addStack(); text(b, `${dayLabel(dayKey(x.s), now)} ${span(x)}`, F.r(11), INK2); b.addSpacer(); text(b, `${x.kn ?? "–"} nd ${compass(x.dir)}`, F.b(11), INK);
   }
   if (list.length < 2) text(right, "Pas d'autre créneau en vue", F.r(11), INK3);
@@ -161,7 +163,7 @@ function large(w, data, list, cfg, now) {
     const d = new Date(c.s);
     text(b, `${JOURS[d.getDay()]} ${d.getDate()} · ${span(c)}`, F.h(19), INK, { scale: 0.5 });
     const l3 = b.addStack(); l3.centerAlignContent();
-    text(l3, c.spot.name, F.s(13), INK, { scale: 0.6 }); l3.addSpacer(8); stars(l3, k, 13, false); l3.addSpacer();
+    l3.spacing = 6; text(l3, c.spot.name, F.s(13), INK, { scale: 0.6 }); stars(l3, k, 13, false); l3.addSpacer();
     text(b, `${c.kn ?? "–"} nd ${compass(c.dir)}${c.g ? ` · raf. ${c.g}` : ""}`, F.b(12), INK2, { scale: 0.7 });
   } else text(w, "Pas de créneau dans les 5 jours", F.s(13), INK2);
   w.addSpacer(10);
@@ -171,10 +173,12 @@ function large(w, data, list, cfg, now) {
   const dayLeft = data.spots.some((sp) => (sp.hours || []).some((h) => h[4] && dayKey(h[0]) === today && h[0] + 3600e3 > now));
   if (days.length > 1 && days[0] === today && !dayLeft) { days = days.slice(1); off = 1; }
   const cols = cfg.spots.slice(0, 8), nameW = 34, gap = 3;
-  const cw = Math.max(22, Math.floor((UTILE - nameW) / Math.max(1, cols.length)) - gap), ch = 25;
+  // un addSpacer() souple réclame au moins 8 pt : il faut les compter, sinon la grille dépasse la carte (12/11)
+  const cw = Math.max(20, Math.floor((UTILE - nameW - 8 * Math.max(1, cols.length)) / Math.max(1, cols.length))), ch = 25;
   const hdr = w.addStack();
   const n0 = hdr.addStack(); n0.size = new Size(nameW, 0);
-  for (const sp of cols) { hdr.addSpacer(); const h = hdr.addStack(); h.size = new Size(cw, 12); h.addSpacer(); text(h, colLabel(sp), F.b(9), INK3, { scale: 0.5 }); h.addSpacer(); }
+  // pile verticale : le nom du spot est centré sans espace souple (sinon iOS le remplace par « … »)
+  for (const sp of cols) { hdr.addSpacer(); const h = hdr.addStack(); h.layoutVertically(); h.spacing = 0; h.size = new Size(cw, 12); h.centerAlignContent(); text(h, colLabel(sp), F.b(9), INK3, { scale: 0.5, center: true }); }
   hdr.addSpacer(0);
   w.addSpacer(3);
   days.forEach((key, i) => {
@@ -184,19 +188,21 @@ function large(w, data, list, cfg, now) {
       r.addSpacer();   // espace souple : les colonnes remplissent la carte, quelle que soit sa largeur
       const x = (sp.daily[cfg.level] || [])[i + off];
       const ses = (sp.sessions[cfg.level] || []).filter((s) => dayKey(s.s) === key);
-      const cell = r.addStack(); cell.size = new Size(cw, ch); cell.cornerRadius = 6; cell.backgroundColor = CELL;
-      cell.centerAlignContent();
+      const cell = r.addStack(); cell.layoutVertically(); cell.spacing = 0; cell.size = new Size(cw, ch);
+      cell.cornerRadius = 6; cell.backgroundColor = CELL; cell.centerAlignContent();
       if (!ses.length || !x) {
         const kn = dayMax(sp, key);
-        if (kn != null) { cell.addSpacer(); text(cell, String(kn), F.s(10), INK3, { scale: 0.6 }); cell.addSpacer(); }
+        if (kn != null) { cell.addSpacer(); text(cell, String(kn), F.s(10), INK3, { scale: 0.6, center: true }); cell.addSpacer(); }
         continue;
       }
       // case remplie selon les heures à 3, 2 et 1 étoiles (comme la Prévision 5 jours de l'app), heures posées dessus
       cell.backgroundImage = fillImage(x, cw, ch);
       const top = x[2] ? 3 : x[1] ? 2 : 1;
       cell.addSpacer();
-      const pill = cell.addStack(); pill.backgroundColor = BG; pill.cornerRadius = 7; pill.setPadding(1, 4, 1, 4);
-      text(pill, `${x[top - 1] || ses.reduce((a, s) => a + s.h, 0)}h`, F.h(10), INK, { scale: 0.6 });   // heures au meilleur niveau
+      const pr = cell.addStack(); pr.spacing = 0; pr.addSpacer();
+      const pill = pr.addStack(); pill.spacing = 0; pill.backgroundColor = BG; pill.cornerRadius = 7; pill.setPadding(1, 4, 1, 4);
+      text(pill, `${x[top - 1] || ses.reduce((a, s) => a + s.h, 0)}h`, F.h(10), INK);   // heures au meilleur niveau
+      pr.addSpacer();
       cell.addSpacer();
       cell.url = `${APP}#/spot/${sp.id}?day=${encodeURIComponent(new Date(key + "T12:00:00").toLocaleDateString("fr-FR"))}`;
     }

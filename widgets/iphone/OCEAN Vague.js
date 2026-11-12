@@ -70,12 +70,16 @@ function text(stack, s, font, color, opts = {}) {
 const F = { h: (n) => Font.heavySystemFont(n), b: (n) => Font.boldSystemFont(n), s: (n) => Font.semiboldSystemFont(n), r: (n) => Font.systemFont(n) };
 function cellNum(stack, kn, w, h, size) {
   const [bg, fg] = windCell(kn);
-  const s = stack.addStack(); s.size = new Size(w, h); s.backgroundColor = bg; s.cornerRadius = 5; s.centerAlignContent();
-  s.addSpacer(); text(s, kn == null ? "–" : Math.round(kn), F.h(size), fg, { scale: 0.5 }); s.addSpacer();
+  // Pile VERTICALE + centerAlignContent : le texte est centré horizontalement sans espace souple. Un addSpacer()
+  // horizontal dans une pile de largeur fixe prend la place avant le texte, qui devient « … » — c'est ce qui
+  // coupait les nombres à deux chiffres sur l'iPhone de Tom (12/11). Ici les espaces ne jouent que sur la hauteur.
+  const s = stack.addStack(); s.layoutVertically(); s.spacing = 0; s.size = new Size(w, h);
+  s.backgroundColor = bg; s.cornerRadius = 5; s.centerAlignContent();
+  s.addSpacer(); text(s, kn == null ? "–" : Math.round(kn), F.h(size), fg, { scale: 0.5, center: true }); s.addSpacer();
   return s;
 }
 function starsText(stack, k, size) {
-  const s = stack.addStack(); s.spacing = 0;
+  const s = stack.addStack(); s.spacing = 0; s.centerAlignContent();
   if (k) text(s, "★".repeat(k), F.b(size), STAR[k]);
   if (k < 3) text(s, "★".repeat(3 - k), F.b(size), OFF);
 }
@@ -151,7 +155,7 @@ function nowBlock(stack, m, big) {
   const n = m.now;
   const s = stack.addStack(); s.layoutVertically(); s.spacing = 1;
   const a = s.addStack(); a.bottomAlignContent(); a.spacing = 3;
-  text(a, n ? `${m1(n.lo)}–${m1(n.hi)}` : "–", F.h(big ? 30 : 26), INK, { scale: 0.6 }); text(a, "m", F.b(13), INK2);
+  text(a, n ? `${m1(n.lo)}–${m1(n.hi)}` : "–", F.h(big ? 30 : 26), INK, { scale: 0.5 }); text(a, "m", F.b(13), INK2, { scale: 0.6 });
   text(s, n ? `${n.tp ?? "–"} s · houle ${compass(n.sd)}` : " ", F.s(12), INK2, { scale: 0.7 });
   if (n && n.ws != null) {
     const w = (big ? a : s).addStack(); w.centerAlignContent(); w.spacing = 3;
@@ -166,17 +170,20 @@ function small(w, data, spot, m, now) {
   const d = m.days[0]; text(b, d && d.cr !== "—" ? d.cr : "pas de créneau", F.s(11), INK2, { scale: 0.7 }); b.addSpacer(); starsText(b, d ? d.stars : 0, 12);
 }
 function medium(w, data, spot, m, now) {
-  const row = w.addStack(); row.spacing = 10;
-  const left = row.addStack(); left.layoutVertically(); left.size = new Size(112, 0);
+  // largeurs calées sur le plus petit widget moyen (305 pt) : 96 + 8 d'écart + 4 colonnes de 40 + 3 écarts
+  const row = w.addStack();
+  const left = row.addStack(); left.layoutVertically(); left.size = new Size(96, 0);
   text(left, spot.short, F.h(14), INK, { scale: 0.7 }); text(left, "maintenant", F.b(9), INK3); left.addSpacer(); nowBlock(left, m, false);
-  const right = row.addStack(); right.spacing = 4;
+  row.addSpacer();
+  const right = row.addStack(); right.spacing = 3;
   for (const d of m.days) {
-    const c = right.addStack(); c.layoutVertically(); c.size = new Size(48, 0); c.backgroundColor = CELL; c.cornerRadius = 10; c.setPadding(6, 2, 6, 2); c.spacing = 4;
-    const l = c.addStack(); l.addSpacer(); text(l, d.label, F.h(11), INK); l.addSpacer();
-    const st = c.addStack(); st.addSpacer(); starsText(st, d.stars, 9); st.addSpacer();
-    const h = c.addStack(); h.addSpacer(); text(h, d.hb == null ? "–" : `${m1(d.hb)} m`, F.h(12), INK, { scale: 0.7 }); h.addSpacer();
-    const p = c.addStack(); p.addSpacer(); text(p, d.tp == null ? "" : `${d.tp} s`, F.r(10), INK2); p.addSpacer();
-    const cr = c.addStack(); cr.addSpacer(); text(cr, d.cr, F.s(10), INK2, { scale: 0.6 }); cr.addSpacer();
+    const c = right.addStack(); c.layoutVertically(); c.size = new Size(40, 0); c.backgroundColor = CELL;
+    c.cornerRadius = 10; c.setPadding(6, 2, 6, 2); c.spacing = 4; c.centerAlignContent();
+    text(c, d.label, F.h(11), INK, { scale: 0.6, center: true });
+    starsText(c, d.stars, 9);
+    text(c, d.hb == null ? "–" : `${m1(d.hb)} m`, F.h(12), INK, { scale: 0.6, center: true });
+    text(c, d.tp == null ? "" : `${d.tp} s`, F.r(10), INK2, { scale: 0.6, center: true });
+    text(c, d.cr, F.s(10), INK2, { scale: 0.6, center: true });
   }
 }
 function large(w, data, spot, m, now) {
@@ -186,7 +193,7 @@ function large(w, data, spot, m, now) {
   for (const d of m.detail) {
     const cols = d.hours.filter((x) => x.has);
     if (!cols.length) continue;
-    const cw = Math.max(15, Math.min(40, Math.floor((UTILE - 20) / cols.length)));   // la grille tient dans le widget, quel que soit l’iPhone
+    const cw = Math.max(15, Math.min(40, Math.floor((UTILE - 26 - 3 * (cols.length - 1)) / cols.length)));   // 26 = marge du bloc + centrage
     const fh = Math.min(11, Math.round(cw * 0.6)), fv = Math.min(12, Math.round(cw * 0.55));
     const fn = Math.min(12, Math.round(cw * 0.58)), fa = Math.min(13, Math.round(cw * 0.58));
     w.addSpacer(7);
@@ -198,19 +205,22 @@ function large(w, data, spot, m, now) {
     const per = tps.length ? ` · ${tps[0]}${tps.length > 1 ? `–${tps[tps.length - 1]}` : ""} s` : "";
     if (d.hbMax) text(hd, `jusqu'à ${m1(d.hbMax)} m${per}`, F.b(11), INK, { scale: 0.6 });
     w.addSpacer(3);
-    const box = w.addStack(); box.backgroundColor = CELL; box.cornerRadius = 10; box.setPadding(5, 5, 5, 5);
+    // même règle que la carte Vent : écarts explicites (3 pt), grille centrée, contenu des colonnes centré par
+    // centerAlignContent() — aucun espace souple ne vient prendre la place des chiffres (12/11).
+    const wrap = w.addStack(); wrap.addSpacer();
+    const box = wrap.addStack(); box.backgroundColor = CELL; box.cornerRadius = 10; box.setPadding(5, 5, 5, 5); box.spacing = 3;
     const hMax = Math.max(1.2, ...cols.map((x) => x.hb ?? 0));
-    cols.forEach((x, i) => {
-      if (i) box.addSpacer();
-      const c = box.addStack(); c.layoutVertically(); c.size = new Size(cw, 0); c.spacing = 1;
-      const hl = c.addStack(); hl.addSpacer(); text(hl, x.h, F.s(fh), INK3, { scale: 0.5 }); hl.addSpacer();
-      const v = c.addStack(); v.addSpacer(); text(v, m1(x.hb), F.b(fv), INK, { scale: 0.5 }); v.addSpacer();
+    cols.forEach((x) => {
+      const c = box.addStack(); c.layoutVertically(); c.size = new Size(cw, 0); c.spacing = 1; c.centerAlignContent();
+      text(c, x.h, F.s(fh), INK3, { scale: 0.5, center: true });
+      text(c, m1(x.hb), F.b(fv), INK, { scale: 0.5, center: true });
       const bar = c.addStack(); bar.layoutVertically(); bar.size = new Size(Math.min(cw - 4, 24), 13); bar.addSpacer();
       const fill = bar.addStack(); fill.size = new Size(Math.min(cw - 4, 24), Math.max(2, Math.round(((x.hb ?? 0) / hMax) * 13))); fill.backgroundColor = WAVE; fill.cornerRadius = 2;
-      const k = c.addStack(); k.addSpacer(); cellNum(k, x.ws, Math.min(cw - 3, 28), fn + 4, fn); k.addSpacer();
-      if (cw >= 22) { const a = c.addStack(); a.addSpacer(); addArrow(a, x.wd, fa, INK2); a.addSpacer(); }   // colonnes étroites : la flèche serait illisible
+      cellNum(c, x.ws, Math.min(cw - 2, 32), fn + 4, fn);
+      if (cw >= 22) addArrow(c, x.wd, fa, INK2);   // colonnes étroites : la flèche serait illisible
       const sb = c.addStack(); sb.size = new Size(cw - 3, 5); sb.cornerRadius = 2; sb.backgroundColor = x.stars > 0 ? STAR[x.stars] : NONE;
     });
+    wrap.addSpacer();
   }
   w.addSpacer();
   const b = bestSession(data, now);
