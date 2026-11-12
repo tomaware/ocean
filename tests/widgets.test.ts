@@ -139,7 +139,10 @@ test('widgets iPhone : aucune dimension du widget n’est devinée depuis l’é
   // Les grilles partent de la largeur du plus petit grand widget et se détendent avec des espaces souples.
   for (const f of [VENT, CREN, 'widgets/iphone/OCEAN Vague.js']) {
     const src = readFileSync(f, 'utf8');
-    assert.doesNotMatch(src.replace(/^\s*\/\/.*$/gm, ''), /screenSize|screenResolution/, f);   // hors commentaires
+    // le repère temporaire du 12/11 AFFICHE la mesure (ligne marquée « repere-temporaire ») ; aucune largeur
+    // ni hauteur ne doit en être déduite ailleurs
+    const code = src.replace(/^\s*\/\/.*$/gm, '').split('\n').filter((l) => !l.includes('repere-temporaire')).join('\n');
+    assert.doesNotMatch(code, /screenSize|screenResolution/, f);
     assert.match(src, /const UTILE = 264;/, f);
   }
   assert.match(readFileSync(CREN, 'utf8'), /r[.]addSpacer[(][)];\s+\/\/ espace souple/);

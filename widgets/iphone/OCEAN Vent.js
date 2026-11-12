@@ -16,7 +16,7 @@
 
 const DATA = "https://tomaware.github.io/ocean/data/widget-wind.json";
 const APP = "https://tomaware.github.io/ocean/";
-const VERSION = "2026-11-12c";   // affichée dans les réglages : permet de savoir quelle version tourne
+const VERSION = "2026-11-12d";   // affichée dans les réglages : permet de savoir quelle version tourne
 // ------------------------------------------------------- mise a jour automatique
 // Le widget va chercher sa propre version publiee et reecrit son fichier. La nouvelle version s'applique au
 // rafraichissement suivant : une correction n'oblige plus a recopier le script a la main.
@@ -300,6 +300,12 @@ function large(w, data, spot, m, now) {
     });
     wrap.addSpacer();
   }
+  // REPÈRE TEMPORAIRE (12/11) : la largeur de la carte ne peut pas être lue directement. Cette ligne affiche ce
+  // que l'iPhone rapporte, pour caler les colonnes sur la vraie taille au lieu de la deviner. Retirée ensuite.
+  let ecran = "?";
+  try { const sz = Device.screenSize(); /* repere-temporaire */ ecran = `${Math.round(sz.width)}×${Math.round(sz.height)}`; } catch (e) { ecran = "indisponible"; }
+  w.addSpacer();
+  text(w, `repère : écran ${ecran} · v${VERSION}`, F.r(9), INK3, { scale: 0.6 });
 }
 function lock(w, family, spot, m) {
   const k = m.now ? Math.round(m.now.kn) : "–", dir = m.now ? m.now.dirTxt || compass(m.now.dir) : "";
