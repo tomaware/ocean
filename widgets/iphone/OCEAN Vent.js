@@ -38,6 +38,7 @@ const DIR16 = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSO", "SO
 const compass = (d) => (d == null ? "" : DIR16[Math.round(d / 22.5) % 16]);
 const fromText = (o) => { const k = DIR16.indexOf(String(o || "").toUpperCase().replace("W", "O")); return k < 0 ? null : k * 22.5; };
 const norm = (s) => String(s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-");
+const GRILLE = [9, 17];   // heures de la grille heure par heure du grand format
 const starsOf = (s) => (s == null ? 0 : s >= 8.5 ? 3 : s >= 7 ? 2 : s >= 5 ? 1 : 0);
 const hh = (t) => `${new Date(t).getHours()} h`;
 const DAYS = ["Dim.", "Lun.", "Mar.", "Mer.", "Jeu.", "Ven.", "Sam."];
@@ -59,14 +60,11 @@ function addArrow(stack, from, size, color) {
   if (from == null) return;
   const i = stack.addImage(arrow(from, size)); i.imageSize = new Size(size, size); i.tintColor = color;
 }
-/** Largeur utile d'un grand widget, estimée à partir de l'écran. Le facteur est volontairement bas : une grille
- *  un peu étroite reste lisible, une grille plus large que le widget est écrasée par iOS (chiffres coupés). */
-function usable() {
-  try { const s = Device.screenSize(); const w = Math.min(s.width, s.height);
-    if (!(w > 0)) return 264;
-    return Math.max(264, Math.min(336, Math.round(w * 0.82) - 28)); }
-  catch (e) { return 264; }
-}
+// Largeur de référence : celle du plus petit grand widget (iPhone SE/mini). Elle n'est JAMAIS estimée depuis
+// l'écran — Device.screenSize() ne donne pas la largeur du widget, et une grille trop large est écrasée par iOS
+// (chiffres coupés, carte débordant des deux côtés : constaté sur l'iPhone de Tom le 12/11). Les colonnes sont
+// séparées par des espaces souples : sur un grand iPhone, la grille remplit la carte sans jamais la dépasser.
+const UTILE = 264;
 function text(stack, s, font, color, opts = {}) {
   const t = stack.addText(String(s)); t.font = font; t.textColor = color; t.lineLimit = opts.lines ?? 1;
   if (opts.scale) t.minimumScaleFactor = opts.scale;
@@ -157,7 +155,9 @@ function model(data, spot, level, live, now) {
     const d = dayKey(now + k * 86400e3);
     const rr = rows.filter((r) => dayKey(r.t) === d);
     const hours = [];
-    for (let h = 7; h <= 21; h++) {
+  // Fenêtre de la grille heure par heure : 9 h → 17 h (Tom, 12/11, après comparaison des densités à la vraie
+  // taille). La bande 4 jours, les créneaux et les max du jour gardent 7 h → 21 h.
+    for (let h = GRILLE[0]; h <= GRILLE[1]; h++) {
       const r = rr.find((x) => new Date(x.t).getHours() === h);
       hours.push({ h, has: !!r, kn: r ? r.kn : null, gust: r ? r.gust : null, dir: r ? r.dir : null, stars: r && r.day ? starsOf(r.score) : 0, past: !!r && r.t + 3600e3 <= now });
     }
@@ -241,7 +241,7 @@ function large(w, data, spot, m, now) {
   for (const d of m.detail) {
     const cols = d.hours.filter((x) => x.has && !x.past);
     if (!cols.length) continue;
-    const cw = Math.max(15, Math.min(40, Math.floor((usable() - 20) / cols.length)));   // la grille tient dans le widget, quel que soit l’iPhone
+    const cw = Math.max(15, Math.min(40, Math.floor((UTILE - 20) / cols.length)));   // la grille tient dans le widget, quel que soit l’iPhone
     const fh = Math.min(11, Math.round(cw * 0.6)), fn = Math.min(14, Math.round(cw * 0.62));
     const fg = Math.min(11, Math.round(cw * 0.55)), fa = Math.min(15, Math.round(cw * 0.68));
     w.addSpacer(7);

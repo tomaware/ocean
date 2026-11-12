@@ -36,22 +36,11 @@ const dayKey = (t) => { const d = new Date(t); return `${d.getFullYear()}-${Stri
 const dayLabel = (key, now) => (key === dayKey(now) ? "Auj." : key === dayKey(now + 86400e3) ? "Demain" : DAYS[new Date(key + "T12:00:00").getDay()]);
 const span = (s) => `${new Date(s.s).getHours()}–${new Date(s.e).getHours()} h`;
 const F = { h: (n) => Font.heavySystemFont(n), b: (n) => Font.boldSystemFont(n), s: (n) => Font.semiboldSystemFont(n), r: (n) => Font.systemFont(n) };
-/** Largeur utile d'un grand widget, estimée à partir de l'écran. Le facteur est volontairement bas : une grille
- *  un peu étroite reste lisible, une grille plus large que le widget est écrasée par iOS (chiffres coupés). */
-function usable() {
-  try { const s = Device.screenSize(); const w = Math.min(s.width, s.height);
-    if (!(w > 0)) return 264;
-    return Math.max(264, Math.min(336, Math.round(w * 0.82) - 28)); }
-  catch (e) { return 264; }
-}
-/** Hauteur utile d'un grand widget, estimée de la même façon (facteur bas : mieux vaut un peu de blanc en bas
- *  qu'une dernière ligne coupée par iOS). */
-function usableH() {
-  try { const s = Device.screenSize(); const w = Math.min(s.width, s.height);
-    if (!(w > 0)) return 283;
-    return Math.max(283, Math.min(354, Math.round(w * 0.86) - 28)); }
-  catch (e) { return 283; }
-}
+// Largeur de référence : celle du plus petit grand widget (iPhone SE/mini). Elle n'est JAMAIS estimée depuis
+// l'écran — Device.screenSize() ne donne pas la largeur du widget, et une grille trop large est écrasée par iOS
+// (chiffres coupés, carte débordant des deux côtés : constaté sur l'iPhone de Tom le 12/11). Les colonnes sont
+// séparées par des espaces souples : sur un grand iPhone, la grille remplit la carte sans jamais la dépasser.
+const UTILE = 264;
 function text(stack, s, font, color, opts = {}) {
   const t = stack.addText(String(s)); t.font = font; t.textColor = color; t.lineLimit = opts.lines ?? 1;
   if (opts.scale) t.minimumScaleFactor = opts.scale;
@@ -182,18 +171,17 @@ function large(w, data, list, cfg, now) {
   const dayLeft = data.spots.some((sp) => (sp.hours || []).some((h) => h[4] && dayKey(h[0]) === today && h[0] + 3600e3 > now));
   if (days.length > 1 && days[0] === today && !dayLeft) { days = days.slice(1); off = 1; }
   const cols = cfg.spots.slice(0, 8), nameW = 34, gap = 3;
-  const cw = Math.max(22, Math.floor((usable() - nameW) / Math.max(1, cols.length)) - gap);
-  // hauteur des lignes : la place qui reste sous le meilleur créneau (≈ 135 pt d'en-tête, de pied et d'espaces)
-  const nr = Math.max(1, days.length);
-  const ch = Math.max(25, Math.min(34, Math.floor((usableH() - 135 - nr * gap) / nr)));
-  const hdr = w.addStack(); hdr.spacing = gap;
+  const cw = Math.max(22, Math.floor((UTILE - nameW) / Math.max(1, cols.length)) - gap), ch = 25;
+  const hdr = w.addStack();
   const n0 = hdr.addStack(); n0.size = new Size(nameW, 0);
-  for (const sp of cols) { const h = hdr.addStack(); h.size = new Size(cw, 12); h.addSpacer(); text(h, colLabel(sp), F.b(9), INK3, { scale: 0.5 }); h.addSpacer(); }
+  for (const sp of cols) { hdr.addSpacer(); const h = hdr.addStack(); h.size = new Size(cw, 12); h.addSpacer(); text(h, colLabel(sp), F.b(9), INK3, { scale: 0.5 }); h.addSpacer(); }
+  hdr.addSpacer(0);
   w.addSpacer(3);
   days.forEach((key, i) => {
-    const r = w.addStack(); r.spacing = gap; r.centerAlignContent();
+    const r = w.addStack(); r.centerAlignContent();
     const n = r.addStack(); n.size = new Size(nameW, 0); text(n, rowLabel(key, now), F.h(11), INK, { scale: 0.5 });
     for (const sp of cols) {
+      r.addSpacer();   // espace souple : les colonnes remplissent la carte, quelle que soit sa largeur
       const x = (sp.daily[cfg.level] || [])[i + off];
       const ses = (sp.sessions[cfg.level] || []).filter((s) => dayKey(s.s) === key);
       const cell = r.addStack(); cell.size = new Size(cw, ch); cell.cornerRadius = 6; cell.backgroundColor = CELL;
@@ -212,6 +200,7 @@ function large(w, data, list, cfg, now) {
       cell.addSpacer();
       cell.url = `${APP}#/spot/${sp.id}?day=${encodeURIComponent(new Date(key + "T12:00:00").toLocaleDateString("fr-FR"))}`;
     }
+    r.addSpacer(0);
     w.addSpacer(3);
   });
   w.addSpacer();

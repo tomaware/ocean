@@ -106,28 +106,25 @@ test('widget Créneaux : meilleur créneau d’abord (étoiles puis note), taill
   assert.match(texts(o.widget).join(' | '), /OffShore/);
 });
 
-test('widgets iPhone : la grille ne dépasse jamais le widget, sur tous les iPhone', async () => {
-  // largeur utile estimée depuis l'écran ; elle doit rester sous la vraie largeur du grand widget, padding compris
-  const src = readFileSync(CREN, 'utf8');
-  const body = src.match(/function usable\(\) \{[\s\S]*?\n\}/)![0];
-  const make = (screen: number) => new Function('Device', `${body} return usable();`)({ screenSize: () => ({ width: screen, height: screen * 2.2 }) });
-  // écran (pt) → largeur réelle du grand widget (pt), iPhone SE 1 → 16 Pro Max
-  for (const [screen, widget] of [[320, 292], [375, 329], [390, 338], [393, 338], [402, 338], [414, 360], [428, 364], [430, 364], [440, 364]]) {
-    const u = make(screen);
-    assert.ok(u <= widget - 28, `écran ${screen} : ${u} > ${widget - 28}`);
-    assert.ok(u >= 264, `écran ${screen} : ${u} < 264`);
+test('widget Vent : la grille heure par heure du grand format va de 9 h à 17 h', async () => {
+  // Tom, 12/11 : 15 colonnes étaient illisibles ; la fenêtre se resserre sur 9 h → 17 h, heure par heure.
+  // Le reste (bande 4 jours, créneaux, max du jour) garde 7 h → 21 h.
+  const o = await run(VENT, { family: 'large', data: DATA, now: NOW });
+  const t = texts(o.widget).join(' | ');
+  // chaque colonne donne trois nombres : heure, vent, rafales
+  const colonnes = (part: string) => part.split(' | ').filter((x) => /^\d+$/.test(x)).filter((_, i) => i % 3 === 0).map(Number);
+  assert.deepEqual(colonnes(t.slice(t.indexOf('jeudi 12'))), [9, 10, 11, 12, 13, 14, 15, 16, 17]);
+  assert.deepEqual(colonnes(t.slice(t.indexOf('mercredi 11'), t.indexOf('Demain'))), [10, 11, 12, 13, 14, 15, 16, 17]);   // 10 h 20 : 9 h est passée
+  for (const f of [VENT, 'widgets/iphone/OCEAN Vague.js']) assert.match(readFileSync(f, 'utf8'), /const GRILLE = \[9, 17\];/, f);
+});
+
+test('widgets iPhone : aucune dimension du widget n’est devinée depuis l’écran', () => {
+  // 12/11 : estimer la largeur depuis Device.screenSize() a fait déborder la carte sur l’iPhone de Tom.
+  // Les grilles partent de la largeur du plus petit grand widget et se détendent avec des espaces souples.
+  for (const f of [VENT, CREN, 'widgets/iphone/OCEAN Vague.js']) {
+    const src = readFileSync(f, 'utf8');
+    assert.doesNotMatch(src.replace(/^\s*\/\/.*$/gm, ''), /screenSize|screenResolution/, f);   // hors commentaires
+    assert.match(src, /const UTILE = 264;/, f);
   }
-  assert.equal(make(0), 264); assert.equal(make(NaN), 264);           // écran illisible : repli sur le plus petit
-  // même garde-fou en hauteur : les lignes de la grille ne doivent jamais pousser la dernière hors du widget
-  const bodyH = src.match(/function usableH\(\) \{[\s\S]*?\n\}/)![0];
-  const makeH = (screen: number) => new Function('Device', `${bodyH} return usableH();`)({ screenSize: () => ({ width: screen, height: screen * 2.2 }) });
-  for (const [screen, hauteur] of [[320, 311], [375, 345], [390, 354], [393, 354], [402, 354], [414, 366], [428, 382], [430, 382], [440, 382]]) {
-    const u = makeH(screen);
-    assert.ok(u <= hauteur - 28, `écran ${screen} : ${u} > ${hauteur - 28}`);
-    const ch = Math.max(25, Math.min(34, Math.floor((u - 135 - 15) / 5)));
-    assert.ok(135 + 5 * (ch + 3) <= Math.max(u, 283), `écran ${screen} : grille ${135 + 5 * (ch + 3)} > ${u}`);
-  }
-  assert.equal(makeH(0), 283); assert.equal(makeH(NaN), 283);
-  // les trois widgets partagent la même fonction, au caractère près
-  for (const f of [VENT, 'widgets/iphone/OCEAN Vague.js']) assert.ok(readFileSync(f, 'utf8').includes(body), f);
+  assert.match(readFileSync(CREN, 'utf8'), /r[.]addSpacer[(][)];\s+\/\/ espace souple/);
 });
