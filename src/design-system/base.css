@@ -83,6 +83,10 @@ p { margin: 0; }
 .list { display: grid; }
 .list > * { padding: var(--s-3) 0; border-bottom: 1px solid var(--c-line); }
 .list > *:last-child { border-bottom: 0; }
+/* webcams (fiche spot) : lignes cliquables qui ouvrent la page de l'éditeur */
+.webcam { display: flex; align-items: center; justify-content: space-between; gap: var(--s-3); color: var(--c-ink); text-decoration: none; min-height: 44px; }
+.webcam:hover, .webcam:focus-visible { color: var(--c-accent); }
+.webcam svg { color: var(--c-ink-3); flex: none; }
 .session { display: grid; grid-template-columns: auto 1fr auto; gap: var(--s-3); align-items: center; text-decoration: none; color: inherit; }
 .session.compact { grid-template-columns: 1fr auto; }
 .session .when { font-weight: 600; font-variant-numeric: tabular-nums; min-width: 92px; }

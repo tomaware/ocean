@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'preact/hooks';
-import { ChevronLeft, Info, LayoutGrid, MessageSquare, Radio, ShieldCheck, TriangleAlert } from 'lucide-preact';
+import { Camera, ChevronLeft, ExternalLink, Info, LayoutGrid, MessageSquare, Radio, ShieldCheck, TriangleAlert } from 'lucide-preact';
 import type { AllData, Discipline, Level, PublicSpot, Session } from '../services/data';
 import { DISC_LABEL, LEVEL_LABEL, LEVELS_FOR, spotDiscipline } from '../services/data';
 import { ago, compass, dayKey, dayLabel, hh, hourOf, labelOf, msToKn, n0, n1, span } from '../services/format';
 import { setPrefs, usePrefs, type Reading } from '../services/prefs';
 import { publicLive, useLive, type Live } from '../services/perso';
 import { goBack } from '../services/nav';
+import { EDITEURS, webcamsCherchees, webcamsOf } from '../services/webcams';
 import { Badge, DiscIcon, Fav, Section, Seg, SessionRow } from '../components/ui';
 import { Chart } from '../components/Chart';
 import { CondCards, Criteria, DayTabs, daysOf, MapCompass, NoteCard } from '../components/Today';
@@ -50,6 +51,33 @@ export function LiveBox({ live, spot }: { live: Live[] | null; spot?: string }) 
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+// Webcams du spot (D-47) : on renvoie chez l'éditeur, qui détient les droits — pas de vidéo rediffusée ici.
+export function Webcams({ id }: { id: string }) {
+  if (!webcamsCherchees(id)) return null;
+  const cams = webcamsOf(id);
+  return (
+    <div class="card">
+      <div class="row"><Camera size={16} color="var(--c-accent)" aria-hidden="true" /><h3 style={{ fontSize: 'inherit', fontWeight: 700 }}>Webcams</h3></div>
+      {!cams.length ? <span class="faint">Pas de webcam publique connue sur ce spot.</span> : (
+        <>
+          <div class="list">
+            {cams.map((c) => (
+              <a key={c.url} class="webcam" href={c.url} target="_blank" rel="noopener noreferrer">
+                <span class="stack" style={{ gap: '2px', flex: 1, minWidth: 0 }}>
+                  <span>{c.titre}</span>
+                  <span class="faint">{c.type === 'video' ? 'vidéo en direct' : 'images'} · {EDITEURS[c.editeur]?.nom ?? c.editeur}{c.position === 'proche' ? ' · à côté du spot' : ''}</span>
+                </span>
+                <ExternalLink size={18} aria-label="ouvre la page de l’éditeur" />
+              </a>
+            ))}
+          </div>
+          <span class="faint small">La webcam s’ouvre chez son éditeur, qui en détient les droits.</span>
+        </>
+      )}
     </div>
   );
 }
@@ -102,6 +130,7 @@ function SpotView({ d, spot, now, day: dayParam }: { d: AllData; spot: PublicSpo
         {s?.levels && <Seg<Level> label={disc === 'wing' ? 'Mode' : 'Niveau de pratique'} value={level} onChange={(v) => setPrefs((p) => ({ ...p, levels: { ...p.levels, [disc]: v } }))} options={LEVELS_FOR[disc].map((l) => [l, LEVEL_LABEL[l]] as [Level, string])} />}
       </div>
       {disc === 'wing' && <LiveBox live={[...(live.live ?? []), ...publicLive(d.meteo?.obs, [spot])]} spot={spot.id} />}
+      <Webcams id={spot.id} />
       {s?.notice && <div class="notice">{s.notice}</div>}
       {!s ? <div class="notice warn">Pas de prévision disponible pour ce spot dans la dernière mise à jour.</div> : (
         <>

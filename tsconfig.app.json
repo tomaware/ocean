@@ -9,8 +9,22 @@
     "noEmit": true,
     "skipLibCheck": true,
     "allowImportingTsExtensions": true,
-    "lib": ["ES2023", "DOM", "DOM.Iterable"],
-    "types": ["vite/client"]
+    "lib": [
+      "ES2023",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "types": [
+      "vite/client"
+    ],
+    "resolveJsonModule": true
   },
-  "include": ["src/types/**/*", "src/main.tsx", "src/app/**/*", "src/features/**/*", "src/components/**/*", "src/services/**/*"]
+  "include": [
+    "src/types/**/*",
+    "src/main.tsx",
+    "src/app/**/*",
+    "src/features/**/*",
+    "src/components/**/*",
+    "src/services/**/*"
+  ]
 }

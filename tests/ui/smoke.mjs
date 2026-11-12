@@ -5,7 +5,7 @@ const { chromium, devices } = createRequire(import.meta.url)('playwright');   //
 const base = process.argv[2] ?? 'http://localhost:4173';
 const routes = [['', 'Où naviguer en wing'], ['wind/meilleure', 'Meilleure session à venir'], ['wind/sessions', 'Sessions de 2H (Localisation Montpellier)'], ['wind/prevision', 'Prévision 5 jours'], ['wind/spots', 'Spots'],
   ['vague/meilleure', 'Meilleure session à venir'], ['vague/prevision', 'Prévision 5 jours'], ['vague/sessions', 'Sessions de 2H'], ['houle/prevision', 'Prévision 5 jours'], ['houle/meilleure', 'Meilleure session à venir'],
-  ['spot/port-camargue', 'Jour par jour'], ['spot/carnon', 'Jour par jour'], ['spot/plagesud-grandemotte', 'Jour par jour'], ['sessions', 'Où naviguer en wing'], ['profil', 'Mode perso'], ['fiabilite', 'Fiabilité'], ['widgets', 'Installer les widgets'], ['avis', 'Avis et commentaires']];
+  ['spot/port-camargue', 'Jour par jour'], ['spot/carnon', 'Jour par jour'], ['spot/plagesud-grandemotte', 'Jour par jour'], ['spot/la-franqui', 'Webcams'], ['spot/beauduc', 'Webcams'], ['sessions', 'Où naviguer en wing'], ['profil', 'Mode perso'], ['fiabilite', 'Fiabilité'], ['widgets', 'Installer les widgets'], ['avis', 'Avis et commentaires']];
 const errs = [];
 const b = await chromium.launch();
 // langue fixée (fr-FR) ; un 3e passage sans langue fixée vérifie que l'app survit à une langue système invalide
@@ -35,6 +35,14 @@ for (const [name, opt] of [['mobile', { ...devices['iPhone 13'], locale: 'fr-FR'
         if (!mzip.ok() || (await mzip.body()).readUInt32LE(0) !== 0x04034b50) errs.push(`${name} #/widgets : widget Mac (.zip) introuvable`);
         await p.getByRole('button', { name: 'iPhone', exact: true }).click();
         if (await p.getByRole('button', { name: /Copier « OCEAN/ }).and(p.locator(':disabled')).count()) errs.push(`${name} #/widgets : scripts des widgets introuvables (dist/widgets)`);
+      }
+      if (r.startsWith('spot/')) {
+        // webcams (D-47) : La Franqui filmée, liens qui sortent vers l'éditeur ; Beauduc : rien de connu, et on le dit
+        const cams = await p.locator('a.webcam').count();
+        if (r === 'spot/la-franqui' && cams !== 4) errs.push(`${name} #/${r} : ${cams} webcams au lieu de 4`);
+        if (r === 'spot/la-franqui' && (await p.locator('a.webcam:not([target="_blank"])').count())) errs.push(`${name} #/${r} : webcam qui n'ouvre pas un nouvel onglet`);
+        if (r === 'spot/beauduc' && !(await p.getByText('Pas de webcam publique connue').count())) errs.push(`${name} #/${r} : mention « pas de webcam » absente`);
+        if (await p.locator('iframe, video').count()) errs.push(`${name} #/${r} : lecteur vidéo intégré (interdit par l'éditeur)`);
       }
       if (r === 'avis') {
         // sans message : bouton bloqué ou alerte ; champ piège invisible
