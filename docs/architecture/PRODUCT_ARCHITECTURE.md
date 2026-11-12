@@ -241,3 +241,12 @@ Les apps actuelles restent en ligne jusqu'à ce que leur remplaçante soit véri
 - Grande carte Créneaux : sans titre « Créneaux vent » ni « Sécu first » ; la nuit, la ligne du jour (vide) disparaît.
 - Écarts avec l'ancien widget Créneaux (seuil « 15 nd et + » de la super prévision) : acceptés par Tom ; OCEAN suit la note wing (Sécu first écarte le vent de terre).
 - Windows, Mac, iPhone (Vent et Vague).
+
+### D-39 (12/11/2026, Tom) — lisibilité des grandes cartes (iPhone, Mac, Windows)
+- Sur l'iPhone de Tom, la grille horaire débordait du widget (15 colonnes × 20 pt pour 264 à 336 pt disponibles) : iOS écrasait les colonnes et coupait tous les nombres à un chiffre. Corrigé : heures passées retirées, largeur de colonne calculée d'après leur nombre, espaces souples entre colonnes (la grille remplit le widget sans jamais déborder), et `minimumScaleFactor` sur chaque texte de la grille (un texte rétrécit au lieu d'être coupé).
+- Carte Vague en grand : elle dépassait aussi en hauteur (le bloc « meilleur créneau » était coupé). Période et vent passent dans l'en-tête du jour, barre de vague plus basse, flèche par heure seulement quand les colonnes sont assez larges.
+- Vérifié en rejouant la géométrie exacte aux vraies tailles d'un grand widget (364×382, 338×354, 329×345, 292×311) : plus rien n'est coupé à partir de 338×354 ; sur un iPhone mini (292×311) la carte Vague reste serrée.
+- Mêmes règles sur le widget Mac et le widget Windows (cartes de 364 pt).
+
+### D-40 (12/11/2026) — publication horaire réparée
+- Depuis le 11/11 à 23 h 40, toutes les publications automatiques échouaient au contrôle des types : les modules `.mjs` des widgets Agenda (ajoutés dans la journée) et des bancs d'essai n'avaient pas de déclarations. L'app et les widgets sont restés sur les données de la veille pendant environ 19 h. Corrigé par des déclarations `.d.mts` permissives pour ces modules ; les tests et la logique ne changent pas.
