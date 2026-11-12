@@ -1,6 +1,6 @@
 # Remise en question (③)
 
-Généré le 2026-11-12 21:28 UTC par `pipeline/verify/run.ts`.
+Généré le 2026-11-12 21:43 UTC par `pipeline/verify/run.ts`.
 
 Erreur = prévu − mesuré. Vent en m/s aux stations METAR (aéroports), vagues : hauteur significative en m aux bouées Candhis. « courtTerme » = modèles sur les 3 derniers jours (pas une vraie prévision) ; « archive » = prévisions réellement émises N h avant.
 
@@ -16,18 +16,18 @@ Erreur = prévu − mesuré. Vent en m/s aux stations METAR (aéroports), vagues
 
 | Station | Classement |
 |---|---|
-| LFMT | meteofrance_arome_france 1,5 · gfs_seamless 1,6 · meteofrance_arome_france_hd 1,7 · icon_eu 2,0 · icon_d2 2,1 · meteofrance_arpege_europe 2,5 · ecmwf_ifs025 3,1 |
-| LFMP | meteofrance_arome_france_hd 1,9 · meteofrance_arome_france 2,0 · ecmwf_ifs025 2,2 · icon_eu 2,3 · gfs_seamless 2,6 · meteofrance_arpege_europe 2,7 |
-| LFTH | icon_eu 1,8 · meteofrance_arome_france_hd 2,7 · meteofrance_arome_france 2,7 · ecmwf_ifs025 2,9 · gfs_seamless 3,0 · meteofrance_arpege_europe 3,5 |
-| LFML | meteofrance_arome_france_hd 2,0 · meteofrance_arome_france 2,0 · ecmwf_ifs025 2,3 · icon_eu 2,5 · meteofrance_arpege_europe 3,6 · gfs_seamless 3,7 |
+| LFMT | meteofrance_arome_france 1,6 · gfs_seamless 1,6 · meteofrance_arome_france_hd 1,7 · icon_eu 2,0 · icon_d2 2,1 · meteofrance_arpege_europe 2,5 · ecmwf_ifs025 3,2 |
+| LFMP | meteofrance_arome_france_hd 1,9 · meteofrance_arome_france 2,0 · ecmwf_ifs025 2,3 · icon_eu 2,4 · gfs_seamless 2,7 · meteofrance_arpege_europe 2,8 |
+| LFTH | icon_eu 1,8 · meteofrance_arome_france_hd 2,7 · meteofrance_arome_france 2,7 · ecmwf_ifs025 3,1 · gfs_seamless 3,1 · meteofrance_arpege_europe 3,5 |
+| LFML | meteofrance_arome_france_hd 2,0 · meteofrance_arome_france 2,0 · ecmwf_ifs025 2,2 · icon_eu 2,5 · meteofrance_arpege_europe 3,6 · gfs_seamless 3,6 |
 
 ## Vagues : modèles classés par erreur moyenne (3 derniers jours, en m)
 
 | Bouée | Classement |
 |---|---|
-| 03001 | ewam 0.13 · meteofrance_wave 0.14 · ecmwf_wam025 0.15 · gwam 0.18 · ncep_gfswave025 1.11 |
-| 03404 | ncep_gfswave025 0.12 · ecmwf_wam025 0.14 · meteofrance_wave 0.15 · gwam 0.15 · ewam 0.18 |
-| 01101 | ecmwf_wam025 0.13 · gwam 0.16 · ncep_gfswave025 0.16 · meteofrance_wave 0.19 · ewam 0.19 |
+| 03001 | ewam 0.13 · meteofrance_wave 0.14 · ecmwf_wam025 0.15 · gwam 0.18 · ncep_gfswave025 1.10 |
+| 03404 | ncep_gfswave025 0.12 · ecmwf_wam025 0.14 · meteofrance_wave 0.15 · gwam 0.16 · ewam 0.18 |
+| 01101 | ecmwf_wam025 0.13 · gwam 0.16 · ncep_gfswave025 0.16 · meteofrance_wave 0.18 · ewam 0.19 |
 
 ## Ce que les moteurs en font
 
