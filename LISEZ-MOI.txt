@@ -1,0 +1,1 @@
+Agenda fictif. Mac : rendu réel du widget (WebKit). iPad : simulation de la mise en page Scriptable.
