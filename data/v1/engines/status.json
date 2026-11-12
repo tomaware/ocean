@@ -1,5 +1,5 @@
 {
- "generatedAt": 1794525528039,
+ "generatedAt": 1794525789036,
  "checks": [
   {
    "id": "golden-surf",
@@ -34,12 +34,12 @@
   {
    "id": "ecart-prod-surf",
    "ok": true,
-   "detail": "notes surf OCEAN vs app en service (calcul prod. 33 min avant, même extrait Copernicus) : médiane 0.10, 90 % ≤ 1.00, max 4.60 sur 664 heures (max : carnon sam. 21:00, OCEAN 2.3 / prod 6.9)"
+   "detail": "notes surf OCEAN vs app en service (calcul prod. 37 min avant, même extrait Copernicus) : médiane 0.10, 90 % ≤ 1.00, max 4.60 sur 664 heures (max : carnon sam. 21:00, OCEAN 2.3 / prod 6.9)"
   },
   {
    "id": "ecart-prod-downwind",
    "ok": true,
-   "detail": "notes downwind (intermédiaire, de jour) OCEAN vs app en service (calcul prod. 16 min avant) : médiane 0.00, 90 % ≤ 0.00, max 0.10 sur 120 heures"
+   "detail": "notes downwind (intermédiaire, de jour) OCEAN vs app en service (calcul prod. 21 min avant) : médiane 0.00, 90 % ≤ 0.00, max 0.10 sur 120 heures"
   },
   {
    "id": "sorties-wing",
