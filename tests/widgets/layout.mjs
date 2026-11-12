@@ -16,8 +16,11 @@ const MARGE = 1.5;                    // tolérance : le modèle de largeur est 
 // Facteurs recalés sur la capture de l'iPhone de Tom (12/11) : « 10 » en gras lourd 14 pt ne tenait pas dans une
 // case de 21 pt, donc un chiffre fait au moins 0,78 × la taille de la police — pas 0,65 comme je l'estimais.
 const LARGEUR = { heavySystemFont: 0.80, boldSystemFont: 0.74, semiboldSystemFont: 0.70, systemFont: 0.66 };
-// largeur totale (pt) d'un widget sur le plus petit iPhone ; la marge du widget est retirée par son setPadding
+// taille totale (pt) d'un widget sur le plus petit iPhone ; la marge du widget est retirée par son setPadding
 export const UTILE = { small: 141, medium: 305, large: 292, extraLarge: 292 };
+export const HAUT = { small: 141, medium: 141, large: 311, extraLarge: 311 };
+// Hauteur d'une ligne de texte : ~1,2 × la taille de la police en SF Pro.
+const INTERLIGNE = 1.2;
 
 function largeurTexte(n) {
   const f = n.font ?? { k: 'systemFont', n: 12 };
@@ -43,12 +46,30 @@ function taille(n, min) {
   return pad + e.reduce((a, c) => a + taille(c, min), 0) + (n.spacing ?? 0) * (e.length - 1);
 }
 
+/** Hauteur minimale d'un élément (un espace souple compte ESPACE pt dans une pile verticale). */
+function hauteur(n) {
+  if (n.kind === 'text') return (n.font?.n ?? 12) * INTERLIGNE * (n.lineLimit || 1);
+  if (n.kind === 'image') return n.imageSize?.h ?? 0;
+  if (n.kind === 'spacer') return 0;
+  if (n._size?.h > 0) return n._size.h;
+  const pad = (n.padding?.[0] ?? 0) + (n.padding?.[2] ?? 0);
+  const e = n.children;
+  if (!e.length) return pad;
+  if (n.layout === 'v')
+    return pad + e.reduce((a, c) => a + (c.kind === 'spacer' ? (c.n ?? ESPACE) : hauteur(c)), 0) + (n.spacing ?? 0) * (e.length - 1);
+  return pad + Math.max(0, ...e.filter((c) => c.kind !== 'spacer').map(hauteur));
+}
+
 /**
  * Parcourt l'arbre et signale ce qui ne tient pas.
  * @returns {{coupe: string[], reduit: string[], deborde: string[]}}
  */
-export function verifierMiseEnPage(racine, famille = 'large', chemin = 'widget') {
+export function verifierMiseEnPage(racine, famille = 'large', chemin = 'widget', dims = null) {
   const r = { coupe: [], reduit: [], deborde: [] };
+  const L = dims?.[0] ?? UTILE[famille] ?? 264, H = dims?.[1] ?? HAUT[famille] ?? 311;
+  // hauteur : tout le contenu doit tenir dans la carte (marge du widget comprise, via son setPadding)
+  const h = hauteur(racine);
+  if (h > H + MARGE * 2) r.deborde.push(`${chemin} › hauteur ${h.toFixed(0)} pt pour ${H} pt`);
   const voir = (n, dispo, ou) => {
     if (n.kind !== 'stack' && n.kind !== 'widget') return;
     const pad = (n.padding?.[1] ?? 0) + (n.padding?.[3] ?? 0);
@@ -86,13 +107,13 @@ export function verifierMiseEnPage(racine, famille = 'large', chemin = 'widget')
     }
     for (const c of autres) voir(c, Math.max(minimale(c), Math.min(naturelle(c), part(c))) || naturelle(c), `${ou}/h`);
   };
-  voir(racine, UTILE[famille] ?? 264, chemin);
+  voir(racine, L, chemin);
   return r;
 }
 
 /** Message prêt à afficher dans un test, ou '' si tout tient. */
-export function problemes(racine, famille) {
-  const r = verifierMiseEnPage(racine, famille);
+export function problemes(racine, famille, dims = null) {
+  const r = verifierMiseEnPage(racine, famille, 'widget', dims);
   const l = [...r.coupe.map((x) => `COUPÉ ${x}`), ...r.deborde.map((x) => `DÉBORDE ${x}`)];
   return l.join('\n');
 }

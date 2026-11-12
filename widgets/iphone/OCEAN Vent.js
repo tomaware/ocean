@@ -16,7 +16,7 @@
 
 const DATA = "https://tomaware.github.io/ocean/data/widget-wind.json";
 const APP = "https://tomaware.github.io/ocean/";
-const VERSION = "2026-11-12d";   // affichée dans les réglages : permet de savoir quelle version tourne
+const VERSION = "2026-11-13a";   // affichée dans les réglages : permet de savoir quelle version tourne
 // ------------------------------------------------------- mise a jour automatique
 // Le widget va chercher sa propre version publiee et reecrit son fichier. La nouvelle version s'applique au
 // rafraichissement suivant : une correction n'oblige plus a recopier le script a la main.
@@ -82,11 +82,24 @@ function addArrow(stack, from, size, color) {
   if (from == null) return;
   const i = stack.addImage(arrow(from, size)); i.imageSize = new Size(size, size); i.tintColor = color;
 }
-// Largeur de référence : celle du plus petit grand widget (iPhone SE/mini). Elle n'est JAMAIS estimée depuis
-// l'écran — Device.screenSize() ne donne pas la largeur du widget, et une grille trop large est écrasée par iOS
-// (chiffres coupés, carte débordant des deux côtés : constaté sur l'iPhone de Tom le 12/11). Les colonnes sont
-// séparées par des espaces souples : sur un grand iPhone, la grille remplit la carte sans jamais la dépasser.
-const UTILE = 264;
+// Tailles réelles des widgets, MESURÉES sur une capture d'écran (jamais estimées). Clé : l'écran que rapporte
+// l'iPhone (affiché dans les réglages du script). Écran absent de la table → plus petit iPhone : la carte peut
+// garder du vide, elle ne déborde jamais. Pour ajouter un iPhone : lire l'écran dans les réglages, mesurer la
+// carte sur une capture, ajouter la ligne.
+const MESURES = {
+  "402x874": { large: [348, 364], medium: [348, 164] },   // iPhone 16 Pro de Tom, mesuré le 13/11
+};
+const PLUS_PETIT = { small: [141, 141], medium: [292, 141], large: [292, 311] };
+function ecranCle() {
+  try { const s = Device.screenSize(); return `${Math.round(Math.min(s.width, s.height))}x${Math.round(Math.max(s.width, s.height))}`; }
+  catch (e) { return "?"; }
+}
+function tailleWidget(famille) {
+  const t = (MESURES[ecranCle()] || {})[famille];
+  if (t) return { l: t[0], h: t[1], mesure: true };
+  const d = PLUS_PETIT[famille] || PLUS_PETIT.large;
+  return { l: d[0], h: d[1], mesure: false };
+}
 function text(stack, s, font, color, opts = {}) {
   const t = stack.addText(String(s)); t.font = font; t.textColor = color; t.lineLimit = opts.lines ?? 1;
   if (opts.scale) t.minimumScaleFactor = opts.scale;
@@ -260,34 +273,35 @@ function medium(w, data, spot, m, now) {
   const right = row.addStack(); right.spacing = 3; dayCols(right, m, 40);
 }
 function large(w, data, spot, m, now) {
-  header(w, spot, m, now, true); w.addSpacer(4);
+  // Taille réelle de la carte (mesurée) : la grille prend toute la largeur, et quand la hauteur est connue les
+  // blocs se répartissent du haut en bas au lieu de laisser un vide (Tom, 13/11). Taille inconnue → plus petit
+  // iPhone, espaces fixes : la carte peut garder du vide, elle ne déborde jamais.
+  const T = tailleWidget("large"), utile = T.l - 28;
+  const ecart = (n) => (T.mesure ? w.addSpacer() : w.addSpacer(n));
+  header(w, spot, m, now, true); ecart(4);
   const r = w.addStack(); r.centerAlignContent(); bigNow(r, m, 34); r.addSpacer();
   const rr = r.addStack(); rr.layoutVertically();
   text(rr, m.now && m.now.gust != null ? `${m.now.src === "balise" ? "max" : "rafales"} ${Math.round(m.now.gust)} nd` : "", F.s(12), INK2);
   text(rr, m.in2 ? `dans 2 h : ${Math.round(m.in2.kn)} nd ${compass(m.in2.dir)}` : "", F.s(12), INK2);
-  // aujourd'hui et demain heure par heure : vent, rafales, direction, étoiles.
-  // Les heures passées sont retirées, et la largeur des colonnes vient de leur nombre : la grille ne déborde jamais
-  // du widget (sinon iOS écrase les colonnes et coupe les chiffres à un caractère).
+  // aujourd'hui et demain heure par heure : vent, rafales, direction, étoiles. Heures passées retirées.
   for (const d of m.detail) {
     const cols = d.hours.filter((x) => x.has && !x.past);
     if (!cols.length) continue;
-    const cw = Math.max(15, Math.min(40, Math.floor((UTILE - 26 - 3 * (cols.length - 1)) / cols.length)));   // 26 = marge du bloc + centrage
-    // Tailles déduites de la largeur de colonne : un chiffre fait ~0,80 × la taille de la police (mesuré sur la
-    // capture du 12/11), donc deux chiffres tiennent si la police reste sous (cw - 2) / 1,6. Le vent est le plus
-    // gros élément de la colonne, l'heure et la rafale restent secondaires.
-    const fn = Math.max(9, Math.min(15, Math.floor((cw - 2) / 1.6)));
-    const fh = Math.min(9, fn - 4), fg = Math.min(9, fn - 4), fa = Math.min(15, cw - 6);
-    w.addSpacer(7);
+    // 26 = marge du bloc (10) + les deux espaces souples qui centrent la grille (8 + 8) ; 3 pt entre colonnes
+    const cw = Math.max(15, Math.min(40, Math.floor((utile - 26 - 3 * (cols.length - 1)) / cols.length)));
+    // Un chiffre fait ~0,80 × la taille de la police (mesuré le 12/11) : deux chiffres tiennent si la police reste
+    // sous (cw - 2) / 1,6. Le vent est le plus gros élément de la colonne, l'heure et la rafale restent secondaires.
+    const fn = Math.max(9, Math.min(18, Math.floor((cw - 2) / 1.6)));
+    const fh = Math.min(11, fn - 4), fg = Math.min(11, fn - 4), fa = Math.min(18, cw - 6);
+    ecart(7);
     const hd = w.addStack(); hd.centerAlignContent(); hd.spacing = 4;
     text(hd, d.label, F.h(13), INK, { scale: 0.7 }); text(hd, d.date, F.r(11), INK3, { scale: 0.6 });
-    if (d.stars) text(hd, "★".repeat(d.stars), F.b(11), STAR[d.stars]);
+    if (d.stars) text(hd, "★".repeat(d.stars), F.b(11), STAR[d.stars], { scale: 0.7 });
     hd.addSpacer();
     if (d.kn != null) text(hd, `max ${Math.round(d.kn)} nd ${compass(d.dir)}${d.gust != null ? ` · raf. ${Math.round(d.gust)}` : ""}`, F.b(11), INK, { scale: 0.6 });
     w.addSpacer(3);
-    // La grille est centrée dans la carte : sa largeur est calculée sur le plus petit grand widget, espaces
-    // compris. Un addSpacer() souple coûte au moins 8 pt — ne pas les compter faisait dépasser la grille, qui
-    // écrasait alors les colonnes (12/11). Ici les écarts sont explicites (3 pt) et le contenu des colonnes est
-    // centré par centerAlignContent(), sans aucun espace souple qui prendrait la place des chiffres.
+    // Écarts explicites (3 pt) entre colonnes, contenu calé à gauche : aucun espace souple ne prend la place des
+    // chiffres (un addSpacer() souple réclame ~8 pt, cause des « … » du 12/11).
     const wrap = w.addStack(); wrap.addSpacer();
     const box = wrap.addStack(); box.backgroundColor = CELL; box.cornerRadius = 10; box.setPadding(5, 5, 5, 5); box.spacing = 3;
     cols.forEach((x) => {
@@ -300,12 +314,7 @@ function large(w, data, spot, m, now) {
     });
     wrap.addSpacer();
   }
-  // REPÈRE TEMPORAIRE (12/11) : la largeur de la carte ne peut pas être lue directement. Cette ligne affiche ce
-  // que l'iPhone rapporte, pour caler les colonnes sur la vraie taille au lieu de la deviner. Retirée ensuite.
-  let ecran = "?";
-  try { const sz = Device.screenSize(); /* repere-temporaire */ ecran = `${Math.round(sz.width)}×${Math.round(sz.height)}`; } catch (e) { ecran = "indisponible"; }
-  w.addSpacer();
-  text(w, `repère : écran ${ecran} · v${VERSION}`, F.r(9), INK3, { scale: 0.6 });
+  if (!T.mesure) w.addSpacer();   // taille inconnue : le contenu reste en haut
 }
 function lock(w, family, spot, m) {
   const k = m.now ? Math.round(m.now.kn) : "–", dir = m.now ? m.now.dirTxt || compass(m.now.dir) : "";
@@ -325,7 +334,7 @@ function lock(w, family, spot, m) {
 // ------------------------------------------------------------------ réglages dans l'app
 async function setup(data) {
   const a = new Alert(); a.title = "OCEAN · widget Vent · " + VERSION;
-  a.message = `Spot par défaut : ${Keychain.contains(K_SPOT) ? Keychain.get(K_SPOT) : DEFAULT_SPOT}\nMode : ${Keychain.contains(K_MODE) && Keychain.get(K_MODE) === "offshore" ? "OffShore" : "Sécu first"}\nBalise en direct : ${Keychain.contains(K_SP) ? "branchée" : "non"}`;
+  a.message = `Écran : ${ecranCle()}${MESURES[ecranCle()] ? " (taille mesurée)" : " (taille par défaut)"}\nSpot par défaut : ${Keychain.contains(K_SPOT) ? Keychain.get(K_SPOT) : DEFAULT_SPOT}\nMode : ${Keychain.contains(K_MODE) && Keychain.get(K_MODE) === "offshore" ? "OffShore" : "Sécu first"}\nBalise en direct : ${Keychain.contains(K_SP) ? "branchée" : "non"}`;
   a.addAction("Choisir le spot"); a.addAction("Mode Sécu first / OffShore"); a.addAction("Brancher ma super prévision"); a.addAction("Aperçu du widget"); a.addCancelAction("Fermer");
   const r = await a.presentSheet();
   if (r === 0) {

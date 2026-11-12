@@ -58,7 +58,8 @@ export function makeEnv({ family = 'small', parameter = '', inWidget = true, dat
     async present() { const a = alerts[ai++]; if (a && typeof a === 'object' && 'text' in a) this.fields[0] = a.text; return a === undefined ? -1 : typeof a === 'object' ? a.choice : a; }
     textFieldValue(i) { return this.fields[i]; }
   }
-  const Device = { screenSize: () => ({ width: screen, height: Math.round(screen * 2.16) }), isUsingDarkAppearance: () => true };
+  // screen : largeur seule (hauteur déduite) ou [largeur, hauteur] exacts, comme le rapporte l'iPhone
+  const Device = { screenSize: () => (Array.isArray(screen) ? { width: screen[0], height: screen[1] } : { width: screen, height: Math.round(screen * 2.16) }), isUsingDarkAppearance: () => true };
   const globals = { Color, Size, Point, Rect, Path, DrawContext, Font, ListWidget, Request, FileManager, Keychain, Alert,
     Calendar, CalendarEvent, SFSymbol, Device, module: { filename },
     args: { widgetParameter: parameter || null, queryParameters: query }, config: { widgetFamily: family, runsInWidget: inWidget, runsInApp: !inWidget },

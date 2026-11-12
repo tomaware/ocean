@@ -13,7 +13,7 @@
 
 const DATA = "https://tomaware.github.io/ocean/data/widget-surf.json";
 const APP = "https://tomaware.github.io/ocean/";
-const VERSION = "2026-11-12c";   // affichée dans les réglages : permet de savoir quelle version tourne
+const VERSION = "2026-11-13a";   // affichée dans les réglages : permet de savoir quelle version tourne
 // ------------------------------------------------------- mise a jour automatique
 // Le widget va chercher sa propre version publiee et reecrit son fichier. La nouvelle version s'applique au
 // rafraichissement suivant : une correction n'oblige plus a recopier le script a la main.
@@ -78,11 +78,24 @@ function addArrow(stack, from, size, color) {
   if (from == null) return;
   const i = stack.addImage(arrow(from, size)); i.imageSize = new Size(size, size); i.tintColor = color;
 }
-// Largeur de référence : celle du plus petit grand widget (iPhone SE/mini). Elle n'est JAMAIS estimée depuis
-// l'écran — Device.screenSize() ne donne pas la largeur du widget, et une grille trop large est écrasée par iOS
-// (chiffres coupés, carte débordant des deux côtés : constaté sur l'iPhone de Tom le 12/11). Les colonnes sont
-// séparées par des espaces souples : sur un grand iPhone, la grille remplit la carte sans jamais la dépasser.
-const UTILE = 264;
+// Tailles réelles des widgets, MESURÉES sur une capture d'écran (jamais estimées). Clé : l'écran que rapporte
+// l'iPhone (affiché dans les réglages du script). Écran absent de la table → plus petit iPhone : la carte peut
+// garder du vide, elle ne déborde jamais. Pour ajouter un iPhone : lire l'écran dans les réglages, mesurer la
+// carte sur une capture, ajouter la ligne.
+const MESURES = {
+  "402x874": { large: [348, 364], medium: [348, 164] },   // iPhone 16 Pro de Tom, mesuré le 13/11
+};
+const PLUS_PETIT = { small: [141, 141], medium: [292, 141], large: [292, 311] };
+function ecranCle() {
+  try { const s = Device.screenSize(); return `${Math.round(Math.min(s.width, s.height))}x${Math.round(Math.max(s.width, s.height))}`; }
+  catch (e) { return "?"; }
+}
+function tailleWidget(famille) {
+  const t = (MESURES[ecranCle()] || {})[famille];
+  if (t) return { l: t[0], h: t[1], mesure: true };
+  const d = PLUS_PETIT[famille] || PLUS_PETIT.large;
+  return { l: d[0], h: d[1], mesure: false };
+}
 function text(stack, s, font, color, opts = {}) {
   const t = stack.addText(String(s)); t.font = font; t.textColor = color; t.lineLimit = opts.lines ?? 1;
   if (opts.scale) t.minimumScaleFactor = opts.scale;
@@ -186,7 +199,7 @@ function nowBlock(stack, m, big) {
   }
 }
 function small(w, data, spot, m, now) {
-  const top = w.addStack(); top.centerAlignContent(); text(top, spot.short, F.h(14), INK, { scale: 0.7 }); top.addSpacer(); text(top, "maintenant", F.b(9), INK3, { scale: 0.7 });
+  const top = w.addStack(); top.centerAlignContent(); text(top, spot.short, F.h(14), INK, { scale: 0.7 }); top.addSpacer(); text(top, "prévi", F.b(9), INK3, { scale: 0.7 });
   w.addSpacer(); nowBlock(w, m, false); w.addSpacer(6);
   const b = w.addStack(); b.centerAlignContent();
   const d = m.days[0]; text(b, d && d.cr !== "—" ? d.cr : "pas de créneau", F.s(11), INK2, { scale: 0.7 }); b.addSpacer(); starsText(b, d ? d.stars : 0, 11);
@@ -195,7 +208,7 @@ function medium(w, data, spot, m, now) {
   // largeurs calées sur le plus petit widget moyen (305 pt) : 96 + 8 d'écart + 4 colonnes de 40 + 3 écarts
   const row = w.addStack();
   const left = row.addStack(); left.layoutVertically(); left.size = new Size(96, 0);
-  text(left, spot.short, F.h(14), INK, { scale: 0.7 }); text(left, "maintenant", F.b(9), INK3, { scale: 0.7 }); left.addSpacer(); nowBlock(left, m, false);
+  text(left, spot.short, F.h(14), INK, { scale: 0.7 }); text(left, "prévi", F.b(9), INK3, { scale: 0.7 }); left.addSpacer(); nowBlock(left, m, false);
   row.addSpacer();
   const right = row.addStack(); right.spacing = 3;
   for (const d of m.days) {
@@ -209,18 +222,46 @@ function medium(w, data, spot, m, now) {
   }
 }
 function large(w, data, spot, m, now) {
-  const top = w.addStack(); top.centerAlignContent(); text(top, String(spot.name).split(" / ")[0].replace(/\s*\(.*\)$/, ""), F.h(15), INK, { scale: 0.7 }); top.addSpacer(); text(top, "maintenant", F.b(9), INK3, { scale: 0.7 });
-  w.addSpacer(4); nowBlock(w, m, true);
-  // heure par heure, heures passées retirées ; largeur des colonnes selon leur nombre (sinon iOS coupe les chiffres)
-  for (const d of m.detail) {
-    const cols = d.hours.filter((x) => x.has);
-    if (!cols.length) continue;
-    const cw = Math.max(15, Math.min(40, Math.floor((UTILE - 26 - 3 * (cols.length - 1)) / cols.length)));   // 26 = marge du bloc + centrage
-    // « 1,2 » fait trois caractères : il lui faut un peu plus de place qu'un nombre à deux chiffres (cf. Vent)
-    const fv = Math.max(8, Math.min(13, Math.floor((cw - 2) / 2.1)));
-    const fn = Math.max(8, Math.min(13, Math.floor((cw - 2) / 1.6)));
-    const fh = Math.min(9, fn - 4), fa = Math.min(13, cw - 6);
-    w.addSpacer(7);
+  // Taille réelle de la carte (mesurée) : grille sur toute la largeur, blocs répartis sur toute la hauteur.
+  // La carte Vague est chargée : elle a un BUDGET de hauteur. Si tout ne tient pas, elle renonce dans l'ordre à
+  // la barre de vague (qui répète le chiffre), puis réduit les polices, puis retire le bloc « meilleur créneau »,
+  // et en dernier recours le 2e jour. Jamais de bas rogné (constaté le 13/11 : 373 pt de contenu pour 364).
+  const T = tailleWidget("large"), utile = T.l - 28, dispo = T.h - 28;
+  const ecart = (n) => (T.mesure ? w.addSpacer() : w.addSpacer(n));
+  const jours = m.detail.map((d) => ({ d, cols: d.hours.filter((x) => x.has) })).filter((j) => j.cols.length);
+  const b = bestSession(data, now);
+  const largeur = (n) => Math.max(15, Math.min(40, Math.floor((utile - 26 - 3 * (n - 1)) / n)));
+  // polices calculées une fois, sur le jour le plus chargé : les deux jours ont la même allure
+  const cw0 = largeur(Math.max(1, ...jours.map((j) => j.cols.length)));
+  const base = { fn: Math.max(9, Math.min(16, Math.floor((cw0 - 2) / 1.6))), fv: Math.max(8, Math.min(14, Math.floor((cw0 - 2) / 2.1))) };
+  const ESP = 8, LIGNE = 1.2;   // espace souple minimal ; hauteur d'une ligne = 1,2 × la police
+  const boite = (o) => {
+    const rangs = [o.fh * LIGNE, o.fv * LIGNE, o.bh || null, o.fn + 5, o.fa, 5].filter((v) => v != null);
+    return 10 + rangs.reduce((a, v) => a + v, 0) + (rangs.length - 1);
+  };
+  const total = (o, nj, avecMeilleur) => 15 * LIGNE + 51 + (T.mesure ? ESP : 4)
+    + nj * ((T.mesure ? ESP : 7) + 13 * LIGNE + 3 + boite(o))
+    + (avecMeilleur ? ESP + 37 : 0);
+  let choix = null, nj = Math.min(2, jours.length), avecMeilleur = !!b;
+  for (const essai of [[2, true], [2, false], [1, true], [1, false]]) {
+    nj = Math.min(essai[0], jours.length); avecMeilleur = essai[1] && !!b;
+    for (const red of [0, 1, 2, 3]) {
+      for (const bh of [13, 8, 0]) {
+        const fn = Math.max(9, base.fn - red), fv = Math.max(8, base.fv - red);
+        const o = { fn, fv, fh: Math.max(8, Math.min(11, fn - 4)), fa: Math.min(16, cw0 - 6), bh };
+        if (total(o, nj, avecMeilleur) <= dispo) { choix = o; break; }
+      }
+      if (choix) break;
+    }
+    if (choix) break;
+  }
+  if (!choix) { nj = Math.min(1, jours.length); avecMeilleur = false; choix = { fn: 9, fv: 8, fh: 8, fa: 12, bh: 0 }; }
+
+  const top = w.addStack(); top.centerAlignContent(); text(top, String(spot.name).split(" / ")[0].replace(/\s*\(.*\)$/, ""), F.h(15), INK, { scale: 0.7 }); top.addSpacer(); text(top, "prévi", F.b(9), INK3, { scale: 0.7 });
+  ecart(4); nowBlock(w, m, true);
+  for (const { d, cols } of jours.slice(0, nj)) {
+    const cw = largeur(cols.length);
+    ecart(7);
     const hd = w.addStack(); hd.centerAlignContent(); hd.spacing = 4;
     text(hd, d.label, F.h(13), INK, { scale: 0.7 }); text(hd, d.date, F.r(11), INK3, { scale: 0.6 });
     if (d.stars) text(hd, "★".repeat(d.stars), F.b(11), STAR[d.stars], { scale: 0.7 });
@@ -229,31 +270,31 @@ function large(w, data, spot, m, now) {
     const per = tps.length ? ` · ${tps[0]}${tps.length > 1 ? `–${tps[tps.length - 1]}` : ""} s` : "";
     if (d.hbMax) text(hd, `jusqu'à ${m1(d.hbMax)} m${per}`, F.b(11), INK, { scale: 0.6 });
     w.addSpacer(3);
-    // même règle que la carte Vent : écarts explicites (3 pt), grille centrée, contenu des colonnes centré par
-    // centerAlignContent() — aucun espace souple ne vient prendre la place des chiffres (12/11).
     const wrap = w.addStack(); wrap.addSpacer();
     const box = wrap.addStack(); box.backgroundColor = CELL; box.cornerRadius = 10; box.setPadding(5, 5, 5, 5); box.spacing = 3;
     const hMax = Math.max(1.2, ...cols.map((x) => x.hb ?? 0));
     cols.forEach((x) => {
       const c = box.addStack(); c.layoutVertically(); c.size = new Size(cw, 0); c.spacing = 1;
-      text(c, x.h, F.s(fh), INK3, { scale: 0.7 });
-      text(c, m1(x.hb), F.b(fv), INK, { scale: 0.8 });
-      const bar = c.addStack(); bar.layoutVertically(); bar.size = new Size(Math.min(cw - 4, 24), 13); bar.addSpacer();
-      const fill = bar.addStack(); fill.size = new Size(Math.min(cw - 4, 24), Math.max(2, Math.round(((x.hb ?? 0) / hMax) * 13))); fill.backgroundColor = WAVE; fill.cornerRadius = 2;
-      cellNum(c, x.ws, cw, fn + 5, fn);                                       // la case occupe toute la colonne
-      if (cw >= 22) addArrow(c, x.wd, fa, INK2);   // colonnes étroites : la flèche serait illisible
+      text(c, x.h, F.s(choix.fh), INK3, { scale: 0.7 });
+      text(c, m1(x.hb), F.b(choix.fv), INK, { scale: 0.8 });
+      if (choix.bh) {
+        const bar = c.addStack(); bar.layoutVertically(); bar.size = new Size(Math.min(cw - 4, 24), choix.bh); bar.addSpacer();
+        const fill = bar.addStack(); fill.size = new Size(Math.min(cw - 4, 24), Math.max(2, Math.round(((x.hb ?? 0) / hMax) * choix.bh))); fill.backgroundColor = WAVE; fill.cornerRadius = 2;
+      }
+      cellNum(c, x.ws, cw, choix.fn + 5, choix.fn);                          // la case occupe toute la colonne
+      addArrow(c, x.wd, choix.fa, INK2);
       const sb = c.addStack(); sb.size = new Size(cw - 3, 5); sb.cornerRadius = 2; sb.backgroundColor = x.stars > 0 ? STAR[x.stars] : NONE;
     });
     wrap.addSpacer();
   }
-  w.addSpacer();
-  const b = bestSession(data, now);
-  if (b) {
+  if (avecMeilleur) {
+    w.addSpacer();
     const box = w.addStack(); box.layoutVertically(); box.backgroundColor = CELL; box.cornerRadius = 10; box.setPadding(6, 8, 6, 8); box.url = link(b.spot, b.s);
-    text(box, "MEILLEUR CRÉNEAU SURF", F.b(9), INK3);
+    text(box, "MEILLEUR CRÉNEAU SURF", F.b(9), INK3, { scale: 0.7 });
     const l = box.addStack(); l.spacing = 4; if (b.stars) text(l, "★".repeat(b.stars), F.b(12), STAR[b.stars], { scale: 0.7 });
     text(l, `${b.spot.short} · ${when(b, now)} · ${m1(b.hb)} m · ${b.tp ?? "–"} s`, F.b(12), INK, { scale: 0.6 });
   }
+  if (!T.mesure) w.addSpacer();
 }
 function lock(w, family, spot, m) {
   const n = m.now, h = n ? `${m1(n.lo)}–${m1(n.hi)} m` : "–";
@@ -273,7 +314,7 @@ function lock(w, family, spot, m) {
 // ------------------------------------------------------------------ réglages dans l'app
 async function setup(data) {
   const a = new Alert(); a.title = "OCEAN · widget Vague · " + VERSION;
-  a.message = `Spot par défaut : ${Keychain.contains(K_SPOT) ? Keychain.get(K_SPOT) : DEFAULT_SPOT}`;
+  a.message = `Écran : ${ecranCle()}${MESURES[ecranCle()] ? " (taille mesurée)" : " (taille par défaut)"}\nSpot par défaut : ${Keychain.contains(K_SPOT) ? Keychain.get(K_SPOT) : DEFAULT_SPOT}`;
   a.addAction("Choisir le spot"); a.addAction("Aperçu du widget"); a.addCancelAction("Fermer");
   const r = await a.presentSheet();
   if (r === 0) {

@@ -15,7 +15,7 @@
 
 const DATA = "https://tomaware.github.io/ocean/data/widget-wind.json";
 const APP = "https://tomaware.github.io/ocean/";
-const VERSION = "2026-11-12c";   // affichée dans les réglages : permet de savoir quelle version tourne
+const VERSION = "2026-11-13a";   // affichée dans les réglages : permet de savoir quelle version tourne
 // ------------------------------------------------------- mise a jour automatique
 // Le widget va chercher sa propre version publiee et reecrit son fichier. La nouvelle version s'applique au
 // rafraichissement suivant : une correction n'oblige plus a recopier le script a la main.
@@ -58,11 +58,24 @@ const dayKey = (t) => { const d = new Date(t); return `${d.getFullYear()}-${Stri
 const dayLabel = (key, now) => (key === dayKey(now) ? "Auj." : key === dayKey(now + 86400e3) ? "Demain" : DAYS[new Date(key + "T12:00:00").getDay()]);
 const span = (s) => `${new Date(s.s).getHours()}–${new Date(s.e).getHours()} h`;
 const F = { h: (n) => Font.heavySystemFont(n), b: (n) => Font.boldSystemFont(n), s: (n) => Font.semiboldSystemFont(n), r: (n) => Font.systemFont(n) };
-// Largeur de référence : celle du plus petit grand widget (iPhone SE/mini). Elle n'est JAMAIS estimée depuis
-// l'écran — Device.screenSize() ne donne pas la largeur du widget, et une grille trop large est écrasée par iOS
-// (chiffres coupés, carte débordant des deux côtés : constaté sur l'iPhone de Tom le 12/11). Les colonnes sont
-// séparées par des espaces souples : sur un grand iPhone, la grille remplit la carte sans jamais la dépasser.
-const UTILE = 264;
+// Tailles réelles des widgets, MESURÉES sur une capture d'écran (jamais estimées). Clé : l'écran que rapporte
+// l'iPhone (affiché dans les réglages du script). Écran absent de la table → plus petit iPhone : la carte peut
+// garder du vide, elle ne déborde jamais. Pour ajouter un iPhone : lire l'écran dans les réglages, mesurer la
+// carte sur une capture, ajouter la ligne.
+const MESURES = {
+  "402x874": { large: [348, 364], medium: [348, 164] },   // iPhone 16 Pro de Tom, mesuré le 13/11
+};
+const PLUS_PETIT = { small: [141, 141], medium: [292, 141], large: [292, 311] };
+function ecranCle() {
+  try { const s = Device.screenSize(); return `${Math.round(Math.min(s.width, s.height))}x${Math.round(Math.max(s.width, s.height))}`; }
+  catch (e) { return "?"; }
+}
+function tailleWidget(famille) {
+  const t = (MESURES[ecranCle()] || {})[famille];
+  if (t) return { l: t[0], h: t[1], mesure: true };
+  const d = PLUS_PETIT[famille] || PLUS_PETIT.large;
+  return { l: d[0], h: d[1], mesure: false };
+}
 function text(stack, s, font, color, opts = {}) {
   const t = stack.addText(String(s)); t.font = font; t.textColor = color; t.lineLimit = opts.lines ?? 1;
   if (opts.scale) t.minimumScaleFactor = opts.scale;
@@ -146,7 +159,9 @@ function medium(w, list, cfg, now) {
   text(best, `${dayLabel(dayKey(c.s), now)} ${span(c)}`, F.s(12), INK2, { scale: 0.7 });
   best.addSpacer(4); text(best, `${c.kn ?? "–"} nd ${compass(c.dir)}`, F.b(12), INK); best.addSpacer();
   best.url = link(c);
+  // colonne de droite centrée sur la hauteur, comme le bloc du meilleur créneau (Tom, 13/11)
   const right = row.addStack(); right.layoutVertically(); right.spacing = 6;
+  right.addSpacer();
   for (const x of list.slice(1, 4)) {
     const r = right.addStack(); r.layoutVertically(); r.url = link(x);
     const a = r.addStack(); a.spacing = 6; a.centerAlignContent();
@@ -154,8 +169,8 @@ function medium(w, list, cfg, now) {
     const b = r.addStack(); text(b, `${dayLabel(dayKey(x.s), now)} ${span(x)}`, F.r(11), INK2); b.addSpacer(); text(b, `${x.kn ?? "–"} nd ${compass(x.dir)}`, F.b(11), INK);
   }
   if (list.length < 2) text(right, "Pas d'autre créneau en vue", F.r(11), INK3);
-  right.addSpacer();
   text(right, cfg.label, F.r(9), INK3);
+  right.addSpacer();
   w.url = link(c);
 }
 const HEAD = { "La Franqui": "Franqui", "Espiguette": "Espig.", "Almanarre": "Alman." };   // en-têtes de colonne courts
@@ -196,7 +211,8 @@ function large(w, data, list, cfg, now) {
   if (days.length > 1 && days[0] === today && !dayLeft) { days = days.slice(1); off = 1; }
   const cols = cfg.spots.slice(0, 8), nameW = 34, gap = 3;
   // un addSpacer() souple réclame au moins 8 pt : il faut les compter, sinon la grille dépasse la carte (12/11)
-  const cw = Math.max(20, Math.floor((UTILE - nameW - 8 * Math.max(1, cols.length)) / Math.max(1, cols.length))), ch = 25;
+  const utile = tailleWidget("large").l - 28;   // largeur réelle (mesurée) ou celle du plus petit iPhone
+  const cw = Math.max(20, Math.floor((utile - nameW - 8 * Math.max(1, cols.length)) / Math.max(1, cols.length))), ch = 25;
   const hdr = w.addStack();
   const n0 = hdr.addStack(); n0.size = new Size(nameW, 0);
   // pile verticale : le nom du spot est centré sans espace souple (sinon iOS le remplace par « … »)
@@ -246,7 +262,7 @@ function lock(w, family, list, now) {
 
 async function setup(data) {
   const a = new Alert(); a.title = "OCEAN · Créneaux vent · " + VERSION;
-  a.message = `Mode : ${Keychain.contains(K_MODE) && Keychain.get(K_MODE) === "offshore" ? "OffShore" : "Sécu first"}\nSpots : ${Keychain.contains(K_SPOTS) && Keychain.get(K_SPOTS) ? Keychain.get(K_SPOTS) : "tous"}`;
+  a.message = `Écran : ${ecranCle()}${MESURES[ecranCle()] ? " (taille mesurée)" : " (taille par défaut)"}\nMode : ${Keychain.contains(K_MODE) && Keychain.get(K_MODE) === "offshore" ? "OffShore" : "Sécu first"}\nSpots : ${Keychain.contains(K_SPOTS) && Keychain.get(K_SPOTS) ? Keychain.get(K_SPOTS) : "tous"}`;
   a.addAction("Mode Sécu first / OffShore"); a.addAction("Spots suivis"); a.addAction("Aperçu du widget"); a.addCancelAction("Fermer");
   const r = await a.presentSheet();
   if (r === 0) { const b = new Alert(); b.addAction("Sécu first"); b.addAction("OffShore"); b.addCancelAction("Annuler"); const k = await b.presentSheet(); if (k >= 0) Keychain.set(K_MODE, k ? "offshore" : "secu"); }

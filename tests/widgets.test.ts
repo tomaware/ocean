@@ -121,31 +121,45 @@ test('widget Vent : la grille heure par heure du grand format va de 9 h à 17 h'
 });
 
 test('widgets iPhone : tout tient dans la carte, même sur le plus petit iPhone', async () => {
-  // Contrôle de mise en page : un addSpacer() souple réclame au moins 8 pt AVANT le texte. Ne pas les compter a
-  // fait déborder la grille, puis remplacer les nombres à deux chiffres par « … » sur l'iPhone de Tom (12/11).
-  // Les captures HTML ne pouvaient pas le voir : c'est une règle de Scriptable, pas de géométrie.
+  // Contrôle de mise en page (largeur ET hauteur) : un addSpacer() souple réclame au moins 8 pt avant le texte, et
+  // une carte trop chargée se fait rogner par le bas. Deux cas : iPhone inconnu (plus petit grand widget, 292 × 311)
+  // et l'iPhone de Tom, dont la taille de carte a été mesurée sur capture (348 × 364).
   const SURF = surfFixture();
-  const cas: [string, any, string][] = [[VENT, DATA, ''], [CREN, DATA, ''], [CREN, DATA, 'proches'],
-    ['widgets/iphone/OCEAN Vague.js', widgetSurf(SURF, surfSessions(SURF, NOW), NOW), '']];
-  for (const [f, data, parameter] of cas)
-    for (const family of ['small', 'medium', 'large']) {
-      const o = await run(f, { family, data, now: NOW, parameter });
-      assert.equal(problemes(o.widget, family), '', `${f.split('/').pop()} ${family} ${parameter}`);
-    }
+  const surf = widgetSurf(SURF, surfSessions(SURF, NOW), NOW);
+  const cas: [string, any, string][] = [[VENT, DATA, ''], [CREN, DATA, ''], [CREN, DATA, 'proches'], ['widgets/iphone/OCEAN Vague.js', surf, '']];
+  const ecrans: [string, any, Record<string, [number, number] | null>][] = [
+    ['inconnu', 390, { small: null, medium: null, large: null }],
+    ['Tom', [402, 874], { small: null, medium: [348, 164], large: [348, 364] }],
+  ];
+  for (const [nom, screen, dims] of ecrans)
+    for (const [f, data, parameter] of cas)
+      for (const family of ['small', 'medium', 'large']) {
+        const o = await run(f, { family, data, now: NOW, parameter, screen });
+        assert.equal(problemes(o.widget, family, dims[family]), '', `${nom} · ${f.split('/').pop()} ${family} ${parameter}`);
+      }
 });
 
-test('widgets iPhone : aucune dimension du widget n’est devinée depuis l’écran', () => {
-  // 12/11 : estimer la largeur depuis Device.screenSize() a fait déborder la carte sur l’iPhone de Tom.
-  // Les grilles partent de la largeur du plus petit grand widget et se détendent avec des espaces souples.
+test('widgets iPhone : la taille de la carte vient d’une mesure, jamais d’une estimation', async () => {
+  // 12/11 : une largeur ESTIMÉE depuis l'écran a fait déborder la carte. Depuis le 13/11, la taille vient d'une
+  // table de tailles MESURÉES sur capture, indexée par l'écran exact. Écran inconnu → plus petit iPhone.
   for (const f of [VENT, CREN, 'widgets/iphone/OCEAN Vague.js']) {
     const src = readFileSync(f, 'utf8');
-    // le repère temporaire du 12/11 AFFICHE la mesure (ligne marquée « repere-temporaire ») ; aucune largeur
-    // ni hauteur ne doit en être déduite ailleurs
-    const code = src.replace(/^\s*\/\/.*$/gm, '').split('\n').filter((l) => !l.includes('repere-temporaire')).join('\n');
-    assert.doesNotMatch(code, /screenSize|screenResolution/, f);
-    assert.match(src, /const UTILE = 264;/, f);
+    const code = src.replace(/^\s*\/\/.*$/gm, '');
+    // l'écran n'est lu qu'à un seul endroit, pour former la clé de la table
+    assert.equal((code.match(/screenSize\(\)/g) || []).length, 1, f);
+    assert.match(code, /function ecranCle\(\) \{\n  try \{ const s = Device\.screenSize\(\);/, f);
+    // la table ne contient que des nombres écrits en dur (des mesures), pas de calcul
+    const table = src.slice(src.indexOf('const MESURES = {'), src.indexOf('};', src.indexOf('const MESURES = {')));
+    assert.doesNotMatch(table.replace(/\/\/.*$/gm, ''), /[*\/+]|Math|screen/, f);
+    assert.match(table, /"402x874": \{ large: \[348, 364\], medium: \[348, 164\] \}/, f);
   }
-  assert.match(readFileSync(CREN, 'utf8'), /r[.]addSpacer[(][)];\s+\/\/ espace souple/);
+  // effet : sur l'iPhone de Tom les colonnes sont plus larges ; sur un iPhone inconnu, on retombe au plus petit
+  const largeurs = (o: any) => { const r: number[] = []; const v = (n: any) => { if (n?._size?.w && n.layout === 'v' && n._size.h === 0) r.push(n._size.w); (n?.children || []).forEach(v); }; v(o.widget); return r; };
+  const tom = largeurs(await run(VENT, { family: 'large', data: DATA, now: NOW, screen: [402, 874] }));
+  const inconnu = largeurs(await run(VENT, { family: 'large', data: DATA, now: NOW, screen: [390, 844] }));
+  assert.ok(Math.max(...tom) > Math.max(...inconnu), `${Math.max(...tom)} > ${Math.max(...inconnu)}`);
+  assert.ok(tom.includes(30), String(tom));                              // demain, 9 colonnes : (348 - 28 - 26 - 3 × 8) / 9 = 30 pt
+  assert.ok(tom.includes(34), String(tom));                              // aujourd'hui à 10 h 20, 8 colonnes : 34 pt
 });
 
 test('contrôle de mise en page : il attrape bien le piège de l’espace souple', () => {

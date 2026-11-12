@@ -21,7 +21,7 @@ test('widget Vague : données publiées (vagues, période, vent en nœuds, crén
   assert.ok(JSON.stringify(DATA).length < 60000);
 });
 
-test('widget Vague : chaque taille s’affiche, Carnon par défaut, maintenant + jours + meilleur créneau', async () => {
+test('widget Vague : chaque taille s’affiche, Carnon par défaut, prévi + jours + meilleur créneau si la place le permet', async () => {
   for (const family of ['small', 'medium', 'large', 'accessoryRectangular', 'accessoryInline', 'accessoryCircular']) {
     const o = await run(VAGUE, { family, data: DATA, now: NOW });
     const t = texts(o.widget).join(' | ');
@@ -31,10 +31,16 @@ test('widget Vague : chaque taille s’affiche, Carnon par défaut, maintenant +
     if (family === 'small') assert.match(t, /0,4–0,9 \| m .*6 s · houle SSO.*vent de mer/);
     if (family === 'medium') assert.match(t, /Auj\..*Jeu\..*Ven\. \| ★★★ \| ☆?.*1,2 m \| 9 s \| 8–16 h/);
     if (family === 'large') {
+      assert.match(t, /^Carnon \| prévi \|/);                                  // « prévi » et plus « maintenant » (13/11)
       assert.match(t, /Aujourd'hui \| mercredi 11.*Demain \| jeudi 12/); assert.doesNotMatch(t, /Créneau :/);
-      assert.match(t, /MEILLEUR CRÉNEAU SURF \| ★★★ \| (Carnon|Sète) · Ven\. 8–16 h · 1,[26] m · 9 s/);
+      // iPhone inconnu → plus petit grand widget (311 pt) : les deux jours tiennent, pas le bloc du meilleur créneau
+      assert.doesNotMatch(t, /MEILLEUR CRÉNEAU SURF/);
     }
   }
+  // iPhone de Tom (taille mesurée 348 × 364) : il reste la place pour le meilleur créneau
+  const tom = texts((await run(VAGUE, { family: 'large', data: DATA, now: NOW, screen: [402, 874] })).widget).join(' | ');
+  assert.match(tom, /Aujourd'hui \| mercredi 11.*Demain \| jeudi 12/);
+  assert.match(tom, /MEILLEUR CRÉNEAU SURF \| ★★★ \| (Carnon|Sète) · Ven\. 8–16 h · 1,[26] m · 9 s/);
   const o = await run(VAGUE, { family: 'small', parameter: 'Sète', data: DATA, now: NOW });
   assert.match(texts(o.widget).join(' '), /Sète/);
   const off = await run(VAGUE, { family: 'small', data: DATA, fail: true, now: NOW });
