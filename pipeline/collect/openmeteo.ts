@@ -128,6 +128,7 @@ export function parseOpenMeteo(json: unknown, points: CollectPoint[], vars: stri
 
 export async function collectOpenMeteo(id: string, url: string, points: CollectPoint[], vars: string[], models: string[]) {
   const fetchedAt = Date.now();
-  const json = await getJSON(url, { timeoutMs: 90_000 });
+  // Open-Meteo coupe parfois quelques minutes (« fetch failed », 13/11) : 4 essais espacés de 10 s, 30 s puis 60 s
+  const json = await getJSON(url, { timeoutMs: 90_000, tries: 4, backoffMs: [10_000, 30_000, 60_000] });
   return { json, ...parseOpenMeteo(json, points, vars, models, id, url, fetchedAt) };
 }

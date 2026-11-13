@@ -14,7 +14,9 @@ concurrency:
 
 jobs:
   pipeline:
-    runs-on: ubuntu-24.04          # Playwright (test de l’interface) ne gère pas encore ubuntu-latest (26.04)
+    runs-on: ubuntu-24.04
+    outputs:
+      skip: ${{ steps.engines.outputs.skip }}          # Playwright (test de l’interface) ne gère pas encore ubuntu-latest (26.04)
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
@@ -34,16 +36,20 @@ jobs:
           SUPER_PREVISION_URL: ${{ secrets.SUPER_PREVISION_URL }}   # vent corrigé (relevés Winds-Up : fichier privé, jamais publié)
         run: npm run collect
       - name: ② Analyse (moteurs surf + downwind, test golden ; note wing)
+        id: engines
         env:
           SUPER_PREVISION_URL: ${{ secrets.SUPER_PREVISION_URL }}   # seulement pour vérifier qu'il ne fuit pas
         run: npm run engines
       - name: Récupérer l'archive des prévisions (branche data)
+        if: steps.engines.outputs.skip != 'true'
         run: |
           mkdir -p data/state
           git fetch -q --depth 1 origin data && git show origin/data:state/archive.json > data/state/archive.json || { echo "pas d'archive : on repart de zéro"; rm -f data/state/archive.json; }
       - name: ③ Remise en question
+        if: steps.engines.outputs.skip != 'true'
         run: npm run verify
       - name: ④ Sessions + données publiques
+        if: steps.engines.outputs.skip != 'true'
         env:
           SUPER_PREVISION_URL: ${{ secrets.SUPER_PREVISION_URL }}
         run: npm run publish-data
@@ -51,15 +57,18 @@ jobs:
         if: always()
         run: rm -rf data/private
       - name: ⑤ Interface
+        if: steps.engines.outputs.skip != 'true'
         run: |
           npm run build
           mkdir -p dist/data && cp data/v1/public/*.json dist/data/
       - name: Test de l'interface sur les données réelles (mobile + ordinateur)
+        if: steps.engines.outputs.skip != 'true'
         run: |
           npm i --no-save playwright@1.55.0 >/dev/null && (npx playwright install --with-deps chromium >/dev/null || npx playwright install chromium >/dev/null)   # miroir apt parfois en panne : les dépendances sont déjà sur l’image GitHub
           (npx vite preview --port 4173 --strictPort >/dev/null 2>&1 &) && sleep 4
           node tests/ui/smoke.mjs http://localhost:4173
       - name: Publier les données (branche data, un seul commit)
+        if: steps.engines.outputs.skip != 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -69,8 +78,17 @@ jobs:
           git add -A && git commit -qm "données $(date -u +%Y-%m-%dT%H:%MZ)"
           git push -qf "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" data
       - uses: actions/upload-pages-artifact@v3
+        if: steps.engines.outputs.skip != 'true'
         with:
           path: dist
+      - name: Données trop anciennes ?
+        # publication sautée (source en panne) : alerte seulement si les données en ligne ont plus de 3 h
+        if: steps.engines.outputs.skip == 'true'
+        run: |
+          git fetch -q --depth 1 origin data
+          age=$(( $(date +%s) - $(git log -1 --format=%ct origin/data) ))
+          echo "données en ligne : il y a $((age / 60)) min"
+          if [ $age -gt 10800 ]; then echo "::error::pas de publication depuis plus de 3 h (sources en panne)"; exit 1; fi
       - name: Publier les rapports
         if: always()
         run: |
@@ -90,6 +108,7 @@ jobs:
   # Site : nécessite GitHub Pages activé (Réglages → Pages → Source : GitHub Actions)
   deploy:
     needs: pipeline
+    if: needs.pipeline.outputs.skip != 'true'
     runs-on: ubuntu-latest
     permissions:
       pages: write

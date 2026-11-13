@@ -2,7 +2,7 @@
 // Lit data/v1/collect/bundle.json, fait tourner les moteurs surf et downwind, écrit data/v1/engines/*.json
 // et docs/quality/ENGINES_REPORT.md. Test golden : mêmes notes que les apps actuelles à ±0,1 sur les mêmes données.
 // Usage : node pipeline/engines/run.ts
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync, appendFileSync } from 'node:fs';
 import type { Check, CollectBundle } from '../../src/types/contracts.ts';
 import { loadRegistry } from '../collect/points.ts';
 import { compareOutputs, inputsFromBundle, inputsLegacy, runEngines, usesCopernicus } from './engines.ts';
@@ -165,4 +165,14 @@ function report(now: number, checks: Check[], o: ReturnType<typeof runEngines>, 
   return s;
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) main().catch((e) => { console.error('[analyse] échec :', e); process.exit(1); });
+if (import.meta.url === `file://${process.argv[1]}`) main().catch((e) => {
+  // Source en panne (Open-Meteo surtout) : on ne publie pas cette heure-ci, les données de l'heure d'avant restent en
+  // ligne avec leur âge affiché. Ce n'est pas un échec : l'alerte part seulement si les données deviennent trop
+  // vieilles (étape « Données trop anciennes ? » du workflow). Toute autre erreur reste un échec.
+  if (/^collecte incomplète/.test(String(e?.message ?? e))) {
+    console.log(`::warning::publication sautée cette heure : ${e.message}`);
+    if (process.env.GITHUB_OUTPUT) appendFileSync(process.env.GITHUB_OUTPUT, 'skip=true\n');
+    process.exit(0);
+  }
+  console.error('[analyse] échec :', e); process.exit(1);
+});

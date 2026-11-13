@@ -6,7 +6,7 @@ export class HttpError extends Error {
   constructor(status: number, message: string) { super(message); this.status = status; }
 }
 
-export async function getJSON<T = unknown>(url: string, opts: { tries?: number; timeoutMs?: number; headers?: Record<string, string> } = {}): Promise<T> {
+export async function getJSON<T = unknown>(url: string, opts: { tries?: number; timeoutMs?: number; headers?: Record<string, string>; backoffMs?: number[] } = {}): Promise<T> {
   const tries = opts.tries ?? 3;
   let last: unknown;
   for (let i = 1; i <= tries; i++) {
@@ -30,7 +30,7 @@ export async function getJSON<T = unknown>(url: string, opts: { tries?: number; 
     } finally {
       clearTimeout(timer);
     }
-    if (i < tries) await new Promise((res) => setTimeout(res, 3000 * i));
+    if (i < tries) await new Promise((res) => setTimeout(res, opts.backoffMs?.[i - 1] ?? 3000 * i));
   }
   throw last instanceof Error ? last : new Error(String(last));
 }

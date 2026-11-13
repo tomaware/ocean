@@ -14,7 +14,7 @@ export function SpotMap({ spots, best, focus, height, onMap }: { spots: PublicSp
   // la carte n'est recréée que si les spots changent ; les repères suivent la note (heure de l'animation) sans la recréer
   useEffect(() => {
     if (!el.current) return;
-    const map = L.map(el.current, { zoomControl: true, attributionControl: true, scrollWheelZoom: false });
+    const map = L.map(el.current, { zoomControl: true, attributionControl: true, scrollWheelZoom: true, wheelPxPerZoomLevel: 90 });
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 17, attribution: '© contributeurs OpenStreetMap' }).addTo(map);
     layer.current = L.layerGroup().addTo(map); mapRef.current = map;
     const bounds: [number, number][] = spots.flatMap((s) => (s.kind === 'run' ? s.geometry.path : [spotPos(s)]));
