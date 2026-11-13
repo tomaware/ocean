@@ -68,7 +68,10 @@ async function main(): Promise<void> {
 
   // spots hors super prévision (étang de Berre, D-22) : modèle le plus juste aux METAR des 3 derniers jours
   const ranking = verifyShortTerm(bundle).wind as ModelRanking;
-  const wing = wingForecast(sp, registry, now, { block: bundle.forecasts.find((f) => f.id === 'open-meteo-vent-spots'), ranking });
+  const altWind = { block: bundle.forecasts.find((f) => f.id === 'open-meteo-vent-spots'), ranking };
+  const wing = wingForecast(sp, registry, now, altWind);
+  // kitesurf (D-51) : même vent, même formule, plage de vent kite
+  const kite = wingForecast(sp, registry, now, altWind, 'kite');
   const nSess = wing.spots.reduce((a, x) => a + x.sessions.secu.length, 0);
   const nWing = registry.spots.filter((x) => x.disciplines.includes('wing')).length;
   for (const x of wing.spots.filter((y) => (y.source as { kind: string }).kind === 'forecast')) {
@@ -77,8 +80,10 @@ async function main(): Promise<void> {
   }
   checks.push({ id: 'sorties-wing', ok: wing.available && wing.spots.length === nWing && wing.spots.every((x) => x.hours.length > 0),
     detail: wing.available ? `${wing.spots.length} spots notés (wing v${wing.version}) ; ${nSess} session(s) 2H en mode Sécu first sur les heures prévues` : String((wing as { reason?: string }).reason) });
+  checks.push({ id: 'sorties-kite', ok: kite.available && kite.spots.length === nWing && kite.spots.every((x) => x.hours.length > 0),
+    detail: kite.available ? `${kite.spots.length} spots notés (kite v${kite.version}) ; ${kite.spots.reduce((a, x) => a + x.sessions.secu.length, 0)} session(s) 2H en mode Sécu first` : String((kite as { reason?: string }).reason) });
 
-  const surfText = JSON.stringify(ocean.surfJSON), dwText = JSON.stringify(ocean.downwindJSON) + JSON.stringify(wing);
+  const surfText = JSON.stringify(ocean.surfJSON), dwText = JSON.stringify(ocean.downwindJSON) + JSON.stringify(wing) + JSON.stringify(kite);
   checks.push(privacyEngines(surfText + dwText, live, [(process.env.SUPER_PREVISION_URL ?? '').trim()]));
 
   mkdirSync(OUT, { recursive: true });
@@ -88,6 +93,7 @@ async function main(): Promise<void> {
   writeFileSync(new URL('surf.json', OUT), JSON.stringify({ provenance: prov, ...ocean.surfJSON }));
   writeFileSync(new URL('downwind.json', OUT), JSON.stringify({ provenance: prov, ...ocean.downwindJSON }));
   writeFileSync(new URL('wing.json', OUT), JSON.stringify(wing));
+  writeFileSync(new URL('kite.json', OUT), JSON.stringify(kite));
   writeFileSync(new URL('status.json', OUT), JSON.stringify({ generatedAt: now, checks }, null, 1));
   mkdirSync(new URL('./', REPORT), { recursive: true });
   writeFileSync(REPORT, report(now, checks, ocean, wing));

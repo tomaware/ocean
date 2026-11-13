@@ -1,25 +1,37 @@
-// Note WING (wing foil seulement), formule validée par Tom le 10/11 (D-14) :
+// Notes WING et KITE (même formule, plages de vent différentes), wing validée par Tom le 10/11 (D-14), kite le 13/11 (D-51) :
 //   note = 10 × V(vent, niveau) × R(rafales / moyenne) × D(angle vent / plage, niveau), 0 la nuit.
 // Plages de vent recalées sur des guides wing (docs/product/WING_SCORE.md). Toute modification = décision + test golden.
 import type { ForecastBlock, Registry, Spot } from '../../src/types/contracts.ts';
 import { SurfEngine as E } from '../collect/points.ts';
 
-export const WING_VERSION = '2.1.0';
+export const WING_VERSION = '2.2.0';
+export const KITE_VERSION = '1.0.0';
 // 1.1 (10/11, D-18, Tom) : « trop de vent » seulement au-delà de 35 nd.
 // 2.0 (10/11, D-19, Tom) : deux modes au lieu de trois niveaux : « Sécu first » (aucun vent de terre ni side-off)
 //     et « Offshore » (side-off et vent de terre acceptés, toujours signalés en commentaire).
 // 2.1 (13/11, D-49, Tom) : « 30 nd en wing c'est 0 » — la force compte à 100 % jusqu'à 28 nd, puis baisse en ligne
 //     droite jusqu'à 0 à 30 nd. Au-delà de 28 nd (même vent que la note), l'heure est une « Kite session » :
 //     1 étoile rouge à l'affichage, et elle ne compte plus dans les créneaux wing.
+// 2.2 (13/11, D-50, Tom) : « dès 13 nd tu peux partir » — note pleine dès 13 nd (monte de 10 à 13 nd), même seuil
+//     en Sécu first et en Offshore (avant : 12 → 15 nd et 11 → 14 nd).
+// KITE 1.0 (13/11, D-51, Tom) : même formule, vent 15 → 20 nd, plein de 20 à 35 nd, 0 à 40 nd ; mêmes modes
+//     Sécu first / Offshore et mêmes facteurs rafales et direction qu'en wing. Pas de « Kite session » en kite.
 export const MS_TO_KN = 1.94384;
 export type WingLevel = 'secu' | 'offshore';
 export const WING_LEVELS: WingLevel[] = ['secu', 'offshore'];
+export type Sport = 'wing' | 'kite';
 
 /** Vent (nœuds) : 0 sous `min`, monte jusqu'à `lo`, 1 jusqu'à `hi` (28 nd), baisse jusqu'à 0 à `max` (30 nd). */
 export const WIND: Record<WingLevel, { min: number; lo: number; hi: number; max: number }> = {
-  secu: { min: 12, lo: 15, hi: 28, max: 30 },
-  offshore: { min: 11, lo: 14, hi: 28, max: 30 },
+  secu: { min: 10, lo: 13, hi: 28, max: 30 },
+  offshore: { min: 10, lo: 13, hi: 28, max: 30 },
 };
+/** Kite (D-51) : 0 jusqu'à 15 nd, monte jusqu'à 20 nd, 1 jusqu'à 35 nd, baisse jusqu'à 0 à 40 nd. */
+export const KITE_WIND: Record<WingLevel, { min: number; lo: number; hi: number; max: number }> = {
+  secu: { min: 15, lo: 20, hi: 35, max: 40 },
+  offshore: { min: 15, lo: 20, hi: 35, max: 40 },
+};
+export const WIND_OF: Record<Sport, typeof WIND> = { wing: WIND, kite: KITE_WIND };
 /** Au-delà (vent de la note, rafales comprises), l'heure est une « Kite session » (D-49). */
 export const KITE_KN = 28;
 export const KITE_LABEL = 'Kite session (plus de 28 nd)';
@@ -39,9 +51,9 @@ export const SESSION_SCORE = 5;
 const clamp01 = (x: number) => Math.max(0, Math.min(1, x));
 const lerp = (x: number, x0: number, x1: number, y0: number, y1: number) => y0 + (y1 - y0) * clamp01((x - x0) / (x1 - x0));
 
-export function windFactor(kn: number, L: WingLevel): number {
-  const w = WIND[L];
-  if (kn <= w.min || kn > w.max) return 0;   // au-delà de 30 nd : 0 (Kite session)
+export function windFactor(kn: number, L: WingLevel, sport: Sport = 'wing'): number {
+  const w = WIND_OF[sport][L];
+  if (kn <= w.min || kn > w.max) return 0;   // au-delà de max (wing 30 nd, kite 40 nd) : 0
   if (kn < w.lo) return (kn - w.min) / (w.lo - w.min);
   if (kn <= w.hi) return 1;
   return w.max > w.hi ? (w.max - kn) / (w.max - w.hi) : 0;
@@ -84,26 +96,26 @@ export function effWind(kn: number, gust: number | null): number {
 }
 /** « Kite session » : de jour, plus de 28 nd sur le vent de la note (D-49). */
 export const isKite = (kn: number, gust: number | null, day: boolean) => day && effWind(kn, gust) > KITE_KN;
-export function scoreHour(kn: number, gust: number | null, dir: number | null, day: boolean, spot: Pick<Spot, 'orientation' | 'waterBody'>, L: WingLevel): { score: number; limit: string | null; f: WingFactors; kite: boolean } {
+export function scoreHour(kn: number, gust: number | null, dir: number | null, day: boolean, spot: Pick<Spot, 'orientation' | 'waterBody'>, L: WingLevel, sport: Sport = 'wing'): { score: number; limit: string | null; f: WingFactors; kite: boolean } {
   const g = gust !== null && kn > 0 ? gust / kn : 1;
   const eff = effWind(kn, gust);
-  const V = windFactor(eff, L), R = gustFactor(g);
+  const V = windFactor(eff, L, sport), R = gustFactor(g);
   const D = dir === null ? { f: 1, label: 'direction inconnue' } : dirFactor(dir, spot, L);
   const f: WingFactors = [r2(V), r2(R), r2(D.f)];
   if (!day) return { score: 0, limit: 'nuit', f, kite: false };
   const score = Math.round(10 * V * R * D.f * 10) / 10;
-  const w = WIND[L];
+  const w = WIND_OF[sport][L];
   // à égalité, la direction passe en premier : « vent de terre » est plus important à lire que « trop de vent »
   const why = [
     [D.f, D.label],
-    [V, eff <= w.lo ? 'pas assez de vent' : KITE_LABEL],
+    [V, eff <= w.lo ? 'pas assez de vent' : sport === 'kite' ? `trop de vent (plus de ${w.hi} nd)` : KITE_LABEL],
     [R, 'vent rafaleux'],
   ] as [number, string][];
   const worst = why.reduce((a, b) => (b[0] < a[0] ? b : a));
   // mode Offshore : le vent de terre ne baisse pas la note mais reste toujours signalé
   const risky = 'sector' in D && (D.sector === 'offshore' || D.sector === 'side-off') ? D.label : null;
   // Kite session : toujours dit en premier (c'est ce qui compte ce jour-là), avec la direction si elle pose aussi problème
-  if (eff > KITE_KN) return { score, limit: D.f < 1 || risky ? `${KITE_LABEL} · ${D.label}` : KITE_LABEL, f, kite: true };
+  if (sport === 'wing' && eff > KITE_KN) return { score, limit: D.f < 1 || risky ? `${KITE_LABEL} · ${D.label}` : KITE_LABEL, f, kite: true };
   return { score, limit: worst[0] < 1 ? worst[1] : risky, f, kite: false };
 }
 
@@ -155,13 +167,14 @@ type Series = { wind_speed_10m: (number | null)[]; wind_gusts_10m: (number | nul
  * Vent : la super prévision (corrigée) ; pour un spot qu'elle ne couvre pas (`windSource.kind = 'best-model'`, ex. étang de Berre,
  * D-22), le modèle le plus juste aux mesures de la station METAR indiquée, non corrigé, avec sa provenance. Jamais de mélange.
  */
-export function wingForecast(block: ForecastBlock | undefined, registry: Registry, now: number, alt?: { block: ForecastBlock | undefined; ranking?: ModelRanking }) {
+export function wingForecast(block: ForecastBlock | undefined, registry: Registry, now: number, alt?: { block: ForecastBlock | undefined; ranking?: ModelRanking }, sport: Sport = 'wing') {
+  const version = sport === 'kite' ? KITE_VERSION : WING_VERSION;
   const all = registry.spots.filter((s) => s.disciplines.includes('wing'));
   // repli « meilleur modèle » seulement si la super prévision ne couvre pas (encore) ce spot (Le Jaï, D-22) : dès qu'elle le couvre, on la prend
   const inSuper = (s: Spot) => !!block?.values['spot_' + s.id]?.['super-prevision']?.wind_speed_10m?.some((x) => x !== null);
   const isAlt = (s: Spot) => (s.windSource as { kind?: string } | undefined)?.kind === 'best-model' && !inSuper(s);
   const spots = all.filter((s) => (isAlt(s) ? !!alt?.block : !!block));
-  if (!spots.length) return { version: WING_VERSION, generatedAt: now, available: false, reason: 'super prévision absente : pas de note wing (pas de repli sur un vent brut)', spots: [] };
+  if (!spots.length) return { version, sport, generatedAt: now, available: false, reason: `super prévision absente : pas de note ${sport} (pas de repli sur un vent brut)`, spots: [] };
   const res = spots.map((s) => {
     let times: number[], v: Series | undefined, source: Record<string, unknown>;
     if (isAlt(s)) {
@@ -192,11 +205,11 @@ export function wingForecast(block: ForecastBlock | undefined, registry: Registr
       const scores = {} as Record<WingLevel, number | null>, limit = {} as Record<WingLevel, string | null>, f = {} as Record<WingLevel, WingFactors | null>;
       for (const L of WING_LEVELS) {
         if (kn === null) { scores[L] = null; limit[L] = null; f[L] = null; continue; }
-        const r = scoreHour(kn, gust, dir, day, s, L); scores[L] = r.score; limit[L] = r.limit; f[L] = r.f;
+        const r = scoreHour(kn, gust, dir, day, s, L, sport); scores[L] = r.score; limit[L] = r.limit; f[L] = r.f;
       }
       const o = s.orientation;
       return { t, kn, gust, dir, conf: v?.confidence?.[i] ?? null, day, sector: dir === null || !o || o.seaward == null ? null : sectorOf(dir, o.seaward).s.id,
-        kite: kn !== null && isKite(kn, gust, day), scores, limit, f };
+        kite: sport === 'wing' && kn !== null && isKite(kn, gust, day), scores, limit, f };
     }).filter((h) => h.kn !== null && h.t >= now - 3 * 3600e3);
     return {
       id: s.id, name: s.name, orientation: s.orientation, waterBody: s.waterBody, source, hours,
@@ -204,9 +217,9 @@ export function wingForecast(block: ForecastBlock | undefined, registry: Registr
     };
   });
   return {
-    version: WING_VERSION, generatedAt: now, available: true,
-    provenance: { source: 'super-prevision', kind: 'corrected', fetchedAt: block?.provenance.fetchedAt ?? null, note: 'Vent corrigé par la super prévision, converti en nœuds ; note calculée par OCEAN (formule wing v' + WING_VERSION + '). Spots hors super prévision : voir « source » de chaque spot.' },
-    levels: WIND, kiteKn: KITE_KN, sectors: SECTORS.map((x) => ({ id: x.id, label: x.label, upTo: x.upTo, f: x.f })),
+    version, sport, generatedAt: now, available: true,
+    provenance: { source: 'super-prevision', kind: 'corrected', fetchedAt: block?.provenance.fetchedAt ?? null, note: 'Vent corrigé par la super prévision, converti en nœuds ; note calculée par OCEAN (formule ' + sport + ' v' + version + '). Spots hors super prévision : voir « source » de chaque spot.' },
+    levels: WIND_OF[sport], kiteKn: sport === 'wing' ? KITE_KN : null, sectors: SECTORS.map((x) => ({ id: x.id, label: x.label, upTo: x.upTo, f: x.f })),
     spots: res,
   };
 }

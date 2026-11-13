@@ -1,6 +1,20 @@
-# Note wing foil — v2.1
+# Note wing foil — v2.2
 
 > **Statut : validée par Tom le 10/11 (D-14, D-16) ; v1.1 le 10/11 à 12 h 41 (D-18 : « trop de vent c'est plus de 35 nœuds, sinon c'est OK ») ; v2.0 le 10/11 à 13 h 45 (D-19 : deux modes « Secu first – OffShore » au lieu des trois niveaux ; « ça envoie » quand il y a plus de 4 h de vent à plus de 20 nd) ; v2.1 le 13/11 (D-49 : « au-delà de 28 nd, 1 étoile rouge et Kite session ; 30 nd en wing c'est 0 »).**
+
+## v2.2 — pleine note dès 13 nd (13/11, D-50)
+
+Demande de Tom : « dès 13 nœuds tu peux commencer à partir en session ». La force V vaut 0 jusqu'à 10 nd, monte en ligne droite jusqu'à **1 à 13 nd**, même seuil en Sécu first et en Offshore (avant : 12 → 15 nd en Sécu first, 11 → 14 nd en Offshore). Le haut ne change pas (plein jusqu'à 28 nd, 0 à 30 nd).
+
+| Vent (régulier, side-shore) | v2.1 Sécu first | v2.2 |
+|---|---|---|
+| 10 nd | 0 | 0 |
+| 12 nd | 0 | 6,7 |
+| 13 nd | 3,3 | 10 |
+| 14 nd | 6,7 | 10 |
+| 15 nd et plus | 10 | 10 |
+
+Le kitesurf a sa propre note (même formule, autre plage de vent) : voir `KITE_SCORE.md` (D-51).
 
 ## v2.1 — « Kite session » au-delà de 28 nd (13/11, D-49)
 

@@ -7,7 +7,8 @@ import { setPrefs, usePrefs, type Reading } from '../services/prefs';
 import { publicLive, useLive, type Live } from '../services/perso';
 import { goBack } from '../services/nav';
 import { EDITEURS, webcamsCherchees, webcamsOf } from '../services/webcams';
-import { Badge, DiscIcon, Fav, Section, Seg, SessionRow } from '../components/ui';
+import { Badge, DiscIcon, Fav, Section, Seg, SessionRow, SportSeg } from '../components/ui';
+import { discName } from '../services/sport';
 import { Chart } from '../components/Chart';
 import { CondCards, Criteria, DayTabs, daysOf, MapCompass, NoteCard } from '../components/Today';
 import { seriesFor } from './series';
@@ -124,9 +125,10 @@ function SpotView({ d, spot, now, day: dayParam }: { d: AllData; spot: PublicSpo
           <div class="row"><h1>{spot.name}</h1><Fav id={spot.id} name={spot.name} /></div>
           <Freshness d={d} now={now} />
         </div>
-        <span class="muted">{DISC_LABEL[disc]}{spot.waterBody === 'lagoon' ? ' · étang' : ''}</span>
+        <span class="muted">{discName(disc, prefs.sport, DISC_LABEL[disc])}{spot.waterBody === 'lagoon' ? ' · étang' : ''}</span>
       </header>
       <div class="row between">
+        {disc === 'wing' && <SportSeg />}
         {s?.levels && <Seg<Level> label={disc === 'wing' ? 'Mode' : 'Niveau de pratique'} value={level} onChange={(v) => setPrefs((p) => ({ ...p, levels: { ...p.levels, [disc]: v } }))} options={LEVELS_FOR[disc].map((l) => [l, LEVEL_LABEL[l]] as [Level, string])} />}
       </div>
       {disc === 'wing' && <LiveBox live={[...(live.live ?? []), ...publicLive(d.meteo?.obs, [spot])]} spot={spot.id} />}

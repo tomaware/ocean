@@ -21,7 +21,7 @@ export type PublicSpot = { id: string; name: string; kind: 'spot' | 'run'; disci
 export type Meta = { generatedAt: number; sources: { id: string; ok: boolean; message: string; points: number; models: string[]; lastObservationAgeMin: Record<string, number> | null }[];
   checks: { id: string; ok: boolean; detail: string }[]; disciplines: Record<Discipline, { available: boolean; source: string; note: string }>; rules: any };
 export type AllData = { meta: Meta; spots: PublicSpot[]; sessions: { generatedAt: number; sessions: Session[]; best: Record<Level, Record<Discipline, Session | null>> };
-  wing: any; surf: any; downwind: any; verify: any; meteo: any };
+  wing: any; kite?: any; surf: any; downwind: any; verify: any; meteo: any };
 
 const FILES = ['meta', 'spots', 'sessions', 'wing', 'surf', 'downwind', 'verify', 'meteo'] as const;
 let cache: Promise<AllData> | null = null;
@@ -29,7 +29,12 @@ let cache: Promise<AllData> | null = null;
 export function loadAll(base = './data/'): Promise<AllData> {
   if (!cache) {
     cache = Promise.all(FILES.map((f) => fetch(`${base}${f}.json`, { cache: 'no-cache' }).then((r) => { if (!r.ok) throw new Error(`${f}.json : HTTP ${r.status}`); return r.json(); })))
-      .then((arr) => Object.fromEntries(FILES.map((f, i) => [f, arr[i]])) as unknown as AllData);
+      .then(async (arr) => {
+        const d = Object.fromEntries(FILES.map((f, i) => [f, arr[i]])) as unknown as AllData;
+        // kitesurf (D-51) : facultatif, l'app reste utilisable si le fichier manque (ancienne publication)
+        d.kite = await fetch(`${base}kite.json`, { cache: 'no-cache' }).then((r) => (r.ok ? r.json() : null), () => null);
+        return d;
+      });
     cache.catch(() => { cache = null; });
   }
   return cache;

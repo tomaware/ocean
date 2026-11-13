@@ -1,11 +1,12 @@
 // Préférences de l'utilisateur, gardées sur cet appareil uniquement (navigateur).
 import { useEffect, useState } from 'preact/hooks';
 import type { Discipline, Level } from './data';
+import type { Sport } from './sport';
 
 export type Reading = 'synthese' | 'detail' | 'expert';
-export type Prefs = { levels: Record<Discipline, Level>; favorites: string[]; reading: Reading; perso: { enabled: boolean; url: string }; theme: 'auto' | 'light' | 'dark' };
+export type Prefs = { sport: Sport; levels: Record<Discipline, Level>; favorites: string[]; reading: Reading; perso: { enabled: boolean; url: string }; theme: 'auto' | 'light' | 'dark' };
 const KEY = 'ocean.prefs.v1';
-export const DEFAULT_PREFS: Prefs = { levels: { wing: 'secu', surf: 'intermediaire', downwind: 'intermediaire' }, favorites: [], reading: 'synthese', perso: { enabled: false, url: '' }, theme: 'auto' };
+export const DEFAULT_PREFS: Prefs = { sport: 'wing', levels: { wing: 'secu', surf: 'intermediaire', downwind: 'intermediaire' }, favorites: [], reading: 'synthese', perso: { enabled: false, url: '' }, theme: 'auto' };
 
 function read(): Prefs {
   try {
@@ -14,7 +15,8 @@ function read(): Prefs {
     const p = JSON.parse(raw);
     const levels = { ...DEFAULT_PREFS.levels, ...(p.levels ?? {}) };
     if (levels.wing !== 'secu' && levels.wing !== 'offshore') levels.wing = 'secu';   // ancienne préférence (3 niveaux) → Sécu first
-    return { ...DEFAULT_PREFS, ...p, levels, perso: { ...DEFAULT_PREFS.perso, ...(p.perso ?? {}) } };
+    const sport: Sport = p.sport === 'kite' ? 'kite' : 'wing';
+    return { ...DEFAULT_PREFS, ...p, sport, levels, perso: { ...DEFAULT_PREFS.perso, ...(p.perso ?? {}) } };
   } catch { return DEFAULT_PREFS; }
 }
 let current = read();

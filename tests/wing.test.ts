@@ -4,7 +4,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { loadRegistry } from '../pipeline/collect/points.ts';
 import { parseSuperPrevision } from '../pipeline/collect/superprevision.ts';
-import { scoreHour, sessions, wingForecast, gustFactor, windFactor, label, effWind, isKite, KITE_LABEL, type WingHour, type WingLevel } from '../pipeline/engines/wing.ts';
+import { scoreHour, sessions, wingForecast, gustFactor, windFactor, label, effWind, isKite, KITE_LABEL, KITE_VERSION, type WingHour, type WingLevel } from '../pipeline/engines/wing.ts';
 
 const registry = loadRegistry();
 const spot = (id: string) => registry.spots.find((s) => s.id === id)!;
@@ -40,13 +40,17 @@ test('wing v2 : cas de référence, modes Sécu first / Offshore', () => {
   assert.equal(sc('le-ponant', 18, 22, 135, 'secu').score, 10);
   // Pas assez de vent, nuit
   assert.equal(sc('almanarre', 10, 13, 290, 'secu').score, 0);
-  assert.equal(sc('almanarre', 12, 15, 290, 'offshore').score, 3.3);               // (12 - 11) / 3
+  // v2.2 (D-50) : avant 3,3 ((12 - 11) / 3) ; maintenant (12 - 10) / 3 = 6,7
+  assert.equal(sc('almanarre', 12, 15, 290, 'offshore').score, 6.7);
+  assert.equal(sc('almanarre', 12, 15, 290, 'secu').score, 6.7);                  // avant 0 (12 nd = seuil Sécu first)
+  assert.equal(sc('almanarre', 13, 16, 290, 'secu').score, 10);                   // avant 3,3 : « dès 13 nd tu peux partir »
   assert.equal(sc('almanarre', 10, 13, 290, 'secu').limit, 'pas assez de vent');
   assert.equal(sc('almanarre', 22, 26, 290, 'offshore', false).score, 0);
 });
 
 test('wing : facteurs et libellés', () => {
-  assert.equal(windFactor(12, 'secu'), 0); assert.equal(windFactor(15, 'secu'), 1); assert.equal(windFactor(26, 'secu'), 1);
+  // v2.2 (D-50) : avant windFactor(12) = 0 et 1 seulement à 15 nd ; maintenant 0 à 10, 1 dès 13 (deux modes)
+  assert.equal(windFactor(10, 'secu'), 0); assert.equal(windFactor(11.5, 'offshore'), 0.5); assert.equal(windFactor(13, 'secu'), 1); assert.equal(windFactor(15, 'secu'), 1); assert.equal(windFactor(26, 'secu'), 1);
   // v2.1 (D-49) : avant, windFactor(35) = 1 et 0 au-delà de 35 ; maintenant 1 jusqu'à 28, 0,5 à 29, 0 dès 30
   assert.equal(windFactor(28, 'offshore'), 1); assert.equal(windFactor(29, 'secu'), 0.5); assert.equal(windFactor(30, 'offshore'), 0); assert.equal(windFactor(35, 'offshore'), 0);
   assert.equal(gustFactor(1.3), 1); assert.equal(gustFactor(1.6), 0.6); assert.equal(gustFactor(2.2), 0.4);
@@ -150,4 +154,47 @@ test('wing : étang de Berre hors super prévision → modèle le plus juste à 
   assert.equal((j.source as any).kind, 'corrected'); assert.deepEqual(j.hours.map((h) => h.kn), [15.6, 15.6, 15.6]);
   const se = scoreHour(18, 20, 150, true, registry.spots.find((s) => s.id === 'le-jai')!, 'secu');
   assert.equal(se.score, 6); assert.match(String(se.limit), /déconseillée/);
+});
+
+// ------------------------------------------------------------------ KITESURF v1.0 (D-51, Tom 13/11)
+// Même formule que le wing, plage de vent kite : 0 jusqu'à 15 nd, 15 → 20, plein de 20 à 35, 0 à 40 nd.
+const kc = (id: string, kn: number, gust: number | null, dir: number, L: WingLevel, day = true) => scoreHour(kn, gust, dir, day, spot(id), L, 'kite');
+test('kite v1.0 : force du vent (tableau validé par Tom)', () => {
+  assert.equal(KITE_VERSION, '1.0.0');
+  const row = (kn: number) => kc('almanarre', kn, kn * 1.1, 335, 'secu').score;   // vent régulier side-shore
+  assert.deepEqual([12, 15, 16, 18, 20, 28, 35, 37.5, 40, 42].map(row), [0, 0, 2, 6, 10, 10, 10, 5, 0, 0]);
+  assert.equal(windFactor(17.5, 'offshore', 'kite'), 0.5);
+  assert.equal(kc('almanarre', 16, 18, 335, 'secu').limit, 'pas assez de vent');
+  assert.equal(kc('almanarre', 38, 41, 335, 'secu').limit, 'trop de vent (plus de 35 nd)');
+  // jamais de « Kite session » en kite, même à 30 nd
+  assert.equal(kc('almanarre', 30, 33, 335, 'secu').kite, false);
+});
+test('kite v1.0 : rafales et direction comme le wing, modes Sécu first / Offshore', () => {
+  // La Franqui en tramontane 25 nd (vent de terre) : 0 en Sécu first, 10 en Offshore, signalé
+  assert.equal(kc('la-franqui', 25, 30, 315, 'secu').score, 0);
+  assert.equal(kc('la-franqui', 25, 30, 315, 'offshore').score, 10);
+  assert.match(String(kc('la-franqui', 25, 30, 315, 'offshore').limit), /vent de terre/);
+  // rafaleux : 24 nd rafales 36 (× 1,5) → vent de la note 30, R = 0,73
+  assert.equal(kc('almanarre', 24, 36, 335, 'secu').score, 7.3);
+  // nuit : 0
+  assert.equal(kc('almanarre', 25, 28, 335, 'secu', false).score, 0);
+});
+test('wing et kite complémentaires : petit vent → wing, vent fort → kite', () => {
+  const both = (kn: number) => [sc('almanarre', kn, kn * 1.1, 335, 'secu').score, kc('almanarre', kn, kn * 1.1, 335, 'secu').score];
+  assert.deepEqual(both(14), [10, 0]);
+  assert.deepEqual(both(22), [10, 10]);
+  assert.deepEqual(both(32), [0, 10]);
+});
+test('kite : prévision publiée sur la super prévision collectée, même provenance que le wing', () => {
+  const t0 = Date.UTC(2026, 10, 10, 11);
+  const spots: Record<string, { t: number; v: number; o: string; r: number }[]> = {};
+  for (const s of registry.spots.filter((x) => x.legacy.superPrevisionVent)) spots[s.legacy.superPrevisionVent!] = [0, 1, 2].map((k) => ({ t: t0 + k * 3600e3, v: 24, o: 'ONO', r: 28 }));
+  const { block } = parseSuperPrevision({ spots }, registry, t0);
+  const k = wingForecast(block, registry, t0, undefined, 'kite');
+  assert.equal(k.sport, 'kite'); assert.equal(k.version, '1.0.0');
+  assert.deepEqual((k as any).levels.secu, { min: 15, lo: 20, hi: 35, max: 40 });
+  const alm = k.spots.find((x) => x.id === 'almanarre')!;
+  assert.ok(alm.hours.every((h) => h.kite === false && h.scores.secu === 10));
+  assert.equal(alm.sessions.secu.length, 1);
+  assert.equal(k.provenance?.kind, 'corrected');
 });

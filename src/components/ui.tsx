@@ -3,7 +3,8 @@ import { Route, Star, Waves, Wind } from 'lucide-preact';
 import type { Discipline, Session } from '../services/data';
 import { DISC_LABEL, LEVEL_LABEL } from '../services/data';
 import { hh, span } from '../services/format';
-import { toggleFavorite, usePrefs } from '../services/prefs';
+import { setPrefs, toggleFavorite, usePrefs } from '../services/prefs';
+import { SPORT_LABEL, type Sport } from '../services/sport';
 import { Stars } from './Views';
 
 /** Note en étoiles sur 3 (demande de Tom, 10/11) ; « Ça envoie » quand la session wing a au moins 4 h à plus de 20 nd. */
@@ -67,3 +68,9 @@ export function Section({ title, aside, children }: { title: ComponentChildren; 
 }
 
 export const discTitle = (d: Discipline) => DISC_LABEL[d];
+
+/** WIND : bascule Wing | Kite (D-51), gardée dans les préférences de l'appareil. */
+export function SportSeg() {
+  const prefs = usePrefs();
+  return <Seg<Sport> label="Sport" value={prefs.sport} onChange={(v) => setPrefs((p) => ({ ...p, sport: v }))} options={(['wing', 'kite'] as Sport[]).map((x) => [x, SPORT_LABEL[x]] as [Sport, string])} />;
+}

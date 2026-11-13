@@ -95,8 +95,9 @@ function main(): void {
   const registry = loadRegistry();
   const collect = read('data/v1/collect/status.json'), engines = read('data/v1/engines/status.json'), verify = opt('data/v1/verify/scores.json');
   const surf = read('data/v1/engines/surf.json'), downwind = read('data/v1/engines/downwind.json'), wing = read('data/v1/engines/wing.json');
+  const kite = opt('data/v1/engines/kite.json');   // kitesurf (D-51)
   const now = collect.generatedAt as number;
-  const sessions = allSessions({ wing, surf, downwind }, now);
+  const sessions = allSessions({ wing, kite, surf, downwind }, now);
   const best = Object.fromEntries(ALL_LEVELS.map((L) => [L, bestByDiscipline(sessions, L)]));
   const checks: Check[] = [...collect.checks, ...engines.checks, ...(verify?.checks ?? [])];
   const meta = {
@@ -105,6 +106,7 @@ function main(): void {
     checks: checks.map((c) => ({ id: c.id, ok: c.ok, detail: c.detail })),
     disciplines: {
       wing: { available: !!wing.available, source: 'Vent corrigé de la super prévision (modèles pondérés par leur erreur aux balises)', note: 'Note wing v' + wing.version },
+      kite: { available: !!kite?.available, source: 'Vent corrigé de la super prévision (modèles pondérés par leur erreur aux balises)', note: kite ? 'Note kite v' + kite.version : 'Note kite indisponible' },
       surf: { available: true, source: surf.sources?.copernicus ? 'Moteur Super Prévi Surf : 6 modèles de vagues dont Copernicus Med-WAV (4,2 km), recalés sur les bouées Candhis ; vent AROME / ECMWF' : 'Moteur Super Prévi Surf : 5 modèles de vagues recalés sur les bouées Candhis, vent AROME / ECMWF (Copernicus indisponible pour cette mise à jour)', note: surf.sources?.copernicus ? 'Generated using E.U. Copernicus Marine Service Information' : 'Copernicus absent ou trop ancien' },
       downwind: { available: true, source: 'Moteur downwind : vent AROME / ECMWF recalé sur la super prévision, houle au large (5 modèles)', note: '' },
     },
@@ -115,6 +117,7 @@ function main(): void {
     'spots.json': JSON.stringify(publicSpots(registry)),
     'sessions.json': JSON.stringify({ generatedAt: now, sessions, best }),
     'wing.json': JSON.stringify(wing),
+    ...(kite ? { 'kite.json': JSON.stringify(kite) } : {}),
     'surf.json': JSON.stringify(surf),
     'downwind.json': JSON.stringify(downwind),
     'verify.json': JSON.stringify(verify ?? { generatedAt: now, unavailable: true }),

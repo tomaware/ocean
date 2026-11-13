@@ -15,11 +15,13 @@ for (const [name, opt] of [['mobile', { ...devices['iPhone 13'], locale: 'fr-FR'
   let shown = false;
   p.on('pageerror', (e) => { if (name === 'langue-système' && /language tag/.test(e.message)) { if (!shown) console.log('[interface] langue système invalide (attendu, graphique seul touché) :', (e.stack ?? '').split('\n').slice(0, 3).join(' | ')); shown = true; } else errs.push(`${name} : ${e.message}`); });
   p.on('console', (m) => { if (m.type() === 'error' && !/openstreetmap|fonts\.g|net::/.test(m.text())) errs.push(`${name} console : ${m.text()}`); });
-  for (const reading of ['synthese', 'expert']) {
+  // 3e passage : WIND en kitesurf (bascule Wing | Kite, D-51)
+  for (const reading of ['synthese', 'expert', 'kite']) {
     await p.goto(base + '/#/');
-    await p.evaluate((r) => localStorage.setItem('ocean.prefs.v1', JSON.stringify({ reading: r })), reading);
+    await p.evaluate((r) => localStorage.setItem('ocean.prefs.v1', JSON.stringify(r === 'kite' ? { reading: 'synthese', sport: 'kite' } : { reading: r })), reading);
     if (name === 'sombre') { await p.reload(); const bg = await p.evaluate(() => getComputedStyle(document.body).backgroundColor); if (bg !== 'rgb(13, 25, 30)') errs.push(`sombre : fond ${bg} (thème sombre non appliqué)`); }
-    for (const [r, text] of routes) {
+    for (const [r, text0] of routes) {
+      const text = reading === 'kite' ? text0.replace('en wing', 'en kite') : text0;
       await p.goto(`${base}/#/${r}`); await p.reload();
       try { await p.getByRole('heading', { name: text }).first().waitFor({ timeout: 8000 }); } catch { errs.push(`${name} #/${r} : « ${text} » absent`); }
       const over = await p.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
@@ -127,5 +129,5 @@ for (const [name, opt] of [['mobile', { ...devices['iPhone 13'], locale: 'fr-FR'
   await ctx.close();
 }
 await b.close();
-console.log(errs.length ? 'ÉCHEC\n' + errs.join('\n') : `[interface] OK : ${routes.length} écrans × 2 niveaux de lecture × mobile / ordinateur / langue système / sombre, aucune erreur`);
+console.log(errs.length ? 'ÉCHEC\n' + errs.join('\n') : `[interface] OK : ${routes.length} écrans × 2 niveaux de lecture + kite × mobile / ordinateur / langue système / sombre, aucune erreur`);
 process.exit(errs.length ? 1 : 0);

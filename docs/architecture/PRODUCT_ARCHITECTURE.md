@@ -315,3 +315,14 @@ Les apps actuelles restent en ligne jusqu'à ce que leur remplaçante soit véri
 - **Affichage** : 1 étoile rouge + « Kite session » (« Kite » en petit) partout — fiche spot (étoiles du jour, barres heure par heure, tableau, survol), Prévision 5 jours, widgets iPhone, Mac et Windows. Les étoiles d'un jour viennent de la meilleure heure hors kite ; sans étoile mais avec du kite, le jour prend l'étoile rouge. Rouge : #D6343C (clair) / #FF6B6B (sombre).
 - **Données des widgets** : 8ᵉ valeur de chaque heure = kite (1/0), 5ᵉ valeur des comptes du jour = heures kite (ajoutées en fin de tableau : les anciens widgets continuent de fonctionner, sans l'étoile rouge, jusqu'à leur mise à jour automatique).
 - Cas de référence avant / après dans `docs/product/WING_SCORE.md` (v2.1) et `tests/wing.test.ts` : 26 et 28 nd 10 → 10 ; 29 nd 10 → 5 + kite ; 30 à 35 nd 10 → 0 + kite. Rendu des quatre surfaces vérifié dans `tests/kite.test.ts` (jeudi fictif à 31 nd à Beauduc).
+
+### D-50 (13/11/2026) — note wing v2.2 : pleine note dès 13 nd
+- Demande de Tom : « dès 13 nœuds tu peux commencer à partir en session ». Choix validé : note pleine dès 13 nd (monte de 10 à 13 nd), même seuil en Sécu first et Offshore. Avant : 12 → 15 nd (Sécu first), 11 → 14 nd (Offshore).
+- Cas avant / après dans `WING_SCORE.md` (v2.2) et `tests/wing.test.ts` : 12 nd 0 → 6,7 ; 13 nd 3,3 → 10 ; 14 nd 6,7 → 10.
+
+### D-51 (13/11/2026) — kitesurf dans l'onglet WIND : bascule Wing | Kite
+- Demande de Tom : séparer le vent en deux catégories complémentaires — wing pour le petit vent, kite pour le vent fort — avec le même affichage et une note propre à chaque sport.
+- **Note kite v1.0** (validée par Tom) : même formule et mêmes modes Sécu first / Offshore que le wing ; force 0 jusqu'à 15 nd, 1 de 20 à 35 nd, 0 à 40 nd. Détail : `docs/product/KITE_SCORE.md`.
+- **Pipeline** : le moteur wing calcule aussi le kite (`wingForecast(…, 'kite')`), publié dans `kite.json` ; les créneaux kite sont dans `sessions.json` avec la discipline « kite » (« Ça envoie » réservé au wing). Contrôle `sorties-kite` dans l'analyse.
+- **App** : bascule Wing | Kite en haut de WIND et de la fiche spot, gardée sur l'appareil. L'app ne recalcule rien : elle affiche `kite.json` et les créneaux kite à la place des données wing (`src/services/sport.ts`). Sans `kite.json` (ancienne publication), l'app reste en wing.
+- **Vérifié** : 104 tests, contrôle des types, test d'interface (20 écrans en wing synthèse, wing expert et kite, sur 4 affichages) sur les données réellement publiées rejouées avec les nouvelles notes. **Widgets** : toujours en wing.

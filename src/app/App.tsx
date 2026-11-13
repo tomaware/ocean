@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'preact/hooks';
+import { useEffect, useMemo, useState } from 'preact/hooks';
 import { LayoutGrid, Menu, MessageSquare, Moon, ShieldCheck, Sun, User, X } from 'lucide-preact';
 import { spotDiscipline, useData } from '../services/data';
 import { MODULES, moduleOf, Profile, Reliability, SpotPage } from '../features/pages';
@@ -6,6 +6,7 @@ import { Module, subsFor, type Sub } from '../features/modules';
 import { FeedbackPage, WidgetsPage } from '../features/extras';
 import { setPrefs, usePrefs } from '../services/prefs';
 import { installNav, lastSub } from '../services/nav';
+import { forSport } from '../services/sport';
 
 const TITLES: Record<string, string> = { fiabilite: 'Fiabilité', avis: 'Avis', widgets: 'Widgets', profil: 'Profil' };
 
@@ -26,7 +27,9 @@ export function App() {
   const dark = isDark(prefs.theme);
   const [route, setRoute] = useState(parse());
   const [now, setNow] = useState(Date.now());
-  const { data, error } = useData();
+  const { data: raw, error } = useData();
+  // WIND : wing ou kite selon le choix gardé dans les préférences (D-51)
+  const data = useMemo(() => (raw ? forSport(raw, prefs.sport) : null), [raw, prefs.sport]);
   // menu du téléphone (Profil, Widgets, Avis) : se ferme au changement d'écran, au toucher ailleurs ou avec Échap
   const [menu, setMenu] = useState(false);
   useEffect(() => { setMenu(false); }, [location.hash]);

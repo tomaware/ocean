@@ -3,7 +3,7 @@
 // les créneaux d'au moins 2 h d'affilée à 5/10 ou plus, de jour (même règle que la note wing, D-17).
 import type { Registry } from '../../src/types/contracts.ts';
 
-export type Discipline = 'wing' | 'surf' | 'downwind';
+export type Discipline = 'wing' | 'kite' | 'surf' | 'downwind';
 export type Level = 'debutant' | 'intermediaire' | 'confirme' | 'secu' | 'offshore';
 export const LEVELS: Level[] = ['debutant', 'intermediaire', 'confirme'];          // downwind (moteur actuel)
 export const WING_MODES: Level[] = ['secu', 'offshore'];                          // wing v2 (D-19)
@@ -51,7 +51,8 @@ function mk(d: Discipline, spot: string, spotName: string, level: Level | 'tous'
     label: label(peak), tone: peak >= 7 ? 'top' : 'ok', text: text(pi), why: why(pi), confidence: conf(pi), envoie: false, windyHours: null };
 }
 
-export function wingSessions(wing: any, now: number): Session[] {
+/** Créneaux wing, ou kite (D-51) : même règle (2 h à 5/10), discipline « kite » ; « Ça envoie » réservé au wing. */
+export function wingSessions(wing: any, now: number, disc: 'wing' | 'kite' = 'wing'): Session[] {
   const out: Session[] = [];
   for (const s of wing.spots ?? []) {
     const times = s.hours.map((h: any) => h.t);
@@ -61,9 +62,9 @@ export function wingSessions(wing: any, now: number): Session[] {
       // « Kite session » (plus de 28 nd, D-49) : jamais dans un créneau wing
       for (const w of windows(s.hours.map((h: any, i: number) => ({ t: h.t, s: h.kite ? null : h.scores[L], day: h.day, i })), now)) {
         const windy = w.idx.filter((i) => (s.hours[i].kn ?? 0) > ENVOIE_KN).length;
-        out.push({ ...mk('wing', s.id, s.name, L, w, sc, times,
+        out.push({ ...mk(disc, s.id, s.name, L, w, sc, times,
           (i) => { const h = s.hours[i]; return `${Math.round(h.kn)} nd de ${compass(h.dir)} (rafales ${h.gust === null ? '—' : Math.round(h.gust)})${h.sector ? ' · ' + sectorText(h.sector) : ''}`; },
-          (i) => s.hours[i].limit[L], (i) => s.hours[i].conf), envoie: windy >= ENVOIE_H, windyHours: windy });
+          (i) => s.hours[i].limit[L], (i) => s.hours[i].conf), envoie: disc === 'wing' && windy >= ENVOIE_H, windyHours: disc === 'wing' ? windy : null });
       }
     }
   }
@@ -104,15 +105,15 @@ export function downwindSessions(dw: any, now: number): Session[] {
   return out;
 }
 
-export function allSessions(input: { wing: any; surf: any; downwind: any }, now: number): Session[] {
-  return [...wingSessions(input.wing, now), ...surfSessions(input.surf, now), ...downwindSessions(input.downwind, now)].sort((a, b) => a.start - b.start || b.peak - a.peak);
+export function allSessions(input: { wing: any; kite?: any; surf: any; downwind: any }, now: number): Session[] {
+  return [...wingSessions(input.wing, now), ...(input.kite ? wingSessions(input.kite, now, 'kite') : []), ...surfSessions(input.surf, now), ...downwindSessions(input.downwind, now)].sort((a, b) => a.start - b.start || b.peak - a.peak);
 }
 
 /** Accueil : meilleure session à venir par discipline (pas de classement entre disciplines, D-15). */
 export function bestByDiscipline(sessions: Session[], level: Level): Record<Discipline, Session | null> {
   const pick = (d: Discipline) => sessions.filter((s) => s.discipline === d && (s.level === level || s.level === 'tous'))
     .sort((a, b) => b.peak * 0.4 + b.mean * 0.6 + Math.min(b.hours, 5) * 0.1 - (a.peak * 0.4 + a.mean * 0.6 + Math.min(a.hours, 5) * 0.1))[0] ?? null;
-  return { wing: pick('wing'), surf: pick('surf'), downwind: pick('downwind') };
+  return { wing: pick('wing'), kite: pick('kite'), surf: pick('surf'), downwind: pick('downwind') };
 }
 
 /** Registre public : ce que l'interface a besoin de savoir sur chaque spot (pas d'identifiant Winds-Up). */

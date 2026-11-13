@@ -5,10 +5,11 @@ import { DISC_LABEL, distanceKm, HOME, LEVEL_LABEL, LEVELS_FOR, SESSION_SPOTS, S
 import { compass, dayKey, dayLabel, dayShort, hh, hourOf, n0, n1, span } from '../services/format';
 import { setPrefs, usePrefs } from '../services/prefs';
 import { publicLive, useLive } from '../services/perso';
-import { Badge, Fav, Section, Seg } from '../components/ui';
+import { Badge, Fav, Section, Seg, SportSeg } from '../components/ui';
 import { SpotMap } from '../components/SpotMap';
 import { headFor, isKiteAt, ModuleView, pickHours, starsOf } from '../components/Views';
 import { ScoreBars } from '../components/Today';
+import { discName } from '../services/sport';
 import { seriesFor, type Series } from './series';
 import { bestScoreBySpot, Freshness, levelFor, LiveBox, matches, moduleOf, upcoming } from './pages';
 
@@ -89,7 +90,7 @@ function Prevision({ d, now, disc, spots, L, query }: { d: AllData; now: number;
   const selSpot = sel ? spots.find((s) => s.id === sel.spot) : null;
   return (
     <Section title="Prévision 5 jours">
-      <p class="faint">Chaque case se remplit selon les heures de jour à 1 ★ (vert), 2 ★ (orange) et 3 ★ (violet) ; le chiffre = heures au meilleur niveau du jour. Case vide = pas de session 2H ce jour-là.{disc === 'wing' ? ' ★ rouge « Kite » = plus de 28 nd : Kite session, pas pour le wing.' : ''} Touche une case pour le détail.</p>
+      <p class="faint">Chaque case se remplit selon les heures de jour à 1 ★ (vert), 2 ★ (orange) et 3 ★ (violet) ; le chiffre = heures au meilleur niveau du jour. Case vide = pas de session 2H ce jour-là.{disc === 'wing' && prefs.sport === 'wing' ? ' ★ rouge « Kite » = plus de 28 nd : Kite session, pas pour le wing (voir l’onglet Kite).' : ''} Touche une case pour le détail.</p>
       <div class="card table-wrap">
         <table class="grid5">
           <thead><tr><th />{spots.map((s) => <th key={s.id} title={s.name}><strong>{shortName(s)}</strong></th>)}</tr></thead>
@@ -148,6 +149,7 @@ function SessionCard({ d, s, now, L, big }: { d: AllData; s: Session; now: numbe
 // ------------------------------------------------------------ module
 export function Module({ d, now, disc, sub, query }: { d: AllData; now: number; disc: Discipline; sub: Sub; query: URLSearchParams }) {
   const prefs = usePrefs();
+  const kite = disc === 'wing' && prefs.sport === 'kite';
   const m = moduleOf(disc);
   const L = levelFor(prefs, disc);
   const [onlyFav, setOnlyFav] = useState(false);
@@ -168,7 +170,7 @@ export function Module({ d, now, disc, sub, query }: { d: AllData; now: number; 
   let body;
   if (sub === 'sessions') body = (
     <Section title={`Sessions de 2H${tomorrowOnly ? ' demain' : ''} (Localisation ${HOME.name})`} aside={<Seg label="Spots" value={onlyFav ? 'fav' : 'all'} onChange={(v) => setOnlyFav(v === 'fav')} options={[['all', 'Tous'], ['fav', 'Favoris']]} />}>
-      <p class="faint">{tomorrowOnly ? `Demain seulement, à ${spots.filter((s) => near.has(s.id)).map((s) => s.name.replace(/\s*\(.*\)/, '')).join(', ')} ; les autres jours et spots sont dans Prévision.` : <>Spots à moins de {HOME.radiusKm} km de {HOME.name}{far.length ? ` (hors ${far.map((s) => s.name.replace(/\s*\(.*\)/, '')).join(', ')} : trop loin pour 2 h ; voir Prévision)` : ''}.{disc === 'wing' ? ' « Ça envoie » = au moins 4 h à plus de 20 nd.' : ''}</>}</p>
+      <p class="faint">{tomorrowOnly ? `Demain seulement, à ${spots.filter((s) => near.has(s.id)).map((s) => s.name.replace(/\s*\(.*\)/, '')).join(', ')} ; les autres jours et spots sont dans Prévision.` : <>Spots à moins de {HOME.radiusKm} km de {HOME.name}{far.length ? ` (hors ${far.map((s) => s.name.replace(/\s*\(.*\)/, '')).join(', ')} : trop loin pour 2 h ; voir Prévision)` : ''}.{disc === 'wing' && prefs.sport === 'wing' ? ' « Ça envoie » = au moins 4 h à plus de 20 nd.' : ''}</>}</p>
       {byDay.size === 0 && <div class="card empty">Aucune session {tomorrowOnly ? 'demain' : 'en vue'}{onlyFav ? ' sur tes favoris' : ''}.</div>}
       {[...byDay.values()].map((arr) => (
         <div key={arr[0].id} class="stack">
@@ -191,7 +193,7 @@ export function Module({ d, now, disc, sub, query }: { d: AllData; now: number; 
       <div class="card"><div class="list">
         {spots.map((s) => (
           <a key={s.id} class="session compact" href={`#/spot/${s.id}`}>
-            <div class="stack" style={{ gap: '2px' }}><strong>{s.name}</strong><span class="faint">{s.waterBody === 'lagoon' ? 'étang' : DISC_LABEL[disc]}{s.orientation?.confidence === 'low' ? ' · orientation à confirmer' : ''}</span></div>
+            <div class="stack" style={{ gap: '2px' }}><strong>{s.name}</strong><span class="faint">{s.waterBody === 'lagoon' ? 'étang' : discName(disc, prefs.sport, DISC_LABEL[disc])}{s.orientation?.confidence === 'low' ? ' · orientation à confirmer' : ''}</span></div>
             <div class="row"><Badge score={best[s.id] ?? null} /><Fav id={s.id} name={s.name} /></div>
           </a>
         ))}
@@ -211,11 +213,12 @@ export function Module({ d, now, disc, sub, query }: { d: AllData; now: number; 
   return (
     <>
       <header class="page-head">
-        <span class="eyebrow">{m.tab} · {DISC_LABEL[disc]}</span>
-        <h1>{m.title}</h1>
-        <span class="muted">{m.sub}</span>
+        <span class="eyebrow">{m.tab} · {discName(disc, prefs.sport, DISC_LABEL[disc])}</span>
+        <h1>{kite ? 'Où naviguer en kite ?' : m.title}</h1>
+        <span class="muted">{kite ? m.sub.replace('Wing foil', 'Kitesurf') : m.sub}</span>
         <div class="row between"><Freshness d={d} now={now} />
-          {disc !== 'surf' && <Seg<Level> label={disc === 'wing' ? 'Mode' : `Niveau ${DISC_LABEL[disc]}`} value={L} onChange={(v) => setPrefs((p) => ({ ...p, levels: { ...p.levels, [disc]: v } }))} options={LEVELS_FOR[disc].map((l) => [l, LEVEL_LABEL[l]] as [Level, string])} />}
+          <div class="row" style={{ gap: '8px', flexWrap: 'wrap' }}>{disc === 'wing' && <SportSeg />}
+          {disc !== 'surf' && <Seg<Level> label={disc === 'wing' ? 'Mode' : `Niveau ${DISC_LABEL[disc]}`} value={L} onChange={(v) => setPrefs((p) => ({ ...p, levels: { ...p.levels, [disc]: v } }))} options={LEVELS_FOR[disc].map((l) => [l, LEVEL_LABEL[l]] as [Level, string])} />}</div>
         </div>
       </header>
       <div class="module">
@@ -225,7 +228,7 @@ export function Module({ d, now, disc, sub, query }: { d: AllData; now: number; 
         <div class="module-body">
           {!meta.available && <div class="notice warn">Prévision indisponible pour cette mise à jour : {meta.note || meta.source}</div>}
           {body}
-          <p class="faint">Session 2H = au moins 2 h d’affilée à 5/10 ou plus, de jour{disc === 'wing' ? ', hors Kite session (plus de 28 nd)' : ''}. Source : {meta.source}.</p>
+          <p class="faint">Session 2H = au moins 2 h d’affilée à 5/10 ou plus, de jour{disc === 'wing' && !kite ? ', hors Kite session (plus de 28 nd)' : ''}. Source : {meta.source}.</p>
         </div>
       </div>
     </>
