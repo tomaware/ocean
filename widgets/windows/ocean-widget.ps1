@@ -309,7 +309,8 @@ function Get-CreneauxModel($data, $reg, [double]$now) {
       # colonnes des heures de jour + note du jour (Tom, 14/11, comme la Prévision 5 jours de l'app)
       $L = if ($level -eq 'offshore') { 6 } else { 5 }
       $hh = @($sp.hours | Where-Object { $_[4] -and (Get-DayKey $_[0]) -eq $days[$i] })
-      $cols = @($hh | ForEach-Object { if (@($_).Count -gt 7 -and $_[7]) { @(10, 'kite') } else { $v = if ($null -eq $_[$L]) { 0 } else { [double]$_[$L] }; @($v, (Get-Stars $_[$L])) } })
+      # « , » devant chaque paire : sinon PowerShell aplatit les paires en une seule liste
+      $cols = @($hh | ForEach-Object { if (@($_).Count -gt 7 -and $_[7]) { , @(10, 'kite') } else { $v = if ($null -eq $_[$L]) { 0 } else { [double]$_[$L] }; , @($v, (Get-Stars $_[$L])) } })
       $okv = @($hh | Where-Object { -not (@($_).Count -gt 7 -and $_[7]) -and $null -ne $_[$L] } | ForEach-Object { [double]$_[$L] })
       $best = if ($okv.Count) { ($okv | Measure-Object -Maximum).Maximum } else { -1 }
       $calm = -not @($cols | Where-Object { $_[1] -eq 'kite' -or $_[1] -gt 0 }).Count
