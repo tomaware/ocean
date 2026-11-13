@@ -10,4 +10,5 @@ if (!j.spots || j.seuil == null) { console.log('ABSENT : le script renvoie la pr
 const ids = Object.keys(j.spots);
 console.log(`PRÉSENT : seuil ${j.seuil} nd, heures ${j.heures?.join('–')} h, ${ids.length} spots`);
 for (const id of ids) { const s = j.spots[id];
-  console.log(`  spot ${ids.indexOf(id) + 1} : ${s.jour?.length ?? 0} heure(s) aujourd’hui, ${s.jours?.length ?? 0} jour(s) d’historique, du ${s.jours?.[0]?.[0] ?? '—'} au ${s.jours?.at(-1)?.[0] ?? '—'}`); }
+  const hrs = (s.jour ?? []).map((x: any) => new Date(x[0]).toLocaleTimeString('fr-FR', { timeZone: 'Europe/Paris', hour: '2-digit' })).join(' ');
+  console.log(`  spot ${ids.indexOf(id) + 1} : ${s.jour?.length ?? 0} heure(s) aujourd’hui [${hrs}], ${s.jours?.length ?? 0} jour(s) d’historique, du ${s.jours?.[0]?.[0] ?? '—'} au ${s.jours?.at(-1)?.[0] ?? '—'}`); }
