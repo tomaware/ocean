@@ -1,6 +1,6 @@
 # Rapport d'analyse (② ANALYSE)
 
-Généré le 2026-11-13 14:30 UTC par `pipeline/engines/run.ts`, juste après la collecte.
+Généré le 2026-11-13 14:39 UTC par `pipeline/engines/run.ts`, juste après la collecte.
 
 Les moteurs des apps actuelles (copies non modifiées dans `legacy/`) sont alimentés par la collecte commune. Le test golden refait le calcul comme les apps actuelles, avec leurs propres parseurs sur les mêmes réponses brutes, et exige les mêmes notes à ±0.1.
 
@@ -14,8 +14,8 @@ Les moteurs des apps actuelles (copies non modifiées dans `legacy/`) sont alime
 | sorties-surf | ✅ | 6/6 spots notés ; 12 créneaux |
 | houle-direction-downwind | ✅ | direction de la houle (affichage, carte) : 288/288 heures |
 | sorties-downwind | ✅ | 3/3 parcours notés ; 0 meilleurs créneaux |
-| ecart-prod-surf | ✅ | notes surf OCEAN vs app en service (calcul prod. 15 min avant, même extrait Copernicus) : médiane 0.00, 90 % ≤ 0.00, max 0.20 sur 668 heures (max : sete ven. 16:00, OCEAN 1.7 / prod 1.9) |
-| ecart-prod-downwind | ✅ | notes downwind (intermédiaire, de jour) OCEAN vs app en service (calcul prod. 60 min avant) : médiane 0.00, 90 % ≤ 0.00, max 3.50 sur 114 heures |
+| ecart-prod-surf | ✅ | notes surf OCEAN vs app en service (calcul prod. 24 min avant, même extrait Copernicus) : médiane 0.00, 90 % ≤ 0.00, max 1.20 sur 668 heures (max : palavas ven. 20:00, OCEAN 4.3 / prod 3.1) |
+| ecart-prod-downwind | ✅ | notes downwind (intermédiaire, de jour) OCEAN vs app en service (calcul prod. 69 min avant) : médiane 0.00, 90 % ≤ 0.00, max 3.50 sur 114 heures |
 | sorties-wing | ✅ | 7 spots notés (wing v2.1.0) ; 5 session(s) 2H en mode Sécu first sur les heures prévues |
 | confidentialite-moteurs | ✅ | aucun relevé Winds-Up ni clé dans les sorties (seuls les facteurs de correction dérivés y figurent, comme dans l’app downwind actuelle) |
 | copernicus-surf | ✅ | Copernicus Med-WAV inclus dans le moteur surf (comme l’app en service) |
