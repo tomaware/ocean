@@ -357,8 +357,8 @@ table.wg tr.wg-stars .stars .off { opacity: .55; }
 .player input[type="range"] { width: 100%; accent-color: var(--c-accent); }
 .pticks { display: flex; justify-content: space-between; font-size: var(--fs-xs); color: var(--c-ink-3); }
 /* Carte plus grande (Tom, 13/11) : presque tout l'écran, et plein écran au bouton */
-.mapplayer .mapbox .map { height: min(74vh, 760px); min-height: 420px; }
-@media (max-width: 560px) { .mapplayer .mapbox .map { height: 64vh; min-height: 360px; } }
+.mapplayer .mapbox .map { height: min(52vh, 540px); min-height: 360px; }
+@media (max-width: 560px) { .mapplayer .mapbox .map { height: 46vh; min-height: 300px; } }
 .fullbtn { position: absolute; right: 10px; bottom: 30px; z-index: 800; width: 40px; height: 40px; border-radius: 10px; border: 0; background: var(--c-surface); color: var(--c-ink); box-shadow: 0 2px 8px rgba(0,0,0,.25); display: grid; place-items: center; cursor: pointer; }
 .mapbox.full, .mapplayer.full { position: fixed; inset: 0; z-index: 3000; margin: 0; border-radius: 0; background: var(--c-bg); }
 .mapbox.full .map { height: 100vh !important; border-radius: 0; }

@@ -58,7 +58,6 @@ export function MapPlayer({ d, spots, disc, L, now }: { d: AllData; spots: Publi
           <div class="pticks" aria-hidden="true">{[7, 9, 12, 15, 18, 21].map((h) => <span key={h}>{h} h</span>)}</div>
         </div>
       </div>
-      <p class="faint">Repères colorés comme les étoiles selon la note de l’heure affichée{disc === 'wing' ? ' (gris : pas de session, nuit ou Kite session)' : ' (gris : pas de session ou nuit)'}. Vent sur la carte : modèle Météo-France brut. Touche un spot pour sa fiche.</p>
     </div>
   );
 }

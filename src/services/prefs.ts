@@ -2,12 +2,12 @@
 import { useEffect, useState } from 'preact/hooks';
 import type { Discipline, Level } from './data';
 import type { Sport } from './sport';
-import type { TabLayout } from './layout';
+import { DEFAULT_LAYOUT, type TabLayout } from './layout';
 
 export type Reading = 'synthese' | 'detail' | 'expert';
 export type Prefs = { sport: Sport; modules: Record<string, TabLayout>; levels: Record<Discipline, Level>; favorites: string[]; reading: Reading; perso: { enabled: boolean; url: string }; theme: 'auto' | 'light' | 'dark' };
 const KEY = 'ocean.prefs.v1';
-export const DEFAULT_PREFS: Prefs = { sport: 'wing', modules: {}, levels: { wing: 'secu', surf: 'intermediaire', downwind: 'intermediaire' }, favorites: [], reading: 'synthese', perso: { enabled: false, url: '' }, theme: 'auto' };
+export const DEFAULT_PREFS: Prefs = { sport: 'wing', modules: DEFAULT_LAYOUT, levels: { wing: 'secu', surf: 'intermediaire', downwind: 'intermediaire' }, favorites: [], reading: 'synthese', perso: { enabled: false, url: '' }, theme: 'auto' };
 
 function read(): Prefs {
   try {
@@ -17,7 +17,8 @@ function read(): Prefs {
     const levels = { ...DEFAULT_PREFS.levels, ...(p.levels ?? {}) };
     if (levels.wing !== 'secu' && levels.wing !== 'offshore') levels.wing = 'secu';   // ancienne préférence (3 niveaux) → Sécu first
     const sport: Sport = p.sport === 'kite' ? 'kite' : 'wing';
-    const modules = p.modules && typeof p.modules === 'object' ? p.modules : {};
+    // onglets jamais réglés sur cet appareil : réglage de base de l'app
+    const modules = { ...DEFAULT_LAYOUT, ...(p.modules && typeof p.modules === 'object' ? p.modules : {}) };
     return { ...DEFAULT_PREFS, ...p, sport, modules, levels, perso: { ...DEFAULT_PREFS.perso, ...(p.perso ?? {}) } };
   } catch { return DEFAULT_PREFS; }
 }

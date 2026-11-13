@@ -6,6 +6,8 @@ const base = process.argv[2] ?? 'http://localhost:4173';
 const routes = [['', 'Où naviguer en wing'], ['wind/meilleure', 'Meilleure session à venir'], ['wind/sessions', 'Sessions de 2H (Localisation Montpellier)'], ['wind/prevision', 'Prévision 5 jours'], ['wind/spots', 'Carte'], ['wind/favoris', 'Meilleure session de tes favoris'],
   ['vague/meilleure', 'Meilleure session à venir'], ['vague/prevision', 'Prévision 5 jours'], ['vague/sessions', 'Sessions de 2H'], ['houle/prevision', 'Prévision 5 jours'], ['houle/meilleure', 'Meilleure session à venir'],
   ['spot/port-camargue', 'Jour par jour'], ['spot/carnon', 'Jour par jour'], ['spot/plagesud-grandemotte', 'Jour par jour'], ['spot/la-franqui', 'Webcams'], ['spot/beauduc', 'Webcams'], ['sessions', 'Où naviguer en wing'], ['profil', 'Mode perso'], ['fiabilite', 'Fiabilité'], ['widgets', 'Installer les widgets'], ['avis', 'Avis et commentaires']];
+// tous les modules affichés pour parcourir chaque écran (le réglage de base en masque, testé plus bas)
+const ALL = { wind: { order: [], hidden: [] }, vague: { order: [], hidden: [] }, houle: { order: [], hidden: [] } };
 const errs = [];
 const b = await chromium.launch();
 // langue fixée (fr-FR) ; un 3e passage sans langue fixée vérifie que l'app survit à une langue système invalide
@@ -18,7 +20,7 @@ for (const [name, opt] of [['mobile', { ...devices['iPhone 13'], locale: 'fr-FR'
   // 3e passage : WIND en kitesurf (bascule Wing | Kite, D-51)
   for (const reading of ['synthese', 'expert', 'kite']) {
     await p.goto(base + '/#/');
-    await p.evaluate((r) => localStorage.setItem('ocean.prefs.v1', JSON.stringify(r === 'kite' ? { reading: 'synthese', sport: 'kite' } : { reading: r })), reading);
+    await p.evaluate(([r, all]) => localStorage.setItem('ocean.prefs.v1', JSON.stringify({ ...(r === 'kite' ? { reading: 'synthese', sport: 'kite' } : { reading: r }), modules: all })), [reading, ALL]);
     if (name === 'sombre') { await p.reload(); const bg = await p.evaluate(() => getComputedStyle(document.body).backgroundColor); if (bg !== 'rgb(13, 25, 30)') errs.push(`sombre : fond ${bg} (thème sombre non appliqué)`); }
     for (const [r, text0] of routes) {
       const text = reading === 'kite' ? text0.replace('en wing', 'en kite') : text0;
@@ -127,19 +129,26 @@ for (const [name, opt] of [['mobile', { ...devices['iPhone 13'], locale: 'fr-FR'
   if (!(await p.evaluate(() => location.hash)).startsWith('#/wind/prevision')) errs.push(`${name} : WIND ne rouvre pas le dernier module (${await p.evaluate(() => location.hash)})`);
   if (name === 'ordinateur' && (await p.locator('.side a').count()) < 6) errs.push(`${name} : colonne de gauche absente`);
   // Profil → modules affichés (Tom, 13/11) : masquer Sessions 2H en WIND, monter Prévision en tête ; HOULE inchangé
+  // réglage de base de l'app (Tom, 13/11)
+  await p.evaluate(() => localStorage.removeItem('ocean.prefs.v1'));
+  for (const [t, want] of [['wind', 'En direct|Carte|Favoris|Sessions 2H|Prévision'], ['vague', 'Sessions 2H|Prévision|Carte|Favoris'], ['houle', 'Carte|Prévision']]) {
+    await p.goto(`${base}/#/${t}`); await p.reload(); await p.waitForTimeout(400);
+    const got = (await p.locator('.subnav a').allInnerTexts()).join('|');
+    if (got !== want) errs.push(`${name} : modules de base ${t} = ${got}`);
+  }
   await p.goto(`${base}/#/profil`); await p.reload();
   await p.getByRole('list', { name: 'Modules WIND' }).getByLabel('Sessions 2H', { exact: true }).uncheck();
   await p.getByRole('button', { name: 'Monter Prévision (WIND)' }).click(); await p.getByRole('button', { name: 'Monter Prévision (WIND)' }).click();
   await p.locator('.tabs a').nth(0).click(); await p.waitForTimeout(400);
   const subs = await p.locator('.subnav a').allInnerTexts();
-  if (subs.join('|') !== 'Prévision|Meilleure session|Favoris|Carte|En direct') errs.push(`${name} : modules WIND après réglage = ${subs.join(', ')}`);
+  if (subs.join('|') !== 'En direct|Prévision|Carte|Favoris') errs.push(`${name} : modules WIND après réglage = ${subs.join(', ')}`);
   await p.goto(`${base}/#/houle`); await p.waitForTimeout(400);
-  if ((await p.locator('.subnav a').allInnerTexts()).join('|') !== 'Meilleure session|Favoris|Prévision|Carte') errs.push(`${name} : HOULE touché par le réglage WIND`);
+  if ((await p.locator('.subnav a').allInnerTexts()).join('|') !== 'Carte|Prévision') errs.push(`${name} : HOULE touché par le réglage WIND`);
   // le dernier module affiché ne peut pas être masqué
   await p.goto(`${base}/#/profil`);
   const hl = p.getByRole('list', { name: 'Modules HOULE' });
-  await hl.getByLabel('Meilleure session', { exact: true }).uncheck(); await hl.getByLabel('Favoris', { exact: true }).uncheck(); await hl.getByLabel('Prévision', { exact: true }).uncheck();
-  if (!(await hl.getByLabel('Carte', { exact: true }).isDisabled())) errs.push(`${name} : le dernier module de HOULE peut être masqué`);
+  await hl.getByLabel('Carte', { exact: true }).uncheck();
+  if (!(await hl.getByLabel('Prévision', { exact: true }).isDisabled())) errs.push(`${name} : le dernier module de HOULE peut être masqué`);
   await ctx.close();
 }
 await b.close();
