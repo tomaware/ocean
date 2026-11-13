@@ -102,7 +102,7 @@ function Prevision({ d, now, disc, spots, L, query }: { d: AllData; now: number;
                   const on = sel?.spot === sp.id && sel?.day === dayT;
                   return (
                     <td key={sp.id}>
-                      <button type="button" class={`cell${c.session ? ' s' : ''}${on ? ' sel' : ''}`} style={c.session || c.kh ? { background: fillOf(c.n, c.day, c.kh) } : undefined}
+                      <button type="button" class={`cell${c.session ? ' s' : c.kh ? ' kite' : ''}${on ? ' sel' : ''}`} style={c.session || c.kh ? { background: fillOf(c.n, c.day, c.kh) } : undefined}
                         aria-pressed={on} aria-label={`${sp.name}, ${dayLabel(dayT, now)} : ${c.session ? `${c.n[2] ? `${c.n[2]} h à 3 étoiles, ` : ''}${c.n[1] ? `${c.n[1]} h à 2 étoiles, ` : ''}${c.n[0]} h à 1 étoile${c.kh ? `, ${c.kh} h Kite session` : ''}` : c.kh ? `pas de session wing, ${c.kh} h Kite session (plus de 28 nœuds)` : c.text === '—' ? 'pas de prévision' : 'pas de session'}`}
                         onClick={() => setSel(on ? null : { spot: sp.id, day: dayT })}>
                         {c.session ? <span class="cell-l">{c.n[c.top - 1] || c.hours}h <span class={`stars sm k${c.top}`}><span class="on">{'★'.repeat(c.top)}</span></span></span> : c.kh ? <span class="cell-l">{c.kh}h <span class="stars sm kite"><span class="on">★</span><span class="kt">Kite</span></span></span> : c.text}

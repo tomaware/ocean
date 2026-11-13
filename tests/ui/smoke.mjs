@@ -52,7 +52,9 @@ for (const [name, opt] of [['mobile', { ...devices['iPhone 13'], locale: 'fr-FR'
       if (r.endsWith('/prevision')) {
         // la grille : 5 jours × spots, et le détail s'ouvre au clic
         const n = await p.locator('table.grid5 tbody tr').count();
-        if (await p.locator('table.grid5 .cell:not(.s)').filter({ hasText: /\d/ }).count()) errs.push(`${name} #/${r} : chiffres dans les cases sans session`);
+        if (await p.locator('table.grid5 .cell:not(.s):not(.kite)').filter({ hasText: /\d/ }).count()) errs.push(`${name} #/${r} : chiffres dans les cases sans session`);
+        // case « Kite session » (D-49) : pas de créneau wing, seulement l'étoile rouge « Kite »
+        for (const t of await p.locator('table.grid5 .cell.kite').allInnerTexts()) if (!/Kite/.test(t)) errs.push(`${name} #/${r} : case kite sans « Kite » (${t})`);
         if (n !== 5) errs.push(`${name} #/${r} : ${n} jours dans la grille`);
         await p.locator('table.grid5 .cell').first().click();
         if (!(await p.locator('.daychart').count())) errs.push(`${name} #/${r} : pas de détail au clic`);
