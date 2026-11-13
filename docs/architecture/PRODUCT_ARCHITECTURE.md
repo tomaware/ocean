@@ -385,3 +385,7 @@ Les apps actuelles restent en ligne jusqu'à ce que leur remplaçante soit véri
 - **Favoris** (3 onglets) : un jour à la fois par spot ; la flèche en gras passe au jour suivant, puis revient au premier quand la prévision s'arrête. Le nom du spot ouvre sa fiche.
 - **Cartes** : repères des spots « S » (spot) dans tous les onglets ; parcours de downwind en trait blanc bordé de sombre, rond « 1 » au départ et « 2 » à l'arrivée (couleur de la note).
 - **Vent sur les cartes** : particules ralenties (0,035 px par image et par nœud au lieu de 0,08) et densité selon la force du vent (probabilité vent / 40 nd : aucun trait sans vent, densité maximale à 40 nd et plus).
+
+### D-64 (14/11/2026) — widgets à jour : grille Créneaux comme la Prévision 5 jours
+- Widgets Créneaux (iPhone grand, Mac moyen/grand, Windows) : chaque case montre une colonne par heure de jour (hauteur = note, couleur des étoiles, rouge pour la Kite session) et la note du jour en haut à droite ; case plus claire sans heure à 1 étoile. Les widgets récupèrent aussi la note wing v2.3, Plage Sud / Hyères et la Kite session par les données publiées.
+- iPhone : VERSION 2026-11-14a (mise à jour automatique) ; Mac : fichiers régénérés (mise à jour automatique) ; Windows : même script publié.

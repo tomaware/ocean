@@ -92,7 +92,8 @@ test('widget Créneaux : meilleur créneau d’abord (étoiles puis note), taill
   for (const x of ['G-Motte', 'Beauduc', 'Le Jaï', 'Auj.', 'MEILLEUR CRÉNEAU']) assert.ok(t.includes(x), x);
   assert.match(t, /Vendredi 13 · 9–17 h/);                        // meilleur créneau : jour en toutes lettres
   assert.match(t, /Jeu 12 \|/); assert.match(t, /Ven 13 \|/);     // lignes = jours
-  assert.match(t, /Ven 13 \| 4h \| 4h \| 18/);                    // vendredi : 4 h pour G-Motte et Beauduc, Le Jaï sans créneau → vent max
+  // cases (Tom, 14/11, comme la Prévision 5 jours de l'app) : colonnes des heures + note du jour (meilleure heure)
+  assert.match(t, /Ven 13 \| 7,5 \| 10,0 \| 5,0/);
   assert.doesNotMatch(t, /\b0h\b/);
   // la nuit : la ligne du jour, vide, disparaît (comme sur Windows)
   const night = await run(CREN, { family: 'large', data: DATA, now: NOW + 9 * H });

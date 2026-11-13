@@ -43,9 +43,10 @@ test('kite : widget iPhone Vent et Créneaux — 1 étoile rouge « Kite »', as
   o = await run('widgets/iphone/OCEAN Vent.js', { family: 'large', parameter: 'beauduc', data: DATA, now: NOW });
   t = texts(o.widget).join(' | ');
   assert.match(t, /Demain \| jeudi 12 \| ★ Kite session/, t);
+  // grille Créneaux (Tom, 14/11) : colonnes rouges et pas de note les jours tout en Kite session
   o = await run('widgets/iphone/OCEAN Créneaux.js', { family: 'large', data: DATA, now: NOW });
   t = texts(o.widget).join(' | ');
-  assert.match(t, /★ Kite/, t);
+  assert.match(t, /Jeu 12 \| 5,6 \| 3,1 \| Ven 13/, t);   // Beauduc jeudi tout en Kite session : pas de note
 });
 
 test('kite : widgets Mac Vent et Créneaux — 1 étoile rouge « Kite »', async () => {
@@ -56,7 +57,7 @@ test('kite : widgets Mac Vent et Créneaux — 1 étoile rouge « Kite »', asyn
   assert.match(html, /stars kite/);
   m = await load('widgets/mac/ocean-creneaux.jsx', { TAILLE: '"grand"' });
   html = toHtml(m.mod.view({ output: JSON.stringify(DATA) }, () => {}, NOW));
-  assert.match(textOf(html), /★ Kite/);
+  assert.match(html, /fill="#D6343C"/);   // colonnes rouges (Kite session) dans la grille
 });
 
 const PWSH = process.env.OCEAN_PS ?? 'pwsh';

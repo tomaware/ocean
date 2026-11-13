@@ -306,7 +306,16 @@ function Get-CreneauxModel($data, $reg, [double]$now) {
       # vent max de la journée (heures de jour), affiché dans les cases sans créneau, comme l'ancien widget
       $kmax = ($sp.hours | Where-Object { $_[4] -and (Get-DayKey $_[0]) -eq $days[$i] -and $null -ne $_[1] } | ForEach-Object { [double]$_[1] } | Measure-Object -Maximum).Maximum
       $kh = if ($x -and @($x).Count -gt 4) { [int]$x[4] } else { 0 }
-      if ((-not $ses.Count -or -not $x) -and $kh) { [pscustomobject]@{ has = $false; kite = $kh; n = @($x); label = ''; kn = $kmax } }
+      # colonnes des heures de jour + note du jour (Tom, 14/11, comme la Prévision 5 jours de l'app)
+      $L = if ($level -eq 'offshore') { 6 } else { 5 }
+      $hh = @($sp.hours | Where-Object { $_[4] -and (Get-DayKey $_[0]) -eq $days[$i] })
+      $cols = @($hh | ForEach-Object { if (@($_).Count -gt 7 -and $_[7]) { @(10, 'kite') } else { $v = if ($null -eq $_[$L]) { 0 } else { [double]$_[$L] }; @($v, (Get-Stars $_[$L])) } })
+      $okv = @($hh | Where-Object { -not (@($_).Count -gt 7 -and $_[7]) -and $null -ne $_[$L] } | ForEach-Object { [double]$_[$L] })
+      $best = if ($okv.Count) { ($okv | Measure-Object -Maximum).Maximum } else { -1 }
+      $calm = -not @($cols | Where-Object { $_[1] -eq 'kite' -or $_[1] -gt 0 }).Count
+      $note = if ($best -gt 0) { ([math]::Round($best, 1)).ToString('0.0', [Globalization.CultureInfo]::new('fr-FR')) } else { '' }
+      if ($hh.Count) { [pscustomobject]@{ has = $true; cols = $cols; best = $best; calm = $calm; label = $note; kite = $kh; n = @($x); kn = $kmax } }
+      elseif ((-not $ses.Count -or -not $x) -and $kh) { [pscustomobject]@{ has = $false; kite = $kh; n = @($x); label = ''; kn = $kmax } }
       elseif (-not $ses.Count -or -not $x) { [pscustomobject]@{ has = $false; kite = 0; n = @(0, 0, 0, 1); label = ''; kn = $kmax } }
       else {
         $top = if ($x[2]) { 3 } elseif ($x[1]) { 2 } else { 1 }
@@ -393,7 +402,7 @@ if ($Model) {
         past = (($_.hours | Where-Object { $_.past } | ForEach-Object { $_.h }) -join ',') } }) }
     creneaux = [pscustomobject]@{ label = $cm.label; days = $cm.dayLabels
       list = @($cm.list | Select-Object -First 4 | ForEach-Object { [pscustomobject]@{ spot = $_.spot.short; when = (Get-CreneauWhen $_ $now); stars = $_.stars; kn = $_.kn; dir = (Get-Compass $_.dir); link = (Get-CreneauLink $_) } })
-      grid = @($cm.grid | ForEach-Object { [pscustomobject]@{ spot = $_.spot.short; cells = (($_.cells | ForEach-Object { if (-not $_.has -and $_.kite) { 'Kite' } else { $_.label } }) -join ','); kn = (($_.cells | ForEach-Object { Get-Round $_.kn }) -join ',') } }) }
+      grid = @($cm.grid | ForEach-Object { [pscustomobject]@{ spot = $_.spot.short; cells = (($_.cells | ForEach-Object { if ($_.kite -and -not $_.label) { 'Kite' } else { $_.label } }) -join ' | '); kn = (($_.cells | ForEach-Object { Get-Round $_.kn }) -join ',') } }) }
   }
   if ($SurfFile) {
     $surf = Get-Content $SurfFile -Raw -Encoding UTF8 | ConvertFrom-Json
@@ -705,7 +714,25 @@ function New-CreneauxCard($cm, [string]$size, [double]$now) {
     foreach ($g in $cm.grid) {
       $x = $g.cells[$i]
       $cell = Add $r (New-Box (C 'CELL') 6 $null); $cell.Width = $cw; $cell.Height = 28; $cell.Margin = Th 3 0 0 0
-      if ($x.has) {
+      if ($x.has -and $null -ne $x.cols) {
+        # colonnes des heures + note du jour en haut à droite ; case plus claire sans heure à 1 étoile
+        $cell.Tag = "$($APP_URL)#/spot/$($g.spot.id)?day=$([uri]::EscapeDataString($dl.ToString('dd/MM/yyyy', $INV)))"
+        if ($x.calm) { $cell.Background = C 'BG'; $cell.BorderBrush = C 'LINE'; $cell.BorderThickness = Th 1 1 1 1 }
+        $layers = [System.Windows.Controls.Grid]::new(); $cell.Child = $layers
+        $cv = [System.Windows.Controls.Canvas]::new(); $cv.Width = $cw; $cv.Height = 28; [void]$layers.Children.Add($cv)
+        $nc = [math]::Max(1, @($x.cols).Count); $bw = ($cw - 6) / $nc
+        for ($j = 0; $j -lt @($x.cols).Count; $j++) {
+          $c = $x.cols[$j]; $bh = [math]::Max(1.5, ([double]$c[0] / 10) * 12)
+          $rr = [System.Windows.Shapes.Rectangle]::new(); $rr.Width = [math]::Max(1, $bw - 1); $rr.Height = $bh; $rr.RadiusX = 1; $rr.RadiusY = 1
+          $rr.Fill = if ($c[1] -eq 'kite') { C 'KITE' } elseif ([int]$c[1] -gt 0) { Get-Brush $FILL[[int]$c[1]] } else { C 'NONE' }
+          [System.Windows.Controls.Canvas]::SetLeft($rr, 3 + $j * $bw); [System.Windows.Controls.Canvas]::SetTop($rr, 28 - 2 - $bh); [void]$cv.Children.Add($rr)
+        }
+        if ($x.label) {
+          $k = Get-Stars $x.best
+          $t = T $x.label 9 $(if ($k -gt 0) { Get-Brush $FILL[$k] } else { C 'INK3' }) 'Black'
+          $t.HorizontalAlignment = 'Right'; $t.VerticalAlignment = 'Top'; $t.Margin = Th 0 0 3 0; [void]$layers.Children.Add($t)
+        }
+      } elseif ($x.has) {
         $cell.Tag = "$($APP_URL)#/spot/$($g.spot.id)?day=$([uri]::EscapeDataString($dl.ToString('dd/MM/yyyy', $INV)))"
         $layers = [System.Windows.Controls.Grid]::new(); $cell.Child = $layers
         [void]$layers.Children.Add((New-Fill $x.n $cw 28))

@@ -15,7 +15,7 @@
 
 const DATA = "https://tomaware.github.io/ocean/data/widget-wind.json";
 const APP = "https://tomaware.github.io/ocean/";
-const VERSION = "2026-11-13c";   // affichée dans les réglages : permet de savoir quelle version tourne
+const VERSION = "2026-11-14a";   // affichée dans les réglages : permet de savoir quelle version tourne
 // ------------------------------------------------------- mise a jour automatique
 // Le widget va chercher sa propre version publiee et reecrit son fichier. La nouvelle version s'applique au
 // rafraichissement suivant : une correction n'oblige plus a recopier le script a la main.
@@ -100,6 +100,27 @@ function fillImage(x, w, h) {
   }
   return c.getImage();
 }
+
+/** Case de la grille (comme la Prévision 5 jours de l'app, Tom 14/11) : une colonne par heure de jour, hauteur = note,
+ *  couleur des étoiles (rouge : Kite session), sur la moitié basse de la case. Renvoie aussi la note du jour. */
+function dayCols(sp, key, level, w, h) {
+  const L = level === "offshore" ? 6 : 5;
+  const hh = (sp.hours || []).filter((x) => x[4] && dayKey(x[0]) === key);
+  if (!hh.length) return null;
+  const c = new DrawContext(); c.size = new Size(w, h); c.opaque = false; c.respectScreenScale = true;
+  const pad = 3, bw = (w - 2 * pad) / hh.length, top = h * 0.48;
+  let best = -1, stars1 = false;
+  hh.forEach((x, j) => {
+    const kite = !!x[7], v = x[L] == null ? 0 : x[L], k = starsOf(x[L]);
+    if (!kite) best = Math.max(best, v);
+    if (kite || k > 0) stars1 = true;
+    const bh = Math.max(1.5, ((kite ? 10 : v) / 10) * (h - top - pad));
+    c.setFillColor(new Color(kite ? "#D6343C" : ["#C9CFC9", "#23A26A", "#EE7F1B", "#8A4FD8"][k]));
+    c.fillRect(new Rect(pad + j * bw + 0.5, h - pad - bh, Math.max(1, bw - 1), bh));
+  });
+  return { img: c.getImage(), best, calm: !stars1 };
+}
+const note1 = (v) => (Math.round(v * 10) / 10).toFixed(1).replace(".", ",");
 
 async function loadData() {
   const fm = FileManager.local(), path = fm.joinPath(fm.documentsDirectory(), "ocean-widget-wind.json");
@@ -231,29 +252,13 @@ function large(w, data, list, cfg, now) {
       const ses = (sp.sessions[cfg.level] || []).filter((s) => dayKey(s.s) === key);
       const cell = r.addStack(); cell.layoutVertically(); cell.spacing = 0; cell.size = new Size(cw, ch);
       cell.cornerRadius = 6; cell.backgroundColor = CELL; cell.centerAlignContent();
-      if ((!ses.length || !x) && x && x[4]) {
-        // pas de créneau wing, mais du vent à plus de 28 nd : 1 étoile rouge « Kite »
-        cell.backgroundImage = fillImage(x, cw, ch);
-        cell.addSpacer();
-        const pr = cell.addStack(); pr.spacing = 0; pr.addSpacer();
-        const pill = pr.addStack(); pill.spacing = 0; pill.backgroundColor = BG; pill.cornerRadius = 7; pill.setPadding(1, 3, 1, 3);
-        text(pill, "★ Kite", F.h(9), KITE, { scale: 0.6 });
-        pr.addSpacer(); cell.addSpacer();
-        continue;
-      }
-      if (!ses.length || !x) {
-        const kn = dayMax(sp, key);
-        if (kn != null) { cell.addSpacer(); text(cell, String(kn), F.s(10), INK3, { scale: 0.6, center: true }); cell.addSpacer(); }
-        continue;
-      }
-      // case remplie selon les heures à 3, 2 et 1 étoiles (comme la Prévision 5 jours de l'app), heures posées dessus
-      cell.backgroundImage = fillImage(x, cw, ch);
-      const top = x[2] ? 3 : x[1] ? 2 : 1;
-      cell.addSpacer();
-      const pr = cell.addStack(); pr.spacing = 0; pr.addSpacer();
-      const pill = pr.addStack(); pill.spacing = 0; pill.backgroundColor = BG; pill.cornerRadius = 7; pill.setPadding(1, 4, 1, 4);
-      text(pill, `${x[top - 1] || ses.reduce((a, s) => a + s.h, 0)}h`, F.h(10), INK);   // heures au meilleur niveau
-      pr.addSpacer();
+      // colonnes des heures de jour + note du jour (Tom, 14/11) ; case plus claire sans heure à 1 étoile
+      const dc = dayCols(sp, key, cfg.level, cw, ch);
+      if (!dc) { cell.addSpacer(); text(cell, "—", F.s(10), INK3, { scale: 0.6, center: true }); cell.addSpacer(); continue; }
+      cell.backgroundImage = dc.img;
+      if (dc.calm) cell.backgroundColor = BG;
+      const pr = cell.addStack(); pr.spacing = 0; pr.setPadding(1, 0, 0, 2); pr.addSpacer();
+      if (dc.best > 0) text(pr, note1(dc.best), F.h(9), dc.best >= 5 ? STAR[starsOf(dc.best)] : INK3, { scale: 0.6 });
       cell.addSpacer();
       cell.url = `${APP}#/spot/${sp.id}?day=${encodeURIComponent(new Date(key + "T12:00:00").toLocaleDateString("fr-FR"))}`;
     }

@@ -107,9 +107,13 @@ function creneauxModel(data, level, sel, now) {
     const kns = sp.hours.filter((h) => h[4] && dayKey(h[0]) === d && h[1] != null).map((h) => h[1]);
     const kn = kns.length ? Math.max(...kns) : null;
     // pas de créneau wing mais des heures à plus de 28 nd : « Kite » en rouge (D-49)
-    if (!ses.length || !x) return { has: false, kn, kite: x ? x[4] || 0 : 0, n: x, day: d };
+    // colonnes des heures de jour + note du jour (Tom, 14/11, comme la Prévision 5 jours de l'app)
+    const L = level === "offshore" ? 6 : 5, hh = sp.hours.filter((h) => h[4] && dayKey(h[0]) === d);
+    const cols = hh.map((h) => ({ v: h[7] ? 10 : h[L] ?? 0, k: h[7] ? "kite" : starsOf(h[L]) }));
+    const best = Math.max(-1, ...hh.filter((h) => !h[7]).map((h) => h[L] ?? -1)), calm = !cols.some((c) => c.k === "kite" || c.k > 0);
+    if (!ses.length || !x) return { has: false, kn, kite: x ? x[4] || 0 : 0, n: x, day: d, cols, best, calm };
     const top = x[2] ? 3 : x[1] ? 2 : 1;
-    return { has: true, kite: x[4] || 0, n: x, label: `${x[top - 1] || ses.reduce((a, s) => a + s.h, 0)}h`, kn, day: d };
+    return { has: true, cols, best, calm, kite: x[4] || 0, n: x, label: `${x[top - 1] || ses.reduce((a, s) => a + s.h, 0)}h`, kn, day: d };
   }) }));
   const quoi = sel === "proches" ? " · proches" : Array.isArray(sel) && sel.length ? ` · ${spots.length} spot${spots.length > 1 ? "s" : ""}` : "";
   return { level, label: `${level === "offshore" ? "OffShore" : "Sécu first"}${quoi}`, list, grid, days };
@@ -201,6 +205,7 @@ const SCALE = [[5, "#FFFFFF", "#3E5157"], [8, "#DDF3FA", "#152B33"], [11, "#A9E3
   [20, "#F2EC4E", "#383300"], [23, "#FFC94D", "#3A2700"], [26, "#FFA04A", "#3A1A00"], [30, "#F66A4B", "#FFFFFF"], [999, "#D9386E", "#FFFFFF"]];
 const wc = (kn) => SCALE.find((s) => (kn ?? 0) < s[0]);
 const FILL = ["", "#23A26A", "#EE7F1B", "#8A4FD8"], KITE = "#D6343C";
+const n1 = (v) => (Math.round(v * 10) / 10).toFixed(1).replace(".", ",");
 // remplissage d'une case : heures 3★, 2★, 1★ puis « Kite session » en rouge ; n = [1★, 2★, 3★, jour, kite]
 const fillOf = (n) => { const t = Math.max(1, n[3]), a = (n[2] / t) * 100, b = a + (n[1] / t) * 100, c = b + (n[0] / t) * 100, e = c + ((n[4] || 0) / t) * 100;
   return `linear-gradient(to right, ${FILL[3]} 0 ${a}%, ${FILL[2]} 0 ${b}%, ${FILL[1]} 0 ${c}%, ${KITE} 0 ${e}%, transparent 0)`; };
@@ -273,10 +278,11 @@ function CreneauxCard({ cm, size, now }) {
       : <div className="ink2 sb13 mid">Pas de créneau dans les 5 jours</div>}
     <table className="cgrid"><thead><tr><th />{cm.grid.map((g) => <th key={g.spot.id}>{HEAD[g.spot.short] || g.spot.short}</th>)}</tr></thead>
       <tbody>{cm.days.map((d, i) => <tr key={d}><th>{d === dayKey(now) ? "Auj." : cap(new Date(d + "T12:00:00").toLocaleDateString("fr-FR", { weekday: "short", day: "numeric" }).replace(".", ""))}</th>
-        {cm.grid.map((g) => { const x = g.cells[i]; return <td key={g.spot.id}>{x.has
-          ? <span className="fill" onClick={open(link(g.spot.id, new Date(d + "T12:00:00").getTime()))} style={{ background: fillOf(x.n) }}><i>{x.label}</i></span>
-          : x.kite ? <span className="fill" onClick={open(link(g.spot.id, new Date(d + "T12:00:00").getTime()))} style={{ background: fillOf(x.n) }}><i className="kitepill">★ Kite</i></span>
-          : <span className="kn">{x.kn != null ? r(x.kn) : ""}</span>}</td>; })}</tr>)}</tbody></table>
+        {cm.grid.map((g) => { const x = g.cells[i]; return <td key={g.spot.id}>{!x.cols.length ? <span className="kn">—</span>
+          : <span className={`fill mcol${x.calm ? " calm" : ""}`} onClick={open(link(g.spot.id, new Date(d + "T12:00:00").getTime()))}>
+            <svg viewBox={`0 0 ${x.cols.length * 10} 40`} preserveAspectRatio="none">{x.cols.map((c, j) => { const h = Math.max(3, (c.v / 10) * 40);
+              return <rect key={j} x={j * 10 + 1} y={40 - h} width="8" height={h} rx="1.5" fill={c.k === "kite" ? KITE : c.k > 0 ? FILL[c.k] : "var(--off)"} />; })}</svg>
+            {x.best > 0 && <i className={`k${starsOf(x.best)}`}>{n1(x.best)}</i>}</span>}</td>; })}</tr>)}</tbody></table>
     <span className="ink3 s9 legend">{cm.label}</span></Card>;
 }
 function VagueNow({ m, size }) {
@@ -392,7 +398,7 @@ const STYLE = `
 .ocean .cgrid{border-collapse:separate;border-spacing:3px;margin:0 -3px;width:calc(100% + 6px);table-layout:fixed}
 .ocean .cgrid th{font-size:9px;font-weight:700;color:var(--ink3);text-align:center;white-space:nowrap;overflow:hidden}.ocean .cgrid thead th:first-child,.ocean .cgrid tbody th{width:44px}.ocean .cgrid tbody th{font-size:11px;font-weight:900;color:var(--ink);text-align:left}
 .ocean .cgrid td{background:var(--cell);border-radius:6px;height:28px;padding:0;text-align:center;overflow:hidden}
-.ocean .cgrid .fill{display:flex;align-items:center;justify-content:center;height:100%}.ocean .cgrid .fill i{font-style:normal;font-size:10px;font-weight:900;background:var(--bg);border-radius:7px;padding:1px 4px}
+.ocean .cgrid .fill{display:flex;align-items:center;justify-content:center;height:100%}.ocean .cgrid .mcol{position:relative;display:block;background:var(--cell)}.ocean .cgrid .mcol.calm{background:transparent;box-shadow:inset 0 0 0 1px var(--line)}.ocean .cgrid .mcol svg{position:absolute;left:2px;right:2px;bottom:2px;height:52%;width:calc(100% - 4px)}.ocean .cgrid .mcol i{position:absolute;top:1px;right:2px;font-size:9px;padding:0 3px;color:var(--ink3)}.ocean .cgrid .mcol i.k1{color:var(--k1)}.ocean .cgrid .mcol i.k2{color:var(--k2)}.ocean .cgrid .mcol i.k3{color:var(--k3)}.ocean .cgrid .fill i{font-style:normal;font-size:10px;font-weight:900;background:var(--bg);border-radius:7px;padding:1px 4px}
 .ocean .cgrid .kn{font-size:10px;font-weight:600;color:var(--ink3)}
 .ocean .vnow{display:flex;flex-direction:column;gap:2px}.ocean .vh{white-space:nowrap}.ocean .vnow b:first-child{font-weight:900}.ocean .wline{display:flex;align-items:center;gap:4px;margin-top:2px}
 .ocean .wbar{height:13px;display:flex;align-items:flex-end}.ocean .wbar i{display:block;width:100%;background:var(--wave);border-radius:2px}

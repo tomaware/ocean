@@ -71,7 +71,7 @@ test('widget Mac Créneaux : même classement et même grille que les widgets iP
   assert.match(t, /Beauduc \| Ven\. 9–17 h \| 24 nd SE .*G-Motte .*Ven\. 9–17 h .*G-Motte .*Auj\. 13–16 h/);
   ({ t } = await show(CREN, { TAILLE: '"grand"' }, JSON.stringify(WIND)));
   assert.match(t, /MEILLEUR CRÉNEAU \| 8h \| Vendredi 13 · 9 h – 17 h \| Beauduc/);
-  assert.match(t, /Ven 13 .*4h/);                                           // grille : Beauduc vendredi, 4 h à 3 étoiles
+  assert.match(t, /Ven 13 .*7,5 .*10,0 .*5,0/);                              // grille (Tom, 14/11) : note du jour par case
   ({ t } = await show(CREN, { TAILLE: '"petit"', SPOTS: '"proches"', MODE: '"offshore"' }, JSON.stringify(WIND)));
   assert.doesNotMatch(t, /Beauduc/);
 });
