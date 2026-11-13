@@ -291,7 +291,7 @@ function CreneauxCard({ cm, size, now }) {
 }
 function VagueNow({ m, size }) {
   const n = m.now;
-  return <div className="vnow"><div><b style={{ fontSize: size }}>{n ? `${m1(n.lo)}–${m1(n.hi)}` : "–"}</b><b className="ink2 t13"> m</b></div>
+  return <div className="vnow"><div className="vh"><b style={{ fontSize: size }}>{n ? `${m1(n.lo)}–${m1(n.hi)}` : "–"}</b><b className="ink2 t13"> m</b></div>
     <div className="ink2 sb12">{n ? `${n.tp ?? "–"} s · houle ${compass(n.sd)}` : " "}</div>
     {n && n.ws != null && <div className="wline"><Num kn={n.ws} w={24} h={16} size={10} /><Arrow from={n.wd} size={11} /><span className="ink2 sb11">{WIND_KIND[n.wk] || compass(n.wd)}</span></div>}</div>;
 }
@@ -301,7 +301,7 @@ function VagueCard({ m, size, now }) {
   if (size === "petit") return <Card size={size} url={url}><div className="row"><b className="t14">{m.spot.short}</b><span className="src">prévi</span></div>
     <VagueNow m={m} size={26} /><div className="row"><span className="ink2 sb11">{d0 && d0.cr !== "—" ? d0.cr : "pas de créneau"}</span><Stars k={d0 ? d0.stars : 0} size={12} /></div></Card>;
   if (size === "moyen") return <Card size={size} url={url}><div className="hrow">
-    <div className="left"><b className="t14">{m.spot.short}</b><span className="src">prévi</span><VagueNow m={m} size={24} /></div>
+    <div className="left"><b className="t14">{m.spot.short}</b><span className="src">prévi</span><VagueNow m={m} size={22} /></div>
     {m.days.map((d) => <div key={d.label} className="dcol"><b>{d.label}</b><Stars k={d.stars} size={9} /><b className="t12">{d.hb == null ? "–" : `${m1(d.hb)} m`}</b><span className="ink2 s10">{d.tp ? `${d.tp} s` : ""}</span><span className="s10">{d.cr}</span></div>)}
   </div></Card>;
   return <Card size={size} url={url}>
@@ -404,7 +404,7 @@ const STYLE = `
 .ocean .cgrid td{background:var(--cell);border-radius:6px;height:28px;padding:0;text-align:center;overflow:hidden}
 .ocean .cgrid .fill{display:flex;align-items:center;justify-content:center;height:100%}.ocean .cgrid .fill i{font-style:normal;font-size:10px;font-weight:900;background:var(--bg);border-radius:7px;padding:1px 4px}
 .ocean .cgrid .kn{font-size:10px;font-weight:600;color:var(--ink3)}
-.ocean .vnow{display:flex;flex-direction:column;gap:2px}.ocean .vnow b:first-child{font-weight:900}.ocean .wline{display:flex;align-items:center;gap:4px;margin-top:2px}
+.ocean .vnow{display:flex;flex-direction:column;gap:2px}.ocean .vh{white-space:nowrap}.ocean .vnow b:first-child{font-weight:900}.ocean .wline{display:flex;align-items:center;gap:4px;margin-top:2px}
 .ocean .wbar{height:13px;display:flex;align-items:flex-end}.ocean .wbar i{display:block;width:100%;background:var(--wave);border-radius:2px}
 .ocean .bestline{background:var(--cell);border-radius:10px;padding:6px 8px;margin-top:8px}
 `;
