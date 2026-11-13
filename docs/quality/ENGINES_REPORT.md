@@ -1,6 +1,6 @@
 # Rapport d'analyse (② ANALYSE)
 
-Généré le 2026-11-13 23:00 UTC par `pipeline/engines/run.ts`, juste après la collecte.
+Généré le 2026-11-13 23:11 UTC par `pipeline/engines/run.ts`, juste après la collecte.
 
 Les moteurs des apps actuelles (copies non modifiées dans `legacy/`) sont alimentés par la collecte commune. Le test golden refait le calcul comme les apps actuelles, avec leurs propres parseurs sur les mêmes réponses brutes, et exige les mêmes notes à ±0.1.
 
@@ -10,12 +10,12 @@ Les moteurs des apps actuelles (copies non modifiées dans `legacy/`) sont alime
 |---|---|---|
 | golden-surf | ✅ | 3114 valeurs (note, hauteur, vent × 6 spots), écart max 0 ; créneaux identiques (tolérance 0.1) |
 | golden-downwind | ✅ | 1440 valeurs (vent, houle, 3 notes × 3 parcours), écart max 0 ; créneaux identiques ; correction du vent identique (tolérance 0.1) |
-| correction-vent-downwind | ✅ | 2 spot(s) de recalage : La Grande-Motte 57 h (× 1.16 en moyenne), Port Camargue 58 h (× 1.11 en moyenne) |
+| correction-vent-downwind | ✅ | 2 spot(s) de recalage : La Grande-Motte 56 h (× 1.14 en moyenne), Port Camargue 58 h (× 1.1 en moyenne) |
 | sorties-surf | ✅ | 6/6 spots notés ; 12 créneaux |
 | houle-direction-downwind | ✅ | direction de la houle (affichage, carte) : 288/288 heures |
 | sorties-downwind | ✅ | 3/3 parcours notés ; 1 meilleurs créneaux |
-| ecart-prod-surf | ✅ | notes surf OCEAN vs app en service (calcul prod. 73 min avant, même extrait Copernicus) : médiane 0.00, 90 % ≤ 0.60, max 2.30 sur 660 heures (max : carnon mar. 17:00, OCEAN 6.1 / prod 8.4) |
-| ecart-prod-downwind | ✅ | notes downwind (intermédiaire, de jour) OCEAN vs app en service (calcul prod. 1 min avant) : médiane 0.00, 90 % ≤ 0.00, max 0.00 sur 120 heures |
+| ecart-prod-surf | ✅ | notes surf OCEAN vs app en service (calcul prod. 83 min avant, même extrait Copernicus) : médiane 0.10, 90 % ≤ 0.90, max 7.50 sur 660 heures (max : sete dim. 15:00, OCEAN 7.7 / prod 0.2) |
+| ecart-prod-downwind | ✅ | notes downwind (intermédiaire, de jour) OCEAN vs app en service (calcul prod. 11 min avant) : médiane 0.00, 90 % ≤ 0.00, max 3.40 sur 120 heures |
 | sorties-wing | ✅ | 7 spots notés (wing v2.3.0) ; 8 session(s) 2H en mode Sécu first sur les heures prévues |
 | sorties-kite | ✅ | 7 spots notés (kite v1.0.0) ; 4 session(s) 2H en mode Sécu first |
 | confidentialite-moteurs | ✅ | aucun relevé Winds-Up ni clé dans les sorties (seuls les facteurs de correction dérivés y figurent, comme dans l’app downwind actuelle) |
@@ -26,8 +26,8 @@ Les moteurs des apps actuelles (copies non modifiées dans `legacy/`) sont alime
 | Quand | Spot | Note moyenne | Pic |
 |---|---|---|---|
 | mer. 18 08:00 → mer. 18 18:00 | La Couronne (Martigues) | 8.75 | 9.6 |
-| dim. 15 08:00 → dim. 15 15:00 | La Guillotine | 7.36 | 8.65 |
 | mar. 17 08:00 → mar. 17 18:00 | Carnon | 7.28 | 8.46 |
+| dim. 15 08:00 → dim. 15 15:00 | La Guillotine | 6.96 | 8.63 |
 | mer. 18 08:00 → mer. 18 18:00 | Saintes-Maries-de-la-Mer | 7.26 | 7.96 |
 | mar. 17 08:00 → mar. 17 18:00 | Palavas-les-Flots | 6.95 | 8.32 |
 
@@ -35,7 +35,7 @@ Les moteurs des apps actuelles (copies non modifiées dans `legacy/`) sont alime
 
 | Quand | Parcours | Note moyenne | Pic |
 |---|---|---|---|
-| dim. 15 14:00 → dim. 15 18:00 | Plage Sud (Port Camargue) → La Grande-Motte | 6.5 | 7.1 |
+| dim. 15 14:00 → dim. 15 18:00 | Plage Sud (Port Camargue) → La Grande-Motte | 6.6 | 7.7 |
 
 ## Wing foil — sessions 2H (mode Sécu first, vent corrigé de la super prévision)
 
