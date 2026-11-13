@@ -50,9 +50,36 @@ const fillOf = (n: number[], day: number, kh = 0) => {
 const shortName = (s: PublicSpot) => s.name.replace(/\s*\(.*\)/, '').replace('Port Camargue / Espiguette', 'Espiguette').replace('Saintes-Maries-de-la-Mer', 'Stes-Maries').replace('La Grande-Motte', 'G-Motte').replace(/^Plage Sud/, 'P. Sud').replace(/→ La Grande-Motte$/, '→ G-Motte');
 
 /** Favoris : aujourd'hui et demain ; le soir (plus d'heure de jour à venir), demain et après-demain. */
-function favDays(s: Series, now: number): number[] {
-  const left = s.times.some((t, i) => dayKey(t) === dayKey(now) && s.day[i] && t + 3600e3 > now);
-  return left ? [now, now + 86400e3] : [now + 86400e3, now + 2 * 86400e3];
+/** Jours avec une prévision de jour à venir (aujourd'hui seulement s'il reste une heure de jour). */
+export function favDays(s: Series, now: number): number[] {
+  const out: number[] = [];
+  for (let k = 0; k < 7; k++) {
+    const t = now + k * 86400e3, key = dayKey(t);
+    if (s.times.some((tt, i) => dayKey(tt) === key && s.day[i] && (k > 0 || tt + 3600e3 > now))) out.push(t);
+  }
+  return out;
+}
+function FavCard({ d, sp, disc, L, now }: { d: AllData; sp: PublicSpot; disc: Discipline; L: Level; now: number }) {
+  const ser = seriesFor(d, sp, disc, L);
+  const days = ser ? favDays(ser, now) : [];
+  const [k, setK] = useState(0);
+  const t = days[k % Math.max(1, days.length)];
+  return (
+    <div class="card stack">
+      <div class="row between">
+        <a href={`#/spot/${sp.id}`} style={{ textDecoration: 'none', color: 'inherit' }}><strong class="big">{sp.name}</strong></a>
+        {days.length > 1 && <button type="button" class="nextday" aria-label={k + 1 < days.length ? `Jour suivant : ${dayLabel(days[k + 1], now)}` : `Revenir à ${dayLabel(days[0], now)}`}
+          onClick={() => setK((k + 1) % days.length)}>→</button>}
+      </div>
+      {!ser || t === undefined ? <span class="muted">Pas de prévision.</span> : (
+        <div class="stack" style={{ gap: '4px' }}>
+          <span class="faint">{dayLabel(t, now)}</span>
+          <ScoreBars s={ser} dayT={t} now={now} />
+          <DayChart d={d} spot={sp} dayT={t} level={L} title=" " />
+        </div>
+      )}
+    </div>
+  );
 }
 /** Case de la Prévision 5 jours (Tom, 13/11) : une colonne par heure de jour, couleur des étoiles, et la note du jour
  *  (meilleure heure hors « Kite session »). */
@@ -222,25 +249,13 @@ export function Module({ d, now, disc, sub, query }: { d: AllData; now: number; 
       <MapPlayer d={d} spots={spots} disc={disc} L={L} now={now} />
     </Section>
   );
-  // Favoris (Tom, 13/11) : meilleure session à venir sur les spots favoris de l'onglet
-  // Favoris (Tom, 13/11) : prévision du jour et du lendemain de chaque spot favori, sans « meilleure session »
+  // Favoris (Tom, 13/11-14/11) : prévision d'un jour par spot favori ; la flèche passe au jour suivant, puis revient au premier
   else if (sub === 'favoris') {
     const favs = spots.filter((s) => prefs.favorites.includes(s.id));
     body = (
       <Section title="Tes favoris">
         {!favs.length ? <div class="card empty">Pas encore de favori dans cet onglet. Ajoute des spots avec l’étoile, sur leur fiche.</div>
-          : favs.map((sp) => { const ser = seriesFor(d, sp, disc, L); return (
-            <div key={sp.id} class="card stack">
-              <a href={`#/spot/${sp.id}`} class="row between" style={{ textDecoration: 'none', color: 'inherit' }}><strong class="big">{sp.name}</strong><span class="small">Fiche →</span></a>
-              {!ser ? <span class="muted">Pas de prévision.</span> : favDays(ser, now).map((t) => { const k = t; return (
-                <div key={k} class="stack" style={{ gap: '4px' }}>
-                  <span class="faint">{dayLabel(t, now)}</span>
-                  <ScoreBars s={ser} dayT={t} now={now} />
-                  <DayChart d={d} spot={sp} dayT={t} level={L} title=" " />
-                </div>
-              ); })}
-            </div>
-          ); })}
+          : favs.map((sp) => <FavCard key={sp.id} d={d} sp={sp} disc={disc} L={L} now={now} />)}
       </Section>
     );
   }

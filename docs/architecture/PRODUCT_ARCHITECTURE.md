@@ -380,3 +380,8 @@ Les apps actuelles restent en ligne jusqu'à ce que leur remplaçante soit véri
 ### D-62 (14/11/2026) — réglage de base des modules (2), grille des 3 onglets
 - Réglage de base (capture de Tom) — WIND : En direct, Favoris, Sessions 2H, Prévision, Carte ; VAGUE : Favoris, Sessions 2H, Prévision, Carte ; HOULE : Prévision, Carte. Meilleure session masquée partout, Favoris aussi en HOULE.
 - Prévision 5 jours, mêmes cases dans WIND, VAGUE et HOULE : colonne des jours étroite (64 px, 50 px sur téléphone), colonnes de spots de même largeur, colonnes par heure + note du jour, case plus claire sans heure à 1 étoile.
+
+### D-63 (14/11/2026) — Favoris jour par jour, cartes lisibles
+- **Favoris** (3 onglets) : un jour à la fois par spot ; la flèche en gras passe au jour suivant, puis revient au premier quand la prévision s'arrête. Le nom du spot ouvre sa fiche.
+- **Cartes** : repères des spots « S » (spot) dans tous les onglets ; parcours de downwind en trait blanc bordé de sombre, rond « 1 » au départ et « 2 » à l'arrivée (couleur de la note).
+- **Vent sur les cartes** : particules ralenties (0,035 px par image et par nœud au lieu de 0,08) et densité selon la force du vent (probabilité vent / 40 nd : aucun trait sans vent, densité maximale à 40 nd et plus).

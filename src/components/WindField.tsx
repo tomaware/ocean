@@ -77,16 +77,24 @@ export function useWindField(map: L.Map | null, g: WindGrid | null, k: number | 
       const ctx = color.getContext('2d')!; ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
       ctx.drawImage(small, 0, 0, W * dpr, H * dpr);
       flow.width = W * dpr; flow.height = H * dpr; flow.style.width = W + 'px'; flow.style.height = H + 'px';
-      const n = Math.round((W * H) / 900);
-      parts = Array.from({ length: n }, () => ({ x: Math.random() * W, y: Math.random() * H, age: Math.floor(Math.random() * 80) }));
+      // densité selon la force du vent (Tom, 14/11) : 0 trait sans vent, le maximum à 40 nd et plus
+      const n = Math.round((W * H) / 450);
+      parts = Array.from({ length: n }, () => ({ ...spawn(), age: Math.floor(Math.random() * LIFE) }));
       if (reduce) still();
+    };
+    const LIFE = 120, FULL_KN = 40;
+    // tirage d'un point de départ : accepté avec une probabilité vent / 40 nd (sinon on retente, au plus 12 fois)
+    const spawn = () => {
+      for (let k = 0; k < 12; k++) { const x = Math.random() * W, y = Math.random() * H, s = at(x, y);
+        if (s && Math.random() < Math.min(1, s.kn / FULL_KN)) return { x, y, age: 0 }; }
+      return { x: -1, y: -1, age: LIFE };   // pas de vent : la particule reste éteinte jusqu'au prochain tirage
     };
     // sans animation (réglage « réduire les animations ») : traits fixes dans le sens du vent
     const still = () => {
       const ctx = flow.getContext('2d')!; ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
       ctx.strokeStyle = 'rgba(255,255,255,0.7)'; ctx.lineWidth = 1.2;
       for (let y = 12; y < H; y += 28) for (let x = 12; x < W; x += 28) {
-        const s = at(x, y); if (!s || s.kn < 0.5) continue;
+        const s = at(x, y); if (!s || s.kn < 0.5 || Math.random() > Math.min(1, s.kn / FULL_KN)) continue;
         const l = Math.min(14, 4 + s.kn * 0.5), ux = s.u / s.kn, uy = -s.v / s.kn;
         ctx.beginPath(); ctx.moveTo(x - ux * l / 2, y - uy * l / 2); ctx.lineTo(x + ux * l / 2, y + uy * l / 2); ctx.stroke();
       }
@@ -95,16 +103,16 @@ export function useWindField(map: L.Map | null, g: WindGrid | null, k: number | 
       if (!alive()) return;
       const ctx = flow.getContext('2d')!; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       // traînées : on estompe l'image précédente plutôt que de l'effacer
-      ctx.globalCompositeOperation = 'destination-in'; ctx.fillStyle = 'rgba(0,0,0,0.86)'; ctx.fillRect(0, 0, W, H);
+      ctx.globalCompositeOperation = 'destination-in'; ctx.fillStyle = 'rgba(0,0,0,0.92)'; ctx.fillRect(0, 0, W, H);
       ctx.globalCompositeOperation = 'source-over'; ctx.strokeStyle = 'rgba(255,255,255,0.8)'; ctx.lineWidth = 1.1;
       ctx.beginPath();
       for (const p of parts) {
         const s = at(p.x, p.y);
-        if (!s || p.age++ > 70) { p.x = Math.random() * W; p.y = Math.random() * H; p.age = 0; continue; }
-        const f = 0.08;                                   // px par image et par nœud
+        if (!s || p.age++ > LIFE) { Object.assign(p, spawn()); continue; }
+        const f = 0.035;                                  // px par image et par nœud (ralenti, Tom 14/11)
         const nx = p.x + s.u * f, ny = p.y - s.v * f;
         ctx.moveTo(p.x, p.y); ctx.lineTo(nx, ny); p.x = nx; p.y = ny;
-        if (nx < 0 || ny < 0 || nx > W || ny > H) { p.x = Math.random() * W; p.y = Math.random() * H; p.age = 0; }
+        if (nx < 0 || ny < 0 || nx > W || ny > H) Object.assign(p, spawn());
       }
       ctx.stroke();
       raf = requestAnimationFrame(tick);

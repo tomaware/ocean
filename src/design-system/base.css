@@ -113,6 +113,7 @@ table.data th, .table-wrap th { font-weight: 600; color: var(--c-ink-2); font-si
 @media (min-width: 900px) { .map { height: 440px; } }
 .leaflet-container { font: inherit; background: var(--c-surface-2); }
 .pin { width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-size: 11px; font-weight: 700; border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,.3); }
+.pin.run { width: 26px; height: 26px; font-size: 13px; font-weight: 800; border-width: 3px; box-shadow: 0 1px 6px rgba(0,0,0,.45); }
 
 /* graphiques */
 .chart { width: 100%; min-height: 220px; }
@@ -404,3 +405,6 @@ table.stats thead th:not(:first-child) { text-align: right; }
 .minicols .cell-l { position: absolute; right: 0; top: 0; font-variant-numeric: tabular-nums; padding: 0 5px; font-size: 12px; line-height: 1.35; }
 .minicols .cell-l.k0 { color: var(--c-ink-3); font-weight: 600; }
 .minicols .cell-l.k1 { color: var(--c-k1); } .minicols .cell-l.k2 { color: var(--c-k2); } .minicols .cell-l.k3 { color: var(--c-k3); }
+/* Favoris : flèche « jour suivant » (Tom, 14/11) */
+.nextday { border: 0; background: var(--c-surface-2); color: var(--c-ink); width: 44px; height: 44px; border-radius: 50%; font-size: 22px; font-weight: 900; cursor: pointer; display: grid; place-items: center; }
+.nextday:hover { background: var(--c-accent); color: #fff; }
