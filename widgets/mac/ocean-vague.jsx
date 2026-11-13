@@ -82,23 +82,24 @@ function liveFor(spot, data, live, now) {
 }
 function ventModel(data, spot, level, live, now) {
   const L = level === "offshore" ? 6 : 5;
-  const rows = spot.hours.map((h) => ({ t: h[0], kn: h[1], gust: h[2], dir: h[3], day: !!h[4], score: h[L] }));
+  // h[7] = « Kite session » (plus de 28 nd, D-49) : 1 étoile rouge, jamais en créneau
+  const rows = spot.hours.map((h) => ({ t: h[0], kn: h[1], gust: h[2], dir: h[3], day: !!h[4], score: h[L], kite: !!h[7] && !!h[4] }));
   const near = (t) => { const x = rows.reduce((b, y) => (Math.abs(y.t - t) < Math.abs((b ? b.t : Infinity) - t) ? y : b), null); return x && Math.abs(x.t - t) <= 3600e3 ? x : null; };
   const cur = near(now), sess = spot.sessions[level] || [];
   const days = data.days.slice(0, 4).map((d) => {
     const rr = rows.filter((x) => dayKey(x.t) === d && x.day);
-    const best = rr.reduce((b, x) => ((x.score ?? -1) > (b ? b.score ?? -1 : -1) ? x : b), null);
+    const best = rr.filter((x) => !x.kite).reduce((b, x) => ((x.score ?? -1) > (b ? b.score ?? -1 : -1) ? x : b), null);
     const max = rr.reduce((b, x) => ((x.kn ?? -1) > (b ? b.kn ?? -1 : -1) ? x : b), null);
     const ss = sess.filter((x) => dayKey(x.s) === d);
-    return { label: dayLabel(d, now), stars: starsOf(best ? best.score : null), kn: max ? max.kn : null, dir: max ? max.dir : null, cr: ss.length ? span(ss[0]) : "—" };
+    return { label: dayLabel(d, now), stars: starsOf(best ? best.score : null), kite: rr.some((x) => x.kite), kn: max ? max.kn : null, dir: max ? max.dir : null, cr: ss.length ? span(ss[0]) : "—" };
   });
   const k0 = H(now) >= 21 ? 1 : 0;
   const detail = [k0, k0 + 1].map((k) => {
     const d = dayKey(now + k * 86400e3), rr = rows.filter((x) => dayKey(x.t) === d), hours = [];
-    for (let h = 7; h <= 21; h++) { const x = rr.find((y) => H(y.t) === h); hours.push({ h, has: !!x && x.t + 3600e3 > now, kn: x ? x.kn : null, gust: x ? x.gust : null, dir: x ? x.dir : null, stars: x && x.day ? starsOf(x.score) : 0 }); }
+    for (let h = 7; h <= 21; h++) { const x = rr.find((y) => H(y.t) === h); hours.push({ h, has: !!x && x.t + 3600e3 > now, kn: x ? x.kn : null, gust: x ? x.gust : null, dir: x ? x.dir : null, stars: x && x.day && !x.kite ? starsOf(x.score) : 0, kite: !!x && x.kite }); }
     const up = hours.filter((x) => x.has), max = up.reduce((b, x) => (x.kn != null && (!b || x.kn > b.kn) ? x : b), null);
     const ss = sess.filter((x) => dayKey(x.s) === d && x.e > now);
-    return { label: k === 0 ? "Aujourd'hui" : k === 1 ? "Demain" : "Après-demain", date: longDay(now + k * 86400e3), stars: Math.max(0, ...up.map((x) => x.stars)),
+    return { label: k === 0 ? "Aujourd'hui" : k === 1 ? "Demain" : "Après-demain", date: longDay(now + k * 86400e3), stars: Math.max(0, ...up.map((x) => x.stars)), kite: up.some((x) => x.kite),
       kn: max ? max.kn : null, dir: max ? max.dir : null, gust: up.reduce((g, x) => (x.gust != null && (g == null || x.gust > g) ? x.gust : g), null),
       cr: ss.length ? ss.map(span).join(" · ") : "pas de créneau", hours };
   });
@@ -122,9 +123,10 @@ function creneauxModel(data, level, sel, now) {
     const x = (sp.daily[level] || [])[i + off], ses = (sp.sessions[level] || []).filter((s) => dayKey(s.s) === d);
     const kns = sp.hours.filter((h) => h[4] && dayKey(h[0]) === d && h[1] != null).map((h) => h[1]);
     const kn = kns.length ? Math.max(...kns) : null;
-    if (!ses.length || !x) return { has: false, kn };
+    // pas de créneau wing mais des heures à plus de 28 nd : « Kite » en rouge (D-49)
+    if (!ses.length || !x) return { has: false, kn, kite: x ? x[4] || 0 : 0, n: x, day: d };
     const top = x[2] ? 3 : x[1] ? 2 : 1;
-    return { has: true, n: x, label: `${x[top - 1] || ses.reduce((a, s) => a + s.h, 0)}h`, kn, day: d };
+    return { has: true, kite: x[4] || 0, n: x, label: `${x[top - 1] || ses.reduce((a, s) => a + s.h, 0)}h`, kn, day: d };
   }) }));
   const quoi = sel === "proches" ? " · proches" : Array.isArray(sel) && sel.length ? ` · ${spots.length} spot${spots.length > 1 ? "s" : ""}` : "";
   return { level, label: `${level === "offshore" ? "OffShore" : "Sécu first"}${quoi}`, list, grid, days };
@@ -215,11 +217,15 @@ const themeOf = (p) => (p.theme === "clair" ? "light" : p.theme === "sombre" ? "
 const SCALE = [[5, "#FFFFFF", "#3E5157"], [8, "#DDF3FA", "#152B33"], [11, "#A9E3EE", "#152B33"], [14, "#7FDDB0", "#0F3322"], [17, "#B5EA62", "#21360A"],
   [20, "#F2EC4E", "#383300"], [23, "#FFC94D", "#3A2700"], [26, "#FFA04A", "#3A1A00"], [30, "#F66A4B", "#FFFFFF"], [999, "#D9386E", "#FFFFFF"]];
 const wc = (kn) => SCALE.find((s) => (kn ?? 0) < s[0]);
-const FILL = ["", "#23A26A", "#EE7F1B", "#8A4FD8"];
+const FILL = ["", "#23A26A", "#EE7F1B", "#8A4FD8"], KITE = "#D6343C";
+// remplissage d'une case : heures 3★, 2★, 1★ puis « Kite session » en rouge ; n = [1★, 2★, 3★, jour, kite]
+const fillOf = (n) => { const t = Math.max(1, n[3]), a = (n[2] / t) * 100, b = a + (n[1] / t) * 100, c = b + (n[0] / t) * 100, e = c + ((n[4] || 0) / t) * 100;
+  return `linear-gradient(to right, ${FILL[3]} 0 ${a}%, ${FILL[2]} 0 ${b}%, ${FILL[1]} 0 ${c}%, ${KITE} 0 ${e}%, transparent 0)`; };
 const Num = ({ kn, w = 36, h = 20, size = 13 }) => { const c = wc(kn); return <span className="num" style={{ width: w, height: h, fontSize: size, background: c[1], color: c[2] }}>{r(kn)}</span>; };
 const Arrow = ({ from, size = 13 }) => (from == null ? <span style={{ width: size, height: size, display: "inline-block" }} /> :
   <svg width={size} height={size} viewBox="-10 -10 20 20" style={{ transform: `rotate(${(from + 180) % 360}deg)` }}><path d="M0,-9 L6,7 L0,3.5 L-6,7 Z" fill="currentColor" /></svg>);
-const Stars = ({ k, size = 11, all = true }) => (
+const Stars = ({ k, size = 11, all = true, kite = false }) => (!k && kite
+  ? <span className="stars kite" style={{ fontSize: size }}><span className="k">★</span><span className="kt">{size >= 16 ? " Kite session" : " Kite"}</span></span> :
   <span className="stars" style={{ fontSize: size }}>{k > 0 && <span className={`k${k}`}>{"★".repeat(k)}</span>}{all && k < 3 && <span className="off">{"★".repeat(3 - k)}</span>}</span>);
 const Card = ({ size, url, children }) => <div className={`card ${size}`} onClick={open(url)}>{children}</div>;
 const srcText = (m, now, short) => {
@@ -242,24 +248,24 @@ function HourGrid({ hours, rows }) {
   const cols = hours.filter((x) => x.has);
   if (!cols.length) return null;
   return <div className="hgrid">{cols.map((x) => (
-    <div key={x.h} className="hcol"><span className="hh">{x.h}</span>{rows(x)}<span className="sb" style={{ background: x.stars > 0 ? FILL[x.stars] : undefined }} /></div>))}</div>;
+    <div key={x.h} className="hcol"><span className="hh">{x.h}</span>{rows(x)}<span className="sb" style={{ background: x.kite ? KITE : x.stars > 0 ? FILL[x.stars] : undefined }} /></div>))}</div>;
 }
 function VentCard({ m, size, now }) {
   const live = m.now && m.now.src !== "prévu" && !m.now.stale;
   if (size === "petit") return <Card size={size} url={link(m.spot.id)}>
     <div className="row"><b className="t14">{m.spot.short}</b><span className={`src${live ? " live" : ""}`}>{srcText(m, now, true)}</span></div>
     <Big m={m} size={44} /><div className="ink2">{gustText(m) || " "}</div>
-    <div className="row"><span className="ink2 sb12">Dans 2 h {m.in2 ? r(m.in2.kn) : "–"}</span><Stars k={m.days[0] ? m.days[0].stars : 0} size={12} /></div></Card>;
+    <div className="row"><span className="ink2 sb12">Dans 2 h {m.in2 ? r(m.in2.kn) : "–"}</span><Stars k={m.days[0] ? m.days[0].stars : 0} size={12} kite={!!m.days[0] && m.days[0].kite} /></div></Card>;
   if (size === "moyen") return <Card size={size} url={link(m.spot.id)}><div className="hrow">
     <div className="left"><b className="t14">{m.spot.short}</b><span className={`src${live ? " live" : ""}`}>{srcText(m, now, true)}</span><Big m={m} size={38} />
       <span className="ink2 s11">{m.now && m.now.gust != null ? `raf. ${r(m.now.gust)} · ` : ""}2 h : {m.in2 ? r(m.in2.kn) : "–"}</span></div>
-    {m.days.map((d) => <div key={d.label} className="dcol"><b>{d.label}</b><Stars k={d.stars} size={10} /><Num kn={d.kn} /><Arrow from={d.dir} /><span className="s10">{d.cr}</span></div>)}
+    {m.days.map((d) => <div key={d.label} className="dcol"><b>{d.label}</b><Stars k={d.stars} size={10} kite={d.kite} /><Num kn={d.kn} /><Arrow from={d.dir} /><span className="s10">{d.cr}</span></div>)}
   </div></Card>;
   return <Card size={size} url={link(m.spot.id)}>
     <div className="row"><b className="t15">{title(m.spot)}</b><span className={`src${live ? " live" : ""}`}>{srcText(m, now)}</span></div>
     <div className="row"><Big m={m} size={34} /><span className="ink2 sb12 right">{gustText(m)}<br />{m.in2 ? `dans 2 h : ${r(m.in2.kn)} nd ${compass(m.in2.dir)}` : ""}</span></div>
     {m.detail.map((d) => <div key={d.label}>
-      <div className="row dh"><span><b className="t13">{d.label}</b> <span className="ink3 s11">{d.date}</span> {d.stars > 0 && <Stars k={d.stars} all={false} />}</span>
+      <div className="row dh"><span><b className="t13">{d.label}</b> <span className="ink3 s11">{d.date}</span> {(d.stars > 0 || d.kite) && <Stars k={d.stars} all={false} kite={d.kite} />}</span>
         {d.kn != null && <span className="s11"><b>max {r(d.kn)} nd {compass(d.dir)}</b><span className="ink2">{d.gust != null ? ` · raf. ${r(d.gust)}` : ""}</span></span>}</div>
       <HourGrid hours={d.hours} rows={(x) => <span className="frag"><Num kn={x.kn} w={19} h={19} size={12} /><span className="ink2 s10">{r(x.gust)}</span><Arrow from={x.dir} size={12} /></span>} /></div>)}</Card>;
 }
@@ -285,7 +291,8 @@ function CreneauxCard({ cm, size, now }) {
     <table className="cgrid"><thead><tr><th />{cm.grid.map((g) => <th key={g.spot.id}>{HEAD[g.spot.short] || g.spot.short}</th>)}</tr></thead>
       <tbody>{cm.days.map((d, i) => <tr key={d}><th>{d === dayKey(now) ? "Auj." : cap(new Date(d + "T12:00:00").toLocaleDateString("fr-FR", { weekday: "short", day: "numeric" }).replace(".", ""))}</th>
         {cm.grid.map((g) => { const x = g.cells[i]; return <td key={g.spot.id}>{x.has
-          ? <span className="fill" onClick={open(link(g.spot.id, new Date(d + "T12:00:00").getTime()))} style={{ background: `linear-gradient(to right, ${FILL[3]} 0 ${(x.n[2] / x.n[3]) * 100}%, ${FILL[2]} 0 ${((x.n[2] + x.n[1]) / x.n[3]) * 100}%, ${FILL[1]} 0 ${((x.n[2] + x.n[1] + x.n[0]) / x.n[3]) * 100}%, transparent 0)` }}><i>{x.label}</i></span>
+          ? <span className="fill" onClick={open(link(g.spot.id, new Date(d + "T12:00:00").getTime()))} style={{ background: fillOf(x.n) }}><i>{x.label}</i></span>
+          : x.kite ? <span className="fill" onClick={open(link(g.spot.id, new Date(d + "T12:00:00").getTime()))} style={{ background: fillOf(x.n) }}><i className="kitepill">★ Kite</i></span>
           : <span className="kn">{x.kn != null ? r(x.kn) : ""}</span>}</td>; })}</tr>)}</tbody></table>
     <span className="ink3 s9 legend">{cm.label}</span></Card>;
 }
@@ -346,8 +353,8 @@ function Shell({ state, dispatch, prefs, place, card, panel, cached }) {
 
 // ------------------------------------------------------------------ styles (couleurs OCEAN ; tout est préfixé .ocean :
 // les widgets Übersicht partagent la même page, un style non préfixé déteindrait sur les autres widgets)
-const LIGHT = "--bg:#FFFFFF;--cell:#F2F3F0;--ink:#152B33;--ink2:#3E5157;--ink3:#5C6E74;--live:#17804F;--off:#D6DCD6;--line:#E4E8E4;--none:#E6E9E5;--k1:#23A26A;--k2:#EE7F1B;--k3:#8A4FD8;--s1:#E3F4EC;--s2:#FDEBDC;--s3:#F3ECFC;--wave:#2F8FB0;--acc:#256D70;--accink:#FFFFFF;--shadow:rgba(0,0,0,.22);";
-const DARK = "--bg:#16262C;--cell:#1E3138;--ink:#EAF1EF;--ink2:#B7C8C6;--ink3:#8EA4A3;--live:#4CC38A;--off:#33494F;--line:#25393F;--none:#25393F;--k1:#4CC38A;--k2:#F5A04A;--k3:#B38BF5;--s1:#1D3A30;--s2:#3A2A1A;--s3:#2E2440;--wave:#5BB8D6;--acc:#75CDC5;--accink:#0D191E;--shadow:rgba(0,0,0,.45);";
+const LIGHT = "--bg:#FFFFFF;--cell:#F2F3F0;--ink:#152B33;--ink2:#3E5157;--ink3:#5C6E74;--live:#17804F;--off:#D6DCD6;--line:#E4E8E4;--none:#E6E9E5;--k1:#23A26A;--k2:#EE7F1B;--k3:#8A4FD8;--kite:#D6343C;--s1:#E3F4EC;--s2:#FDEBDC;--s3:#F3ECFC;--wave:#2F8FB0;--acc:#256D70;--accink:#FFFFFF;--shadow:rgba(0,0,0,.22);";
+const DARK = "--bg:#16262C;--cell:#1E3138;--ink:#EAF1EF;--ink2:#B7C8C6;--ink3:#8EA4A3;--live:#4CC38A;--off:#33494F;--line:#25393F;--none:#25393F;--k1:#4CC38A;--k2:#F5A04A;--k3:#B38BF5;--kite:#FF6B6B;--s1:#1D3A30;--s2:#3A2A1A;--s3:#2E2440;--wave:#5BB8D6;--acc:#75CDC5;--accink:#0D191E;--shadow:rgba(0,0,0,.45);";
 const STYLE = `
 .ocean{position:absolute;${LIGHT}font-family:-apple-system,"SF Pro Text","Helvetica Neue",sans-serif;color:var(--ink);font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased;user-select:none;-webkit-user-select:none;cursor:default}
 @media (prefers-color-scheme: dark){.ocean.auto{${DARK}}}
@@ -384,7 +391,7 @@ const STYLE = `
 .ocean .big{display:flex;align-items:center;gap:6px}.ocean .big>span:first-child{font-weight:900;line-height:1}
 .ocean .bigside{display:flex;flex-direction:column;gap:2px;font-size:11px}
 .ocean .num{display:inline-flex;align-items:center;justify-content:center;border-radius:5px;font-weight:900}
-.ocean .stars{font-weight:700;letter-spacing:1px;white-space:nowrap}.ocean .stars .off{color:var(--off)}.ocean .stars .k1{color:var(--k1)}.ocean .stars .k2{color:var(--k2)}.ocean .stars .k3{color:var(--k3)}
+.ocean .stars{font-weight:700;letter-spacing:1px;white-space:nowrap}.ocean .stars .off{color:var(--off)}.ocean .stars .k1{color:var(--k1)}.ocean .stars .k2{color:var(--k2)}.ocean .stars .k3{color:var(--k3)}.ocean .stars.kite .k,.ocean .stars.kite .kt,.ocean .kitepill{color:var(--kite)}.ocean .stars.kite .kt{font-size:.8em;letter-spacing:0}
 .ocean .dcol{width:50px;background:var(--cell);border-radius:10px;padding:6px 2px;display:flex;flex-direction:column;align-items:center;justify-content:space-evenly;gap:4px;font-size:11px}
 .ocean .dh{margin:8px 0 3px}
 .ocean .hgrid{display:flex;gap:2px;background:var(--cell);border-radius:10px;padding:5px}

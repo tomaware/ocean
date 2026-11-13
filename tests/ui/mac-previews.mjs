@@ -8,7 +8,7 @@ import { join } from 'node:path';
 import { load, toHtml } from '../widgets/mac.mjs';
 import { widgetSurf, widgetWind } from '../../pipeline/publish/widgets.ts';
 import { surfSessions } from '../../pipeline/publish/sessions.ts';
-import { NOW, surfFixture, wingFixture } from '../widgets/fixture.ts';
+import { NOW, surfFixture, kiteFixture } from '../widgets/fixture.ts';
 
 const require = createRequire(import.meta.url);
 let pw;
@@ -18,7 +18,7 @@ const ENGINE = process.argv[3] || 'webkit';
 mkdirSync(OUT, { recursive: true });
 const browser = await pw[ENGINE].launch();
 
-const WIND = JSON.stringify(widgetWind(wingFixture(), {}, NOW));
+const WIND = JSON.stringify(widgetWind(kiteFixture(), {}, NOW));   // avec un jeudi « Kite session » à Beauduc (D-49)
 const S = surfFixture(), SURF = JSON.stringify(widgetSurf(S, surfSessions(S, NOW), NOW));
 const LIVE = JSON.stringify({ connecte: true, spots: { '61-beauduc': { nom: 'Beauduc', t: NOW - 6 * 60e3, v: 23, o: 'SE', max: 29 } } });
 const W = { vent: ['widgets/mac/ocean-vent.jsx', `${WIND}\n@@OCEAN@@\n@@NOLINK@@`], creneaux: ['widgets/mac/ocean-creneaux.jsx', WIND], vague: ['widgets/mac/ocean-vague.jsx', SURF] };

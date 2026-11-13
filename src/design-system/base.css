@@ -176,6 +176,15 @@ table.grid5 tbody th { text-align: left; font-size: var(--fs-sm); color: var(--c
 .stars .on { color: var(--c-star); }
 .stars.k1 .on { color: var(--c-k1); } .stars.k2 .on { color: var(--c-k2); } .stars.k3 .on { color: var(--c-k3); }
 .stars .off { color: var(--c-star-off); }
+/* « Kite session » (wing, plus de 28 nd, D-49) : 1 étoile rouge + mention */
+.stars.kite { align-items: baseline; gap: 4px; }
+.stars.kite .on { color: var(--c-kite); }
+.stars.kite .kt { color: var(--c-kite); font-weight: 700; font-size: .62em; letter-spacing: 0; white-space: nowrap; }
+.stars.sm.kite .kt { font-size: 10px; }
+.tag.kite { color: var(--c-kite); border-color: var(--c-kite); }
+.scorebars .b-kite { fill: var(--c-kite); }
+table.wg col.st.kite { background: color-mix(in srgb, var(--c-kite) 12%, transparent); }
+table.wg tr.wg-stars td.kite { background: color-mix(in srgb, var(--c-kite) 24%, transparent); }
 .stars.sm { font-size: 11px; } .stars.md { font-size: 16px; } .stars.lg { font-size: 22px; } .stars.xl { font-size: 28px; letter-spacing: 2px; }
 .badge.star-badge { background: transparent; padding: 0; gap: var(--s-2); }
 .badge.star-badge.top > span:first-child { background: var(--c-top-soft); color: var(--c-top); padding: 3px 10px; border-radius: var(--r-pill); }

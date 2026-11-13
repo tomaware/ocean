@@ -39,3 +39,15 @@ export function surfFixture() {
   };
   return { spots: [mk('carnon', 'Carnon', 0.6), mk('sete', 'Sète', 1.0)] };
 }
+
+/** Même moteur wing fictif, avec un jeudi 12 « Kite session » à Beauduc : 31 nd rafales 36 toute la journée (D-49).
+ *  Notes et drapeau « kite » posés comme le ferait le moteur v2.1 (au-delà de 30 nd : note 0). */
+export function kiteFixture() {
+  const w = wingFixture();
+  const b = w.spots.find((s) => s.id === 'beauduc')!;
+  for (const h of b.hours as any[]) {
+    if (new Date(h.t).getUTCDate() === 12) { h.kn = 31; h.gust = 36; h.scores = { secu: 0, offshore: 0 }; }
+    h.kite = h.day && (h.kn > 28);
+  }
+  return w;
+}

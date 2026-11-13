@@ -8,7 +8,7 @@ import { LEVEL_LABEL } from '../services/data';
 import { surfWhy } from '../services/surfwhy';
 import { compass, dayKey, dayShort, hh, hourOf, n0, n1 } from '../services/format';
 import type { Series } from '../features/series';
-import { meteoAt, Stars, starsOf, SURF_WIND, WMO } from './Views';
+import { bestOf, isKiteAt, meteoAt, Stars, starsOf, SURF_WIND, WMO } from './Views';
 import { SpotMap } from './SpotMap';
 import type { Map as LMap } from 'leaflet';
 import { gridIndex, useWindField, useWindGrid } from './WindField';
@@ -37,11 +37,12 @@ export function DayTabs({ s, days, value, now, onChange }: { s: Series; days: nu
   return (
     <div class="daytabs" role="group" aria-label="Jour">
       {days.map((t, k) => {
-        const best = Math.max(-1, ...dayIdx(s, t).map((i) => s.score[i] ?? -1));
+        // étoiles du jour = meilleure heure hors « Kite session » ; sinon 1 étoile rouge s'il y a du kite (D-49)
+        const { best, kite } = bestOf(s, dayIdx(s, t).filter((i) => s.day[i]));
         return (
           <button key={t} type="button" aria-pressed={dayKey(t) === dayKey(value)} onClick={() => onChange(t)}>
             {k === 0 && dayKey(t) === dayKey(now) ? 'Auj.' : dayShort(t).replace('.', '')}
-            {starsOf(best) > 0 && <Stars score={best} size="sm" />}
+            {starsOf(best) > 0 ? <Stars score={best} size="sm" /> : kite && <Stars score={null} size="sm" kite label={false} />}
           </button>
         );
       })}
@@ -107,7 +108,7 @@ export function ScoreBars({ s, dayT, now, picked = null, onPick, level }: { s: S
         const night = isNight(h), sc = i === undefined ? null : s.score[i];
         const v = i === undefined || night || sc === null ? 0.4 : Math.max(0.4, sc);
         // couleur = nombre d'étoiles : gris (aucune), vert (1), orange (2), violet (3)
-        const cls = night ? 'b-night' : i === undefined || sc === null ? 'b-none' : sc >= 8.5 ? 'b-top' : sc >= 7 ? 'b-good' : sc >= 5 ? 'b-mid' : 'b-bad';
+        const cls = night ? 'b-night' : i === undefined || sc === null ? 'b-none' : isKiteAt(s, i) ? 'b-kite' : sc >= 8.5 ? 'b-top' : sc >= 7 ? 'b-good' : sc >= 5 ? 'b-mid' : 'b-bad';
         return (
           <g key={h}>
             <rect class={cls} x={X(h) + 1.5} y={y(v)} width={bw - 3} height={H - y(v)} rx={2} />
@@ -144,7 +145,7 @@ function HourTip({ s, i, level, left, top }: { s: Series; i: number; level?: Lev
   }
   return (
     <div class="hourtip" role="status" style={{ left: `${left}px`, top: `${top}px` }}>
-      <div class="row between"><strong>{hh(s.times[i])}</strong><span class="row" style={{ gap: '6px' }}><Stars score={sc} size="sm" /><strong>{s.day[i] ? `${sc1(sc)}/10` : 'nuit : 0'}</strong></span></div>
+      <div class="row between"><strong>{hh(s.times[i])}</strong><span class="row" style={{ gap: '6px' }}><Stars score={sc} size="sm" kite={isKiteAt(s, i)} /><strong>{s.day[i] ? `${sc1(sc)}/10` : 'nuit : 0'}</strong></span></div>
       {lines.map(([k, v]) => <div key={k} class="row between"><span class="muted">{k}</span><span>{v}</span></div>)}
       {why && <span class="comment">{why}</span>}
     </div>
@@ -156,7 +157,7 @@ const SHORE_TAG: Record<string, string> = { on: 'Vent de mer', sideon: 'Side-on'
 
 export function NoteCard({ s, dayT, now, sessions, level, picked, onPick }: { s: Series; dayT: number; now: number; sessions: Session[]; level: Level } & PickProps) {
   const idx = dayIdx(s, dayT).filter((i) => s.day[i]);
-  const best = Math.max(-1, ...idx.map((i) => s.score[i] ?? -1));
+  const { best, kite } = bestOf(s, idx);
   const ss = sessions.filter((x) => dayKey(x.start) === dayKey(dayT)).sort((a, b) => a.start - b.start);
   const envoie = ss.find((x) => x.envoie);
   const r = refIndex(s, dayT, now);
@@ -169,7 +170,8 @@ export function NoteCard({ s, dayT, now, sessions, level, picked, onPick }: { s:
         <span class="small muted">{ss.length ? <>Créneau{ss.length > 1 ? 'x' : ''} <strong style={{ color: 'var(--c-ink)' }}>{ss.map((x) => `${hh(x.start)} – ${hh(x.end)}`).join(' · ')}</strong></> : s.discipline === 'downwind' ? 'pas de créneau' : 'pas de session 2H'}</span>
       </div>
       <div class="mid">
-        <Stars score={best < 0 ? null : best} size="xl" />
+        {starsOf(best) === 0 && kite ? <Stars score={null} size="xl" kite /> : <Stars score={best < 0 ? null : best} size="xl" />}
+        {starsOf(best) > 0 && kite && <span class="tag kite">{'Kite session aussi'}</span>}
         <span class="row" style={{ gap: '6px' }}>
           {envoie && <span class="envoie">Ça envoie · {envoie.windyHours} h à plus de 20 nd</span>}
           {s.levels && <span class="tag">{LEVEL_LABEL[level]}</span>}
@@ -307,11 +309,12 @@ export function Criteria({ d, spot, s, dayT, now, level, sessions, picked }: { d
   if (s.discipline === 'wing') {
     const f = x.f?.[level] as [number, number, number] | null | undefined;
     if (!f) return null;
-    const lo = d.wing.levels?.[level]?.lo ?? 15;
+    const lo = d.wing.levels?.[level]?.lo ?? 15, hi = d.wing.levels?.[level]?.hi ?? 28;
     const ratio = x.gust && x.kn ? x.gust / x.kn : null;
     const sess = sessions.find((y) => dayKey(y.start) === dayKey(dayT) && y.windyHours != null);
     const rows: [string, string, number][] = [
-      ['Force du vent', `${n0(x.kn)} nd · idéal de ${lo} à 35 nd`, f[0] * 10],
+      // bornes publiées par le moteur (v2.1, D-49 : idéal jusqu'à 28 nd, 0 à 30 nd)
+      ['Force du vent', `${n0(x.kn)} nd · idéal de ${lo} à ${hi} nd${x.kite ? ' · au-delà : Kite session' : ''}`, f[0] * 10],
       ['Régularité', ratio ? `rafales ${n0(x.gust)} nd (× ${dec(ratio)})${f[1] < 1 ? ' : vent irrégulier' : ''}` : 'rafales inconnues', f[1] * 10],
       ['Direction / plage', x.dir == null ? 'direction inconnue' : `vent de ${compass(x.dir)}${x.sector ? `, ${(SECTOR_TAG[x.sector] ?? x.sector).toLowerCase()}` : ''}`, f[2] * 10],
       ['Lumière du jour', s.day[i] ? 'de jour' : 'nuit : note 0', s.day[i] ? 10 : 0],

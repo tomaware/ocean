@@ -5,6 +5,8 @@ import { compass, kmhToKn, n0, n1 } from '../services/format';
 export type Col = { key: string; label: string; num?: boolean; fmt: (r: any) => string; warn?: (r: any) => boolean };
 export type Series = {
   discipline: Discipline; times: number[]; score: (number | null)[]; day: boolean[]; rows: any[]; cols: Col[];
+  /** Wing : heure « Kite session » (plus de 28 nd, D-49) — 1 étoile rouge, hors créneaux. Absent ailleurs. */
+  kite?: boolean[];
   lines: { label: string; values: (number | null)[]; color: string; unit: string; scale?: string; dash?: number[] }[];
   levels: boolean; source: string; extra: { label: string; value: string }[]; notice?: string | null;
 };
@@ -20,6 +22,7 @@ export function seriesFor(d: AllData, spot: PublicSpot, disc: Discipline, level:
     const hours = w.hours;
     return {
       discipline: 'wing', times: hours.map((h: any) => h.t), score: hours.map((h: any) => h.scores[level]), day: hours.map((h: any) => h.day), rows: hours, levels: true,
+      kite: hours.map((h: any) => !!h.kite),
       cols: [
         { key: 'kn', label: 'Vent nd', num: true, fmt: (h) => n0(h.kn) },
         { key: 'gust', label: 'Rafales', num: true, fmt: (h) => n0(h.gust) },

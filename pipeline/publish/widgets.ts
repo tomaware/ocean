@@ -22,7 +22,9 @@ export function widgetWind(wing: any, obs: Record<string, unknown>, now: number)
       const hours = s.hours.filter((h: any) => h.t >= now - 3600e3 && h.t <= until);
       const daily = Object.fromEntries(LEVELS.map((L) => [L, days.map((d) => {
         const hh = hours.filter((h: any) => h.day && dayKeyParis(h.t) === d);
-        return [1, 2, 3].map((st) => hh.filter((h: any) => stars(h.scores[L]) === st).length).concat(hh.length);
+        // [heures 1★, 2★, 3★, heures de jour, heures « Kite session » (D-49 : plus de 28 nd, comptées à part, jamais en étoiles)]
+        const ok = hh.filter((h: any) => !h.kite);
+        return [1, 2, 3].map((st) => ok.filter((h: any) => stars(h.scores[L]) === st).length).concat(hh.length, hh.length - ok.length);
       })]));
       const sessions = Object.fromEntries(LEVELS.map((L) => [L, (s.sessions?.[L] ?? []).filter((w: any) => w.end > now && w.start <= until).map((w: any) => {
         const hh = hours.filter((h: any) => h.t >= w.start && h.t < w.end);
@@ -32,8 +34,8 @@ export function widgetWind(wing: any, obs: Record<string, unknown>, now: number)
       })]));
       return {
         id: s.id, name: s.name, short: SHORT[s.id] ?? s.name, source: s.source?.kind ?? 'corrected',
-        // [heure, vent nd, rafales nd, direction °, jour 1/0, note Sécu first, note OffShore]
-        hours: hours.map((h: any) => [h.t, h.kn == null ? null : Math.round(h.kn), h.gust == null ? null : Math.round(h.gust), h.dir, h.day ? 1 : 0, h.scores.secu, h.scores.offshore]),
+        // [heure, vent nd, rafales nd, direction °, jour 1/0, note Sécu first, note OffShore, Kite session 1/0 (D-49)]
+        hours: hours.map((h: any) => [h.t, h.kn == null ? null : Math.round(h.kn), h.gust == null ? null : Math.round(h.gust), h.dir, h.day ? 1 : 0, h.scores.secu, h.scores.offshore, h.kite ? 1 : 0]),
         sessions, daily,
       };
     }),

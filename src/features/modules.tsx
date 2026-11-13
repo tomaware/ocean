@@ -7,7 +7,7 @@ import { setPrefs, usePrefs } from '../services/prefs';
 import { publicLive, useLive } from '../services/perso';
 import { Badge, Fav, Section, Seg } from '../components/ui';
 import { SpotMap } from '../components/SpotMap';
-import { headFor, ModuleView, pickHours, starsOf } from '../components/Views';
+import { headFor, isKiteAt, ModuleView, pickHours, starsOf } from '../components/Views';
 import { ScoreBars } from '../components/Today';
 import { seriesFor, type Series } from './series';
 import { bestScoreBySpot, Freshness, levelFor, LiveBox, matches, moduleOf, upcoming } from './pages';
@@ -45,10 +45,10 @@ export function DayChart({ d, spot, dayT, level, window, title }: { d: AllData; 
 
 // ------------------------------------------------------------ PRÉVISION : grille spots × 5 jours
 /** Remplissage d'une case : violet (3 ★), orange (2 ★), vert (1 ★) en proportion des heures de jour, le reste vide. */
-const fillOf = (n: number[], day: number) => {
+const fillOf = (n: number[], day: number, kh = 0) => {
   const p = (x: number) => Math.round((x / day) * 1000) / 10;
-  const a = p(n[2]), b = a + p(n[1]), c = b + p(n[0]);
-  return `linear-gradient(to right, var(--c-k3) 0 ${a}%, var(--c-k2) ${a}% ${b}%, var(--c-k1) ${b}% ${c}%, var(--c-surface-2) ${c}% 100%)`;
+  const a = p(n[2]), b = a + p(n[1]), c = b + p(n[0]), e = c + p(kh);
+  return `linear-gradient(to right, var(--c-k3) 0 ${a}%, var(--c-k2) ${a}% ${b}%, var(--c-k1) ${b}% ${c}%, var(--c-kite) ${c}% ${e}%, var(--c-surface-2) ${e}% 100%)`;
 };
 const shortName = (s: PublicSpot) => s.name.replace(/\s*\(.*\)/, '').replace('Port Camargue / Espiguette', 'Espiguette').replace('Saintes-Maries-de-la-Mer', 'Stes-Maries').replace('La Grande-Motte', 'G-Motte').replace(/^Plage Sud/, 'P. Sud').replace(/→ La Grande-Motte$/, '→ G-Motte');
 
@@ -68,23 +68,28 @@ function Prevision({ d, now, disc, spots, L, query }: { d: AllData; now: number;
   const cell = (sp: PublicSpot, dayT: number) => {
     const k = dayKey(dayT);
     const ss = sess.filter((s) => s.spot === sp.id && dayKey(s.start) === k);
+    // wing : heures « Kite session » (plus de 28 nd, D-49), jamais en étoiles, en rouge à part
+    const sk = series[sp.id];
+    const kh = sk ? sk.times.filter((t, i) => dayKey(t) === k && sk.day[i] && isKiteAt(sk, i)).length : 0;
+    const dayN = sk ? sk.times.filter((t, i) => dayKey(t) === k && sk.day[i]).length : 1;
     if (ss.length) {
       // heures de jour à 1, 2, 3 étoiles (demande de Tom, 11/11 : la case se remplit selon les heures à chaque niveau)
       const s = series[sp.id];
       const idx = s ? s.times.map((_, i) => i).filter((i) => dayKey(s.times[i]) === k && s.day[i]) : [];
-      const n = [1, 2, 3].map((st) => idx.filter((i) => starsOf(s!.score[i]) === st).length);
+      const n = [1, 2, 3].map((st) => idx.filter((i) => !isKiteAt(s!, i) && starsOf(s!.score[i]) === st).length);
       const peak = Math.max(...ss.map((x) => x.peak)), top = starsOf(peak);
-      return { session: true, hours: ss.reduce((a, x) => a + x.hours, 0), peak, text: '', n, day: Math.max(1, idx.length), top };
+      return { session: true, hours: ss.reduce((a, x) => a + x.hours, 0), peak, text: '', n, day: Math.max(1, idx.length), top, kh };
     }
     // pas de session : case vide (demande de Tom, 10/11 : « autant rien mettre ») ; « — » seulement sans prévision
     const s = series[sp.id];
     const has = !!s && s.times.some((t) => dayKey(t) === k);   // nuit déjà tombée : case vide, pas « — »
-    return { session: false, hours: 0, peak: null, text: has ? '' : '—', n: [0, 0, 0], day: 1, top: 0 };
+    if (kh) return { session: false, hours: 0, peak: null, text: '', n: [0, 0, 0], day: Math.max(1, dayN), top: 0, kh };
+    return { session: false, hours: 0, peak: null, text: has ? '' : '—', n: [0, 0, 0], day: 1, top: 0, kh: 0 };
   };
   const selSpot = sel ? spots.find((s) => s.id === sel.spot) : null;
   return (
     <Section title="Prévision 5 jours">
-      <p class="faint">Chaque case se remplit selon les heures de jour à 1 ★ (vert), 2 ★ (orange) et 3 ★ (violet) ; le chiffre = heures au meilleur niveau du jour. Case vide = pas de session 2H ce jour-là. Touche une case pour le détail.</p>
+      <p class="faint">Chaque case se remplit selon les heures de jour à 1 ★ (vert), 2 ★ (orange) et 3 ★ (violet) ; le chiffre = heures au meilleur niveau du jour. Case vide = pas de session 2H ce jour-là.{disc === 'wing' ? ' ★ rouge « Kite » = plus de 28 nd : Kite session, pas pour le wing.' : ''} Touche une case pour le détail.</p>
       <div class="card table-wrap">
         <table class="grid5">
           <thead><tr><th />{spots.map((s) => <th key={s.id} title={s.name}><strong>{shortName(s)}</strong></th>)}</tr></thead>
@@ -97,10 +102,10 @@ function Prevision({ d, now, disc, spots, L, query }: { d: AllData; now: number;
                   const on = sel?.spot === sp.id && sel?.day === dayT;
                   return (
                     <td key={sp.id}>
-                      <button type="button" class={`cell${c.session ? ' s' : ''}${on ? ' sel' : ''}`} style={c.session ? { background: fillOf(c.n, c.day) } : undefined}
-                        aria-pressed={on} aria-label={`${sp.name}, ${dayLabel(dayT, now)} : ${c.session ? `${c.n[2] ? `${c.n[2]} h à 3 étoiles, ` : ''}${c.n[1] ? `${c.n[1]} h à 2 étoiles, ` : ''}${c.n[0]} h à 1 étoile` : c.text === '—' ? 'pas de prévision' : 'pas de session'}`}
+                      <button type="button" class={`cell${c.session ? ' s' : ''}${on ? ' sel' : ''}`} style={c.session || c.kh ? { background: fillOf(c.n, c.day, c.kh) } : undefined}
+                        aria-pressed={on} aria-label={`${sp.name}, ${dayLabel(dayT, now)} : ${c.session ? `${c.n[2] ? `${c.n[2]} h à 3 étoiles, ` : ''}${c.n[1] ? `${c.n[1]} h à 2 étoiles, ` : ''}${c.n[0]} h à 1 étoile${c.kh ? `, ${c.kh} h Kite session` : ''}` : c.kh ? `pas de session wing, ${c.kh} h Kite session (plus de 28 nœuds)` : c.text === '—' ? 'pas de prévision' : 'pas de session'}`}
                         onClick={() => setSel(on ? null : { spot: sp.id, day: dayT })}>
-                        {c.session ? <span class="cell-l">{c.n[c.top - 1] || c.hours}h <span class={`stars sm k${c.top}`}><span class="on">{'★'.repeat(c.top)}</span></span></span> : c.text}
+                        {c.session ? <span class="cell-l">{c.n[c.top - 1] || c.hours}h <span class={`stars sm k${c.top}`}><span class="on">{'★'.repeat(c.top)}</span></span></span> : c.kh ? <span class="cell-l">{c.kh}h <span class="stars sm kite"><span class="on">★</span><span class="kt">Kite</span></span></span> : c.text}
                       </button>
                     </td>
                   );
@@ -220,7 +225,7 @@ export function Module({ d, now, disc, sub, query }: { d: AllData; now: number; 
         <div class="module-body">
           {!meta.available && <div class="notice warn">Prévision indisponible pour cette mise à jour : {meta.note || meta.source}</div>}
           {body}
-          <p class="faint">Session 2H = au moins 2 h d’affilée à 5/10 ou plus, de jour. Source : {meta.source}.</p>
+          <p class="faint">Session 2H = au moins 2 h d’affilée à 5/10 ou plus, de jour{disc === 'wing' ? ', hors Kite session (plus de 28 nd)' : ''}. Source : {meta.source}.</p>
         </div>
       </div>
     </>

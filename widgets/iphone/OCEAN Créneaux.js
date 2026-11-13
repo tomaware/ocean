@@ -15,7 +15,7 @@
 
 const DATA = "https://tomaware.github.io/ocean/data/widget-wind.json";
 const APP = "https://tomaware.github.io/ocean/";
-const VERSION = "2026-11-13a";   // affichée dans les réglages : permet de savoir quelle version tourne
+const VERSION = "2026-11-13b";   // affichée dans les réglages : permet de savoir quelle version tourne
 // ------------------------------------------------------- mise a jour automatique
 // Le widget va chercher sa propre version publiee et reecrit son fichier. La nouvelle version s'applique au
 // rafraichissement suivant : une correction n'oblige plus a recopier le script a la main.
@@ -46,6 +46,8 @@ const BG = dyn("#FFFFFF", "#16262C"), CELL = dyn("#F2F3F0", "#1E3138");
 const INK = dyn("#152B33", "#EAF1EF"), INK2 = dyn("#3E5157", "#B7C8C6"), INK3 = dyn("#5C6E74", "#8EA4A3"), LINE = dyn("#E4E8E4", "#25393F");
 const OFF = dyn("#D6DCD6", "#33494F");
 const STAR = [OFF, dyn("#23A26A", "#4CC38A"), dyn("#EE7F1B", "#F5A04A"), dyn("#8A4FD8", "#B38BF5")];
+// « Kite session » (plus de 28 nd, D-49) : jamais dans un créneau wing, signalée en rouge dans la grille
+const KITE = dyn("#D6343C", "#FF6B6B");
 const SOFT = [CELL, dyn("#E3F4EC", "#1D3A30"), dyn("#FDEBDC", "#3A2A1A"), dyn("#F3ECFC", "#2E2440")];
 
 const DIR16 = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSO", "SO", "OSO", "O", "ONO", "NO", "NNO"];
@@ -91,8 +93,9 @@ function stars(stack, k, size, all = true) {
 function fillImage(x, w, h) {
   const c = new DrawContext(); c.size = new Size(w, h); c.opaque = false; c.respectScreenScale = true;
   const tot = Math.max(1, x[3]); let at = 0;
-  for (const [k, col] of [[3, "#8A4FD8"], [2, "#EE7F1B"], [1, "#23A26A"]]) {
-    const wpx = (x[k - 1] / tot) * w; if (wpx <= 0) continue;
+  // x = [heures 1★, 2★, 3★, heures de jour, heures « Kite session »]
+  for (const [k, col] of [[3, "#8A4FD8"], [2, "#EE7F1B"], [1, "#23A26A"], [5, "#D6343C"]]) {
+    const wpx = ((x[k - 1] || 0) / tot) * w; if (wpx <= 0) continue;
     c.setFillColor(new Color(col)); c.fillRect(new Rect(at, 0, wpx, h)); at += wpx;
   }
   return c.getImage();
@@ -228,6 +231,16 @@ function large(w, data, list, cfg, now) {
       const ses = (sp.sessions[cfg.level] || []).filter((s) => dayKey(s.s) === key);
       const cell = r.addStack(); cell.layoutVertically(); cell.spacing = 0; cell.size = new Size(cw, ch);
       cell.cornerRadius = 6; cell.backgroundColor = CELL; cell.centerAlignContent();
+      if ((!ses.length || !x) && x && x[4]) {
+        // pas de créneau wing, mais du vent à plus de 28 nd : 1 étoile rouge « Kite »
+        cell.backgroundImage = fillImage(x, cw, ch);
+        cell.addSpacer();
+        const pr = cell.addStack(); pr.spacing = 0; pr.addSpacer();
+        const pill = pr.addStack(); pill.spacing = 0; pill.backgroundColor = BG; pill.cornerRadius = 7; pill.setPadding(1, 3, 1, 3);
+        text(pill, "★ Kite", F.h(9), KITE, { scale: 0.6 });
+        pr.addSpacer(); cell.addSpacer();
+        continue;
+      }
       if (!ses.length || !x) {
         const kn = dayMax(sp, key);
         if (kn != null) { cell.addSpacer(); text(cell, String(kn), F.s(10), INK3, { scale: 0.6, center: true }); cell.addSpacer(); }

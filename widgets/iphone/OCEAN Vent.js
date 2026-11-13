@@ -16,7 +16,7 @@
 
 const DATA = "https://tomaware.github.io/ocean/data/widget-wind.json";
 const APP = "https://tomaware.github.io/ocean/";
-const VERSION = "2026-11-13a";   // affichée dans les réglages : permet de savoir quelle version tourne
+const VERSION = "2026-11-13b";   // affichée dans les réglages : permet de savoir quelle version tourne
 // ------------------------------------------------------- mise a jour automatique
 // Le widget va chercher sa propre version publiee et reecrit son fichier. La nouvelle version s'applique au
 // rafraichissement suivant : une correction n'oblige plus a recopier le script a la main.
@@ -50,6 +50,8 @@ const INK = dyn("#152B33", "#EAF1EF"), INK2 = dyn("#3E5157", "#B7C8C6"), INK3 = 
 const LIVE = dyn("#17804F", "#4CC38A"), OFF = dyn("#D6DCD6", "#33494F"), LINE = dyn("#E4E8E4", "#25393F");
 const STAR = [OFF, dyn("#23A26A", "#4CC38A"), dyn("#EE7F1B", "#F5A04A"), dyn("#8A4FD8", "#B38BF5")];
 const NONE = dyn("#E6E9E5", "#25393F");
+// « Kite session » (plus de 28 nd, D-49) : 1 étoile rouge, quelle que soit la note wing
+const KITE = dyn("#D6343C", "#FF6B6B");
 // échelle de vent façon Windguru (comme les tableaux de l'app)
 const SCALE = [[5, "#FFFFFF", "#3E5157"], [8, "#DDF3FA", "#152B33"], [11, "#A9E3EE", "#152B33"], [14, "#7FDDB0", "#0F3322"], [17, "#B5EA62", "#21360A"],
   [20, "#F2EC4E", "#383300"], [23, "#FFC94D", "#3A2700"], [26, "#FFA04A", "#3A1A00"], [30, "#F66A4B", "#FFFFFF"], [999, "#D9386E", "#FFFFFF"]];
@@ -117,8 +119,9 @@ function cellNum(stack, kn, w, h, size) {
   text(s, kn == null ? "–" : String(Math.round(kn)), F.h(size), fg, { scale: 0.8 });
   return s;
 }
-function starsText(stack, k, size) {
+function starsText(stack, k, size, kite) {
   const s = stack.addStack(); s.spacing = 0; s.centerAlignContent();
+  if (!k && kite) { text(s, "★", F.b(size), KITE); text(s, " Kite", F.h(size - 1), KITE, { scale: 0.6 }); return; }
   if (k) text(s, "★".repeat(k), F.b(size), STAR[k]);
   if (k < 3) text(s, "★".repeat(3 - k), F.b(size), OFF);
 }
@@ -172,19 +175,20 @@ function findSpot(data, q) {
 // ------------------------------------------------------------------ modèle de ce qui est affiché
 function model(data, spot, level, live, now) {
   const L = level === "offshore" ? 6 : 5;
-  const rows = spot.hours.map((h) => ({ t: h[0], kn: h[1], gust: h[2], dir: h[3], day: !!h[4], score: h[L] }));
+  const rows = spot.hours.map((h) => ({ t: h[0], kn: h[1], gust: h[2], dir: h[3], day: !!h[4], score: h[L], kite: !!h[7] && !!h[4] }));
   const near = (t) => rows.reduce((b, r) => (Math.abs(r.t - t) < Math.abs((b ? b.t : Infinity) - t) ? r : b), null);
   const cur = near(now), in2 = near(now + 2 * 3600e3);
   const nowRow = cur && Math.abs(cur.t - now) <= 3600e3 ? cur : null;
   const twoRow = in2 && Math.abs(in2.t - (now + 2 * 3600e3)) <= 3600e3 ? in2 : null;
   const days = data.days.slice(0, 4).map((d, k) => {
     const rr = rows.filter((r) => dayKey(r.t) === d && r.day);
-    const best = rr.reduce((b, r) => ((r.score ?? -1) > (b ? b.score ?? -1 : -1) ? r : b), null);
+    // étoiles du jour = meilleure heure hors « Kite session » ; s'il n'y en a pas, 1 étoile rouge « Kite »
+    const best = rr.filter((r) => !r.kite).reduce((b, r) => ((r.score ?? -1) > (b ? b.score ?? -1 : -1) ? r : b), null);
     const max = rr.reduce((b, r) => ((r.kn ?? -1) > (b ? b.kn ?? -1 : -1) ? r : b), null);
     const ss = (spot.sessions[level] || []).filter((s) => dayKey(s.s) === d);
     const strip = [];
-    for (let h = 7; h <= 21; h++) { const r = rr.find((x) => new Date(x.t).getHours() === h); strip.push(r ? starsOf(r.score) : -1); }
-    return { key: d, label: dayLabel(d, now), stars: starsOf(best ? best.score : null), kn: max ? max.kn : null, dir: max ? max.dir : null,
+    for (let h = 7; h <= 21; h++) { const r = rr.find((x) => new Date(x.t).getHours() === h); strip.push(r ? (r.kite ? 0 : starsOf(r.score)) : -1); }
+    return { key: d, label: dayLabel(d, now), stars: starsOf(best ? best.score : null), kite: rr.some((r) => r.kite), kn: max ? max.kn : null, dir: max ? max.dir : null,
       cr: ss.length ? `${new Date(ss[0].s).getHours()}–${new Date(ss[0].e).getHours()} h` : "—", strip };
   });
   const next = rows.filter((r) => r.t >= now - 3600e3).slice(0, 12);
@@ -198,7 +202,7 @@ function model(data, spot, level, live, now) {
   // taille). La bande 4 jours, les créneaux et les max du jour gardent 7 h → 21 h.
     for (let h = GRILLE[0]; h <= GRILLE[1]; h++) {
       const r = rr.find((x) => new Date(x.t).getHours() === h);
-      hours.push({ h, has: !!r, kn: r ? r.kn : null, gust: r ? r.gust : null, dir: r ? r.dir : null, stars: r && r.day ? starsOf(r.score) : 0, past: !!r && r.t + 3600e3 <= now });
+      hours.push({ h, has: !!r, kn: r ? r.kn : null, gust: r ? r.gust : null, dir: r ? r.dir : null, stars: r && r.day && !r.kite ? starsOf(r.score) : 0, kite: !!r && r.kite, past: !!r && r.t + 3600e3 <= now });
     }
     const up = hours.filter((x) => x.has && !x.past);
     const max = up.reduce((b, x) => (x.kn != null && (!b || x.kn > b.kn) ? x : b), null);
@@ -206,7 +210,7 @@ function model(data, spot, level, live, now) {
     const ss = (spot.sessions[level] || []).filter((x) => dayKey(x.s) === d && x.e > now);
     return { key: d, label: k === 0 ? "Aujourd'hui" : k === 1 ? "Demain" : "Après-demain",
       date: new Date(now + k * 86400e3).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric" }),
-      stars: up.reduce((b, x) => Math.max(b, x.stars), 0), kn: max ? max.kn : null, dir: max ? max.dir : null, gust: gmax,
+      stars: up.reduce((b, x) => Math.max(b, x.stars), 0), kite: up.some((x) => x.kite), kn: max ? max.kn : null, dir: max ? max.dir : null, gust: gmax,
       cr: ss.length ? ss.map((x) => `${new Date(x.s).getHours()}–${new Date(x.e).getHours()} h`).join(" · ") : "pas de créneau", hours };
   });
   return { spot, stale: live && live.stale ? live.t : null, detail, rows, now: live && !live.panne && !live.stale ? live : nowRow ? { t: nowRow.t, kn: nowRow.kn, gust: nowRow.gust, dir: nowRow.dir, dirTxt: compass(nowRow.dir), src: "prévu" } : live && live.stale ? live : null,
@@ -247,7 +251,7 @@ function small(w, data, spot, m, now) {
   w.addSpacer(6);
   const b = w.addStack(); b.centerAlignContent();
   text(b, m.in2 ? `Dans 2 h ${Math.round(m.in2.kn)}` : "Dans 2 h –", F.s(12), INK2); b.addSpacer();
-  starsText(b, m.days[0] ? m.days[0].stars : 0, 12);
+  starsText(b, m.days[0] ? m.days[0].stars : 0, 12, m.days[0] && m.days[0].kite);
 }
 function dayCols(stack, m, cellW) {
   for (const d of m.days) {
@@ -255,7 +259,7 @@ function dayCols(stack, m, cellW) {
     const c = stack.addStack(); c.layoutVertically(); c.size = new Size(cellW, 0); c.backgroundColor = CELL;
     c.cornerRadius = 10; c.setPadding(6, 2, 6, 2); c.spacing = 4; c.centerAlignContent();
     text(c, d.label, F.h(11), INK, { scale: 0.6, center: true });
-    starsText(c, d.stars, 10);
+    starsText(c, d.stars, 10, d.kite);
     cellNum(c, d.kn, cellW - 8, 20, 13);
     addArrow(c, d.dir, 13, INK2);
     text(c, d.cr, F.s(10), INK2, { scale: 0.6, center: true });
@@ -297,6 +301,7 @@ function large(w, data, spot, m, now) {
     const hd = w.addStack(); hd.centerAlignContent(); hd.spacing = 4;
     text(hd, d.label, F.h(13), INK, { scale: 0.7 }); text(hd, d.date, F.r(11), INK3, { scale: 0.6 });
     if (d.stars) text(hd, "★".repeat(d.stars), F.b(11), STAR[d.stars], { scale: 0.7 });
+    else if (d.kite) text(hd, "★ Kite session", F.b(11), KITE, { scale: 0.7 });
     hd.addSpacer();
     if (d.kn != null) text(hd, `max ${Math.round(d.kn)} nd ${compass(d.dir)}${d.gust != null ? ` · raf. ${Math.round(d.gust)}` : ""}`, F.b(11), INK, { scale: 0.6 });
     w.addSpacer(3);
@@ -310,7 +315,7 @@ function large(w, data, spot, m, now) {
       cellNum(c, x.kn, cw, fn + 6, fn);                                      // la case occupe toute la colonne
       text(c, x.gust != null ? String(Math.round(x.gust)) : " ", F.r(fg), INK2, { scale: 0.7 });
       addArrow(c, x.dir, fa, INK2);
-      const sb = c.addStack(); sb.size = new Size(cw - 3, 5); sb.cornerRadius = 2; sb.backgroundColor = x.stars > 0 ? STAR[x.stars] : NONE;
+      const sb = c.addStack(); sb.size = new Size(cw - 3, 5); sb.cornerRadius = 2; sb.backgroundColor = x.kite ? KITE : x.stars > 0 ? STAR[x.stars] : NONE;
     });
     wrap.addSpacer();
   }
@@ -328,7 +333,7 @@ function lock(w, family, spot, m) {
   text(w, `${spot.short} · ${k} nd ${dir}`, F.h(13), Color.white(), { scale: 0.7 });
   text(w, `${m.now && m.now.gust != null ? `raf. ${Math.round(m.now.gust)} · ` : ""}2 h : ${m.in2 ? Math.round(m.in2.kn) : "–"}`, F.r(12), Color.white());
   const d = m.days[0];
-  text(w, d ? `${"★".repeat(d.stars) || "pas d'étoile"} ${d.cr !== "—" ? d.cr : ""}` : "", F.r(12), Color.white());
+  text(w, d ? `${"★".repeat(d.stars) || (d.kite ? "★ Kite" : "pas d'étoile")} ${d.cr !== "—" ? d.cr : ""}` : "", F.r(12), Color.white());
 }
 
 // ------------------------------------------------------------------ réglages dans l'app

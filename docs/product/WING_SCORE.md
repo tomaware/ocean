@@ -1,13 +1,35 @@
-# Note wing foil — v2.0
+# Note wing foil — v2.1
 
-> **Statut : validée par Tom le 10/11 (D-14, D-16) ; v1.1 le 10/11 à 12 h 41 (D-18 : « trop de vent c'est plus de 35 nœuds, sinon c'est OK ») ; v2.0 le 10/11 à 13 h 45 (D-19 : deux modes « Secu first – OffShore » au lieu des trois niveaux ; « ça envoie » quand il y a plus de 4 h de vent à plus de 20 nd).**
+> **Statut : validée par Tom le 10/11 (D-14, D-16) ; v1.1 le 10/11 à 12 h 41 (D-18 : « trop de vent c'est plus de 35 nœuds, sinon c'est OK ») ; v2.0 le 10/11 à 13 h 45 (D-19 : deux modes « Secu first – OffShore » au lieu des trois niveaux ; « ça envoie » quand il y a plus de 4 h de vent à plus de 20 nd) ; v2.1 le 13/11 (D-49 : « au-delà de 28 nd, 1 étoile rouge et Kite session ; 30 nd en wing c'est 0 »).**
+
+## v2.1 — « Kite session » au-delà de 28 nd (13/11, D-49)
+
+Demande de Tom : « quand il y a plus de 28 nds, passe à 1 étoile rouge et mets Kite session. Ajuste la note en fonction : 30 nds en wing c'est 0 ». Choix validés par Tom : le seuil se lit sur **le vent de la note** (vent moyen, ou moyenne vent + rafales quand les rafales dépassent le vent de plus de 30 %), et les heures « Kite session » **ne comptent pas** dans les créneaux wing.
+
+- **Force V** : 1 jusqu'à 28 nd inclus, puis baisse en ligne droite jusqu'à **0 à 30 nd** (0,5 à 29 nd) ; 0 au-delà. Mêmes valeurs en Sécu first et en Offshore.
+- **Kite session** : de jour, vent de la note > 28 nd. Partout (app, iPhone, Mac, Windows) l'heure s'affiche avec **1 étoile rouge** et « Kite session » (« Kite » quand la place manque), quelle que soit la note. Le commentaire commence par « Kite session (plus de 28 nd) ».
+- **Créneaux** : une heure « Kite session » coupe le créneau, même si sa note atteint 5/10. Les étoiles d'un jour viennent de sa meilleure heure hors « Kite session » ; si aucune n'a d'étoile et qu'il y a du kite, le jour prend l'étoile rouge. Dans les grilles 5 jours, les heures « Kite » remplissent la case en rouge.
+- Données des widgets : 8ᵉ valeur de chaque heure = « Kite session » (1/0) ; 5ᵉ valeur des comptes du jour = heures « Kite session ».
+
+Cas de référence avant / après (vent régulier side-shore, Almanarre, rafales × 1,1) :
+
+| Vent | v2.0 | v2.1 |
+|---|---|---|
+| 26 nd | 10 ★★★ | 10 ★★★ |
+| 28 nd | 10 ★★★ | 10 ★★★ |
+| 28,5 nd | 10 ★★★ | 7,5 · ★ rouge « Kite session » |
+| 29 nd | 10 ★★★ | 5 · ★ rouge « Kite session » |
+| 30 nd à 35 nd | 10 ★★★ | 0 · ★ rouge « Kite session » |
+| 36 nd | 0 | 0 · ★ rouge « Kite session » |
+
+24 nd rafales 34 (× 1,42) : vent de la note (24 + 34) / 2 = 29 nd → 5 et « Kite session » ; 26 nd rafales 33 (× 1,27) : vent de la note 26 → 10, pas kite.
 
 ## v2.0 en bref (remplace les niveaux des §§ 3 et 5)
 
 | | Sécu first | Offshore |
 |---|---|---|
 | Vent : 0 → 1 | 12 → 15 nd | 11 → 14 nd |
-| Vent : 1 jusqu'à | 35 nd inclus | 35 nd inclus |
+| Vent : 1 jusqu'à | ~~35 nd inclus~~ 28 nd inclus, 0 à 30 nd (v2.1) | ~~35 nd inclus~~ 28 nd inclus, 0 à 30 nd (v2.1) |
 | Vent de mer (0-30°) | 0,8 | 0,8 |
 | Side-on / side-shore | 1 | 1 |
 | Side-off (100-135°) | 0 | 1 (commentaire « side-off ») |
@@ -94,7 +116,7 @@ Plan d'eau fermé (Le Ponant) : D = 1, sauf secteurs déconseillés (× 0,6).
 
 ### Session 2H
 
-Un créneau = au moins **2 h d'affilée** à 5/10 ou plus, de jour (même durée que `SESSION_HEURES` de la super prévision). Une heure manquante coupe le créneau.
+Un créneau = au moins **2 h d'affilée** à 5/10 ou plus, de jour, hors « Kite session » (v2.1) (même durée que `SESSION_HEURES` de la super prévision). Une heure manquante coupe le créneau.
 
 ## 4. Ce que la note ne fait pas (volontairement)
 

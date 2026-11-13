@@ -58,7 +58,8 @@ export function wingSessions(wing: any, now: number): Session[] {
     const modes = Object.keys(s.hours[0]?.scores ?? {}) as Level[];
     for (const L of modes) {
       const sc = s.hours.map((h: any) => h.scores[L]);
-      for (const w of windows(s.hours.map((h: any, i: number) => ({ t: h.t, s: h.scores[L], day: h.day, i })), now)) {
+      // « Kite session » (plus de 28 nd, D-49) : jamais dans un créneau wing
+      for (const w of windows(s.hours.map((h: any, i: number) => ({ t: h.t, s: h.kite ? null : h.scores[L], day: h.day, i })), now)) {
         const windy = w.idx.filter((i) => (s.hours[i].kn ?? 0) > ENVOIE_KN).length;
         out.push({ ...mk('wing', s.id, s.name, L, w, sc, times,
           (i) => { const h = s.hours[i]; return `${Math.round(h.kn)} nd de ${compass(h.dir)} (rafales ${h.gust === null ? '—' : Math.round(h.gust)})${h.sector ? ' · ' + sectorText(h.sector) : ''}`; },

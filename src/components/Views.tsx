@@ -11,7 +11,21 @@ import type { Series } from '../features/series';
 // ------------------------------------------------------------------ étoiles
 /** 0 à 3 étoiles : ≥ 5 → ★, ≥ 7 → ★★, ≥ 8,5 → ★★★ (mêmes seuils que les couleurs). */
 export const starsOf = (s: number | null | undefined) => (s === null || s === undefined ? 0 : s >= 8.5 ? 3 : s >= 7 ? 2 : s >= 5 ? 1 : 0);
-export function Stars({ score, size = 'md' }: { score: number | null | undefined; size?: 'sm' | 'md' | 'lg' | 'xl' }) {
+/** « Kite session » (wing, plus de 28 nd, D-49) : 1 étoile rouge, quelle que soit la note. */
+export const KITE_TEXT = 'Kite session';
+export const isKiteAt = (s: Series, i: number) => !!s.kite?.[i];
+/** Meilleure note d'un ensemble d'heures hors « Kite session », et s'il y a des heures « Kite session ». */
+export function bestOf(s: Series, idx: number[]): { best: number; bestI: number | null; kite: boolean } {
+  let best = -1, bestI: number | null = null;
+  for (const i of idx) if (!isKiteAt(s, i) && (s.score[i] ?? -1) > best) { best = s.score[i] ?? -1; bestI = i; }
+  return { best, bestI, kite: idx.some((i) => isKiteAt(s, i)) };
+}
+export function Stars({ score, size = 'md', kite, label = true }: { score: number | null | undefined; size?: 'sm' | 'md' | 'lg' | 'xl'; kite?: boolean; label?: boolean }) {
+  if (kite) return (
+    <span class={`stars ${size} kite`} role="img" aria-label={`${KITE_TEXT} : plus de 28 nœuds, trop pour le wing`} title={`${KITE_TEXT} : plus de 28 nd${score == null ? '' : ` (note wing ${n1(score)}/10)`}`}>
+      <span class="on">★</span>{label && <span class="kt">{size === 'sm' ? 'Kite' : KITE_TEXT}</span>}
+    </span>
+  );
   const k = starsOf(score);
   return (
     <span class={`stars ${size} k${k}`} role="img" aria-label={`${k} étoile${k > 1 ? 's' : ''} sur 3${score == null ? '' : ` (note ${n1(score)}/10)`}`} title={score == null ? '' : `note ${n1(score)}/10`}>
@@ -96,6 +110,7 @@ export function WindTable({ d, spot, s, picks, showDays, picked, onPick }: { d: 
   const met = picks.map((p) => meteoAt(d, spot.id, p.t));
   // colonnes qui ont au moins une étoile : teinte verte, orange ou violette selon les étoiles (Tom, 11/11 ; gris clair avant)
   const starred = (i: number) => starsOf(s.score[i]) > 0;
+  const kite = (i: number) => isKiteAt(s, i);
   const dayStarts = new Set(picks.filter((p, k) => k === 0 || dayKey(picks[k - 1].t) !== dayKey(p.t)).map((p) => p.t));
   const sep = (t: number) => (showDays && dayStarts.has(t) ? 'sep' : undefined);
   // VAGUE et HOULE : même tableau que WIND ; barres de vagues (VAGUE) ou de houle portante (HOULE)
@@ -106,7 +121,7 @@ export function WindTable({ d, spot, s, picks, showDays, picked, onPick }: { d: 
     <div class="wg-wrap">
       <table class="wg" aria-label={`${surf ? 'Vagues' : 'Vent'} heure par heure, ${spot.name}`}
         {...pickHandlers(picks, onPick, (el) => { const td = el.closest('td'); return td ? (td as HTMLTableCellElement).cellIndex - 1 : null; })}>
-        <colgroup><col />{picks.map((p) => <col key={p.t} class={picked === p.t ? 'pk' : starred(p.i) ? `st k${starsOf(s.score[p.i])}` : ''} />)}</colgroup>
+        <colgroup><col />{picks.map((p) => <col key={p.t} class={picked === p.t ? 'pk' : kite(p.i) ? 'st kite' : starred(p.i) ? `st k${starsOf(s.score[p.i])}` : ''} />)}</colgroup>
         <tbody>
           {showDays && <tr class="wg-days"><th />{picks.map((p) => <td key={p.t} class={sep(p.t)}>{dayStarts.has(p.t) ? dayShort(p.t) : ''}</td>)}</tr>}
           <tr class="wg-h"><th>Heure</th>{picks.map((p) => <td key={p.t} class={sep(p.t)}>{hourOf(p.t)}</td>)}</tr>
@@ -121,7 +136,7 @@ export function WindTable({ d, spot, s, picks, showDays, picked, onPick }: { d: 
           {s.discipline !== 'wing' && <tr class="wg-bars"><th>{surf ? 'Vagues m' : 'Houle m'}</th>{picks.map((p) => { const h = waveH(p.i); return <td key={p.t} class={sep(p.t)} title={surf ? `${n1(row(p.i).lo)} à ${n1(row(p.i).hi)} m` : undefined}><span>{n1(h)}</span><div class="bar" style={{ height: `${Math.max(2, Math.round(((h ?? 0) / hMax) * 44))}px` }} /></td>; })}</tr>}
           {s.discipline !== 'wing' && <tr><th>Période s</th>{picks.map((p) => <td key={p.t} class={sep(p.t)}>{n0(waveT(p.i))}</td>)}</tr>}
           {surf && <tr><th>Houle de</th>{picks.map((p) => <td key={p.t} class={sep(p.t)} title={compass(row(p.i).dir)}><Arrow from={row(p.i).dir} size={14} /></td>)}</tr>}
-          <tr class="wg-stars"><th>Étoiles</th>{picks.map((p) => <td key={p.t} class={`${sep(p.t) ?? ''} k${starsOf(s.score[p.i])}`}><Stars score={s.score[p.i]} size="md" /></td>)}</tr>
+          <tr class="wg-stars"><th>Étoiles</th>{picks.map((p) => <td key={p.t} class={`${sep(p.t) ?? ''} ${kite(p.i) ? 'kite' : `k${starsOf(s.score[p.i])}`}`}><Stars score={s.score[p.i]} size="md" kite={kite(p.i)} label={false} /></td>)}</tr>
         </tbody>
       </table>
     </div>
