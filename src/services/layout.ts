@@ -5,9 +5,9 @@ export type SubId = (typeof SUB_IDS)[number];
 export type TabLayout = { order: SubId[]; hidden: SubId[] };
 /** Réglage de base de l'app (Tom, 13/11) ; chacun peut le changer dans le Profil. */
 export const DEFAULT_LAYOUT: Record<string, TabLayout> = {
-  wind: { order: ['direct', 'spots', 'favoris', 'sessions', 'prevision', 'meilleure'], hidden: ['meilleure'] },
-  vague: { order: ['sessions', 'prevision', 'spots', 'favoris', 'meilleure'], hidden: ['meilleure'] },
-  houle: { order: ['spots', 'prevision', 'meilleure', 'favoris'], hidden: ['meilleure', 'favoris'] },
+  wind: { order: ['direct', 'favoris', 'sessions', 'prevision', 'spots', 'meilleure'], hidden: ['meilleure'] },
+  vague: { order: ['favoris', 'sessions', 'prevision', 'spots', 'meilleure'], hidden: ['meilleure'] },
+  houle: { order: ['prevision', 'spots', 'meilleure', 'favoris'], hidden: ['meilleure', 'favoris'] },
 };
 
 /** Tous les modules disponibles de l'onglet, dans l'ordre choisi (les modules ajoutés depuis viennent à la fin). */

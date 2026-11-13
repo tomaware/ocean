@@ -376,3 +376,7 @@ Les apps actuelles restent en ligne jusqu'à ce que leur remplaçante soit véri
 ### D-61 (13/11/2026) — Favoris en prévision du jour, cases de la Prévision 5 jours en colonnes
 - **Favoris** : plus de « meilleure session » ; pour chaque spot favori, les barres de note heure par heure d'aujourd'hui et de demain (le soir, quand il n'y a plus d'heure de jour : demain et après-demain).
 - **Prévision 5 jours** : chaque case montre une colonne par heure de jour (hauteur = note, couleur des étoiles, rouge pour la Kite session) et la note du jour (meilleure heure hors Kite session) en haut à droite. La Grande-Motte et Le Ponant sont retirés de la grille WIND (toujours dans Carte et Sessions 2H). Phrase d'aide sur deux lignes.
+
+### D-62 (14/11/2026) — réglage de base des modules (2), grille des 3 onglets
+- Réglage de base (capture de Tom) — WIND : En direct, Favoris, Sessions 2H, Prévision, Carte ; VAGUE : Favoris, Sessions 2H, Prévision, Carte ; HOULE : Prévision, Carte. Meilleure session masquée partout, Favoris aussi en HOULE.
+- Prévision 5 jours, mêmes cases dans WIND, VAGUE et HOULE : colonne des jours étroite (64 px, 50 px sur téléphone), colonnes de spots de même largeur, colonnes par heure + note du jour, case plus claire sans heure à 1 étoile.

@@ -46,7 +46,7 @@ test('carte : 5 jours, 7 h → 21 h, lecture heure par heure', () => {
 
 import { DEFAULT_LAYOUT } from '../src/services/layout.ts';
 test('réglage de base de l’app (capture de Tom, 13/11)', () => {
-  assert.deepEqual(shownSubIds(wind, DEFAULT_LAYOUT.wind), ['direct', 'spots', 'favoris', 'sessions', 'prevision']);
-  assert.deepEqual(shownSubIds(availableSubs('surf'), DEFAULT_LAYOUT.vague), ['sessions', 'prevision', 'spots', 'favoris']);
-  assert.deepEqual(shownSubIds(houle, DEFAULT_LAYOUT.houle), ['spots', 'prevision']);
+  assert.deepEqual(shownSubIds(wind, DEFAULT_LAYOUT.wind), ['direct', 'favoris', 'sessions', 'prevision', 'spots']);
+  assert.deepEqual(shownSubIds(availableSubs('surf'), DEFAULT_LAYOUT.vague), ['favoris', 'sessions', 'prevision', 'spots']);
+  assert.deepEqual(shownSubIds(houle, DEFAULT_LAYOUT.houle), ['prevision', 'spots']);
 });

@@ -133,24 +133,24 @@ for (const [name, opt] of [['mobile', { ...devices['iPhone 13'], locale: 'fr-FR'
   // Profil → modules affichés (Tom, 13/11) : masquer Sessions 2H en WIND, monter Prévision en tête ; HOULE inchangé
   // réglage de base de l'app (Tom, 13/11)
   await p.evaluate(() => localStorage.removeItem('ocean.prefs.v1'));
-  for (const [t, want] of [['wind', 'En direct|Carte|Favoris|Sessions 2H|Prévision'], ['vague', 'Sessions 2H|Prévision|Carte|Favoris'], ['houle', 'Carte|Prévision']]) {
+  for (const [t, want] of [['wind', 'En direct|Favoris|Sessions 2H|Prévision|Carte'], ['vague', 'Favoris|Sessions 2H|Prévision|Carte'], ['houle', 'Prévision|Carte']]) {
     await p.goto(`${base}/#/${t}`); await p.reload(); await p.waitForTimeout(400);
     const got = (await p.locator('.subnav a').allInnerTexts()).join('|');
     if (got !== want) errs.push(`${name} : modules de base ${t} = ${got}`);
   }
   await p.goto(`${base}/#/profil`); await p.reload();
   await p.getByRole('list', { name: 'Modules WIND' }).getByLabel('Sessions 2H', { exact: true }).uncheck();
-  await p.getByRole('button', { name: 'Monter Prévision (WIND)' }).click(); await p.getByRole('button', { name: 'Monter Prévision (WIND)' }).click();
+  await p.getByRole('button', { name: 'Monter Prévision (WIND)' }).click();
   await p.locator('.tabs a').nth(0).click(); await p.waitForTimeout(400);
   const subs = await p.locator('.subnav a').allInnerTexts();
-  if (subs.join('|') !== 'En direct|Prévision|Carte|Favoris') errs.push(`${name} : modules WIND après réglage = ${subs.join(', ')}`);
+  if (subs.join('|') !== 'En direct|Prévision|Favoris|Carte') errs.push(`${name} : modules WIND après réglage = ${subs.join(', ')}`);
   await p.goto(`${base}/#/houle`); await p.waitForTimeout(400);
-  if ((await p.locator('.subnav a').allInnerTexts()).join('|') !== 'Carte|Prévision') errs.push(`${name} : HOULE touché par le réglage WIND`);
+  if ((await p.locator('.subnav a').allInnerTexts()).join('|') !== 'Prévision|Carte') errs.push(`${name} : HOULE touché par le réglage WIND`);
   // le dernier module affiché ne peut pas être masqué
   await p.goto(`${base}/#/profil`);
   const hl = p.getByRole('list', { name: 'Modules HOULE' });
-  await hl.getByLabel('Carte', { exact: true }).uncheck();
-  if (!(await hl.getByLabel('Prévision', { exact: true }).isDisabled())) errs.push(`${name} : le dernier module de HOULE peut être masqué`);
+  await hl.getByLabel('Prévision', { exact: true }).uncheck();
+  if (!(await hl.getByLabel('Carte', { exact: true }).isDisabled())) errs.push(`${name} : le dernier module de HOULE peut être masqué`);
   await ctx.close();
 }
 await b.close();
