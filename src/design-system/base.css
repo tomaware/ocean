@@ -163,7 +163,10 @@ table.data th, .table-wrap th { font-weight: 600; color: var(--c-ink-2); font-si
 .arrow { width: 12px; height: 12px; color: var(--c-ink-2); display: block; margin: 0 auto; }
 
 /* grille prévision 5 jours */
-table.grid5 { border-collapse: separate; border-spacing: 4px; width: 100%; }
+/* colonnes de même largeur, colonne des jours étroite (Tom, 13/11) */
+table.grid5 { border-collapse: separate; border-spacing: 4px; width: 100%; table-layout: fixed; }
+table.grid5 col.days { width: 60px; }
+@media (max-width: 560px) { table.grid5 col.days { width: 50px; } }
 table.grid5 th, table.grid5 td { border: 0; padding: 0; text-align: center; white-space: normal; position: static; background: none; }
 table.grid5 thead th { font-size: 11px; text-transform: none; letter-spacing: 0; color: var(--c-ink-2); font-weight: 600; padding-bottom: 4px; vertical-align: bottom; }
 table.grid5 tbody th { text-align: left; font-size: var(--fs-sm); color: var(--c-ink); white-space: nowrap; padding-right: 6px; text-transform: none; letter-spacing: 0; }
@@ -391,6 +394,8 @@ table.stats thead th:not(:first-child) { text-align: right; }
 .dayread .bar .d, .dayread .bar .t { min-height: 1.3em; line-height: 1.3em; }
 /* Prévision 5 jours : colonnes des heures de jour dans chaque case + note du jour (Tom, 13/11) */
 .grid5 .cell { position: relative; overflow: hidden; min-height: 58px; }
+/* pas de vent (aucune heure à 1 étoile) : case plus claire */
+.grid5 .cell.calm { background: color-mix(in srgb, var(--c-surface-2) 40%, var(--c-surface)); }
 .minicols { position: absolute; inset: 4px 6px; display: block; }
 .minicols svg { position: absolute; inset: 0; width: 100%; height: 100%; }
 .minicols { inset: 3px 5px; }

@@ -110,12 +110,16 @@ function Prevision({ d, now, disc, spots: all, L, query }: { d: AllData; now: nu
     if (kh) return { session: false, hours: 0, peak: null, text: '', n: [0, 0, 0], day: Math.max(1, dayN), top: 0, kh };
     return { session: false, hours: 0, peak: null, text: has ? '' : '—', n: [0, 0, 0], day: 1, top: 0, kh: 0 };
   };
+  // pas de vent : aucune heure de jour à 1 étoile ou plus (ni Kite session) → case plus claire
+  const calm = (sp: PublicSpot, dayT: number) => { const s = series[sp.id], k = dayKey(dayT);
+    return !!s && s.times.some((t) => dayKey(t) === k) && !s.times.some((t, i) => dayKey(t) === k && s.day[i] && (isKiteAt(s, i) || starsOf(s.score[i]) > 0)); };
   const selSpot = sel ? spots.find((s) => s.id === sel.spot) : null;
   return (
     <Section title="Prévision 5 jours">
-      <p class="faint">Chaque case se remplit selon les heures de jour à 1 ★ (vert), 2 ★ (orange) et 3 ★ (violet) ;<br />touche une case pour le détail. Si ça rentre, appelle ton boss…</p>
+      <p class="faint">Chaque case se remplit selon les heures de jour à 1 ★ (vert), 2 ★ (orange) et 3 ★ (violet)<br />Touche une case pour le détail. Si ça rentre, appelle ton boss…</p>
       <div class="card table-wrap">
         <table class="grid5">
+          <colgroup><col class="days" />{spots.map((s) => <col key={s.id} />)}</colgroup>
           <thead><tr><th />{spots.map((s) => <th key={s.id} title={s.name}><strong>{shortName(s)}</strong></th>)}</tr></thead>
           <tbody>
             {days.map((dayT, k) => (
@@ -126,7 +130,7 @@ function Prevision({ d, now, disc, spots: all, L, query }: { d: AllData; now: nu
                   const on = sel?.spot === sp.id && sel?.day === dayT;
                   return (
                     <td key={sp.id}>
-                      <button type="button" class={`cell${c.session ? ' s' : c.kh ? ' kite' : ''}${on ? ' sel' : ''}`}
+                      <button type="button" class={`cell${c.session ? ' s' : c.kh ? ' kite' : ''}${calm(sp, dayT) ? ' calm' : ''}${on ? ' sel' : ''}`}
                         aria-pressed={on} aria-label={`${sp.name}, ${dayLabel(dayT, now)} : ${c.session ? `${c.n[2] ? `${c.n[2]} h à 3 étoiles, ` : ''}${c.n[1] ? `${c.n[1]} h à 2 étoiles, ` : ''}${c.n[0]} h à 1 étoile${c.kh ? `, ${c.kh} h Kite session` : ''}` : c.kh ? `pas de session wing, ${c.kh} h Kite session (plus de 28 nœuds)` : c.text === '—' ? 'pas de prévision' : 'pas de session'}`}
                         onClick={() => setSel(on ? null : { spot: sp.id, day: dayT })}>
                         {c.text === '—' ? c.text : <MiniCols s={series[sp.id]} dayT={dayT} />}
