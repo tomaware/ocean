@@ -39,18 +39,26 @@ test('wing v2 : cas de référence, modes Sécu first / Offshore', () => {
   assert.equal(sc('le-ponant', 18, 22, 0, 'secu').score, 6);
   assert.equal(sc('le-ponant', 18, 22, 135, 'secu').score, 10);
   // Pas assez de vent, nuit
-  assert.equal(sc('almanarre', 10, 13, 290, 'secu').score, 0);
+  // v2.3 (D-60) : montée de 9 à 13 nd sur le vent moyen ; 10 nd rafales 13 : avant 0 → 2,5
+  assert.equal(sc('almanarre', 10, 13, 290, 'secu').score, 2.5);
   // v2.2 (D-50) : avant 3,3 ((12 - 11) / 3) ; maintenant (12 - 10) / 3 = 6,7
-  assert.equal(sc('almanarre', 12, 15, 290, 'offshore').score, 6.7);
-  assert.equal(sc('almanarre', 12, 15, 290, 'secu').score, 6.7);                  // avant 0 (12 nd = seuil Sécu first)
+  // v2.3 : 12/15 : v2.2 6,7 → 7,5 ((12 - 9) / 4)
+  assert.equal(sc('almanarre', 12, 15, 290, 'offshore').score, 7.5);
+  assert.equal(sc('almanarre', 12, 15, 290, 'secu').score, 7.5);
   assert.equal(sc('almanarre', 13, 16, 290, 'secu').score, 10);                   // avant 3,3 : « dès 13 nd tu peux partir »
   assert.equal(sc('almanarre', 10, 13, 290, 'secu').limit, 'pas assez de vent');
+  // v2.3 (D-60, Tom) : les rafales ne font plus monter la note. 11 nd rafales 15 (× 1,36) : avant, vent de la note
+  // (11 + 15) / 2 = 13 → note pleine × R = 9,2 ; maintenant force sur 11 nd = 0,5 × R → 4,6 (« genre 4 »)
+  assert.equal(sc('almanarre', 11, 15, 290, 'secu').score, 4.6);
+  assert.equal(sc('almanarre', 10, 16, 290, 'secu').score, 1.5);   // avant 7,5
+  assert.equal(sc('almanarre', 15, 21, 290, 'secu').score, 8.7);   // inchangé (Tom : « 15-21 à 10, ok »)
   assert.equal(sc('almanarre', 22, 26, 290, 'offshore', false).score, 0);
 });
 
 test('wing : facteurs et libellés', () => {
   // v2.2 (D-50) : avant windFactor(12) = 0 et 1 seulement à 15 nd ; maintenant 0 à 10, 1 dès 13 (deux modes)
-  assert.equal(windFactor(10, 'secu'), 0); assert.equal(windFactor(11.5, 'offshore'), 0.5); assert.equal(windFactor(13, 'secu'), 1); assert.equal(windFactor(15, 'secu'), 1); assert.equal(windFactor(26, 'secu'), 1);
+  // v2.3 (D-60) : 0 à 9 nd, 0,5 à 11, 1 dès 13
+  assert.equal(windFactor(9, 'secu'), 0); assert.equal(windFactor(11, 'offshore'), 0.5); assert.equal(windFactor(13, 'secu'), 1); assert.equal(windFactor(15, 'secu'), 1); assert.equal(windFactor(26, 'secu'), 1);
   // v2.1 (D-49) : avant, windFactor(35) = 1 et 0 au-delà de 35 ; maintenant 1 jusqu'à 28, 0,5 à 29, 0 dès 30
   assert.equal(windFactor(28, 'offshore'), 1); assert.equal(windFactor(29, 'secu'), 0.5); assert.equal(windFactor(30, 'offshore'), 0); assert.equal(windFactor(35, 'offshore'), 0);
   assert.equal(gustFactor(1.3), 1); assert.equal(gustFactor(1.6), 0.6); assert.equal(gustFactor(2.2), 0.4);

@@ -1,6 +1,22 @@
-# Note wing foil — v2.2
+# Note wing foil — v2.3
 
 > **Statut : validée par Tom le 10/11 (D-14, D-16) ; v1.1 le 10/11 à 12 h 41 (D-18 : « trop de vent c'est plus de 35 nœuds, sinon c'est OK ») ; v2.0 le 10/11 à 13 h 45 (D-19 : deux modes « Secu first – OffShore » au lieu des trois niveaux ; « ça envoie » quand il y a plus de 4 h de vent à plus de 20 nd) ; v2.1 le 13/11 (D-49 : « au-delà de 28 nd, 1 étoile rouge et Kite session ; 30 nd en wing c'est 0 »).**
+
+## v2.3 — les rafales ne font plus monter la note (13/11, D-60)
+
+Retour de Tom sur Plage Sud lundi : « très optimiste : 11 nd rafales 15 devrait donner genre 4 ; 15-21 à 10, ok ». Cause : quand les rafales dépassent le vent de plus de 30 %, la note prenait la moyenne vent + rafales (11/15 → 13 nd), et 13 nd donne la note pleine depuis la v2.2 : les rafales aidaient au lieu de pénaliser.
+
+Choix validé par Tom : en wing, **la montée de la force se lit sur le vent moyen seul, de 9 nd (0) à 13 nd (1)** ; les rafales ne jouent plus que via R (pénalité). La descente au-delà de 28 nd et la « Kite session » restent sur le vent de la note (D-49). Kite : inchangé.
+
+| Plage Sud, lundi 16/11 (prévision réelle) | v2.2 | v2.3 |
+|---|---|---|
+| 8 h, 12 nd raf. 18 | 7,3 | 5,5 |
+| 10 h, 15 nd raf. 21 | 8,7 | 8,7 |
+| 13 h, 11 nd raf. 18 | 5,8 | 2,9 |
+| 15 h, 10 nd raf. 16 | 6 | 1,5 |
+| 16 h, 11 nd raf. 15 | 7,3 | 3,7 |
+
+Sur toute la prévision publiée du 13/11 (Sécu first) : 84 heures changent ; 8 créneaux au lieu de 10 ; Plage Sud lundi 8 h–13 h au lieu de 8 h–17 h.
 
 ## Hyères : deux plages (13/11, D-58)
 

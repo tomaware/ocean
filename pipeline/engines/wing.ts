@@ -4,7 +4,7 @@
 import type { ForecastBlock, Registry, Spot } from '../../src/types/contracts.ts';
 import { SurfEngine as E } from '../collect/points.ts';
 
-export const WING_VERSION = '2.2.0';
+export const WING_VERSION = '2.3.0';
 export const KITE_VERSION = '1.0.0';
 // 1.1 (10/11, D-18, Tom) : « trop de vent » seulement au-delà de 35 nd.
 // 2.0 (10/11, D-19, Tom) : deux modes au lieu de trois niveaux : « Sécu first » (aucun vent de terre ni side-off)
@@ -14,6 +14,9 @@ export const KITE_VERSION = '1.0.0';
 //     1 étoile rouge à l'affichage, et elle ne compte plus dans les créneaux wing.
 // 2.2 (13/11, D-50, Tom) : « dès 13 nd tu peux partir » — note pleine dès 13 nd (monte de 10 à 13 nd), même seuil
 //     en Sécu first et en Offshore (avant : 12 → 15 nd et 11 → 14 nd).
+// 2.3 (13/11, D-60, Tom : « très optimiste, 11 nd rafales 15 devrait donner genre 4 ») : en wing, le bas de la force se
+//     lit sur le VENT MOYEN seul (les rafales ne font plus monter la note, elles ne font que la baisser via R) et monte
+//     de 9 à 13 nd. Le haut (28 → 30 nd) et la « Kite session » restent sur le vent de la note (D-49).
 // KITE 1.0 (13/11, D-51, Tom) : même formule, vent 15 → 20 nd, plein de 20 à 35 nd, 0 à 40 nd ; mêmes modes
 //     Sécu first / Offshore et mêmes facteurs rafales et direction qu'en wing. Pas de « Kite session » en kite.
 export const MS_TO_KN = 1.94384;
@@ -23,8 +26,8 @@ export type Sport = 'wing' | 'kite';
 
 /** Vent (nœuds) : 0 sous `min`, monte jusqu'à `lo`, 1 jusqu'à `hi` (28 nd), baisse jusqu'à 0 à `max` (30 nd). */
 export const WIND: Record<WingLevel, { min: number; lo: number; hi: number; max: number }> = {
-  secu: { min: 10, lo: 13, hi: 28, max: 30 },
-  offshore: { min: 10, lo: 13, hi: 28, max: 30 },
+  secu: { min: 9, lo: 13, hi: 28, max: 30 },
+  offshore: { min: 9, lo: 13, hi: 28, max: 30 },
 };
 /** Kite (D-51) : 0 jusqu'à 15 nd, monte jusqu'à 20 nd, 1 jusqu'à 35 nd, baisse jusqu'à 0 à 40 nd. */
 export const KITE_WIND: Record<WingLevel, { min: number; lo: number; hi: number; max: number }> = {
@@ -104,7 +107,9 @@ export const isKite = (kn: number, gust: number | null, day: boolean) => day && 
 export function scoreHour(kn: number, gust: number | null, dir: number | null, day: boolean, spot: Pick<Spot, 'orientation' | 'waterBody'>, L: WingLevel, sport: Sport = 'wing'): { score: number; limit: string | null; f: WingFactors; kite: boolean } {
   const g = gust !== null && kn > 0 ? gust / kn : 1;
   const eff = effWind(kn, gust);
-  const V = windFactor(eff, L, sport), R = gustFactor(g);
+  // wing (D-60) : montée sur le vent moyen, descente au-delà de 28 nd sur le vent de la note ; kite : vent de la note
+  const low = sport === 'wing' ? kn : eff;
+  const V = Math.min(windFactor(Math.min(low, WIND_OF[sport][L].lo), L, sport), windFactor(Math.max(eff, WIND_OF[sport][L].lo), L, sport)), R = gustFactor(g);
   const D = dir === null ? { f: 1, label: 'direction inconnue' } : dirFactor(dir, spot, L);
   const f: WingFactors = [r2(V), r2(R), r2(D.f)];
   if (!day) return { score: 0, limit: 'nuit', f, kite: false };
@@ -113,7 +118,7 @@ export function scoreHour(kn: number, gust: number | null, dir: number | null, d
   // à égalité, la direction passe en premier : « vent de terre » est plus important à lire que « trop de vent »
   const why = [
     [D.f, D.label],
-    [V, eff <= w.lo ? 'pas assez de vent' : sport === 'kite' ? `trop de vent (plus de ${w.hi} nd)` : KITE_LABEL],
+    [V, low < w.lo ? 'pas assez de vent' : sport === 'kite' ? `trop de vent (plus de ${w.hi} nd)` : KITE_LABEL],
     [R, 'vent rafaleux'],
   ] as [number, string][];
   const worst = why.reduce((a, b) => (b[0] < a[0] ? b : a));

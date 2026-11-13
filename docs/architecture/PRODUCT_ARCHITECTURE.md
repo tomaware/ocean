@@ -367,3 +367,8 @@ Les apps actuelles restent en ligne jusqu'à ce que leur remplaçante soit véri
 - **Stats des spots** sous le direct : pour chaque spot, jours du mois en cours et du mois précédent avec au moins une heure de jour (8 h → 19 h) à 15 nd de moyenne ou plus, « sur N jours relevés ».
 - Source : la feuille « Observations » que le script de la super prévision remplit déjà toutes les heures (~3 mois). Nouvel appel `?action=histo` à **ajouter par Tom** au script (`widgets/super-prevision/historique.gs` : aucune clé, aucun identifiant) ; même lien secret que le direct. Rien n'est publié : relevés Winds-Up visibles seulement sur l'appareil qui a le lien. Sans l'ajout, l'app l'indique et le reste marche comme avant.
 - Vérifié : ajout du script exécuté sur une fausse feuille (heures du jour, jours à 15 nd, lignes « écart » ignorées) ; tests des stats ; écran contrôlé sur iPhone avec un faux lien perso (aucune vraie donnée Winds-Up utilisée).
+
+### D-60 (13/11/2026) — note wing v2.3 : les rafales ne font plus monter la note
+- Retour de Tom (Plage Sud, lundi) : 11 nd rafales 15 notée 7,3, « devrait donner genre 4 » ; 15/21 à 8,7 jugé juste. Cause : la moyenne vent + rafales (rafales > 1,3 × vent) combinée à la note pleine dès 13 nd (D-50).
+- Choix validé par Tom : montée de la force sur le **vent moyen seul, de 9 à 13 nd** ; rafales seulement en pénalité (R). Haut de la plage (28 → 30 nd) et « Kite session » inchangés (vent de la note, D-49). Kite inchangé.
+- Avant / après et rejeu sur la prévision réelle : `WING_SCORE.md` (v2.3), `tests/wing.test.ts`.
