@@ -12,3 +12,11 @@ test('stats : mois en cours et mois précédent, jours relevés à part', () => 
   assert.equal(monthStats([['2025-12-05', 20, 2]], new Date(2026, 0, 3).getTime())[1].days, 1);
   assert.deepEqual(monthStats([], Date.now())[0].measured, 0);
 });
+
+test('relevés du jour par tranche d’une heure : moyenne horaire, sinon moyenne des relevés en direct', async () => {
+  process.env.TZ = 'Europe/Paris';
+  const { hourSlots } = await import('../src/features/hourslots.ts');
+  const d = (h: number, m = 0) => new Date(2026, 10, 13, h, m).getTime();
+  const s = hourSlots([[d(18), 15, 19, 'NE'], [d(19), 18, 24, 'NE']], [[d(19, 50), 17, 'NE'], [d(20, 5), 19, 'NE'], [d(20, 20), 20, 'N'], [d(20, 45), 22, 'NE'], [d(21, 5), 23, 'NE']], d(21, 10));
+  assert.deepEqual(s.map((x) => [new Date(x.t).getHours(), x.v, x.live]), [[18, 15, false], [19, 18, false], [20, 18.7, true], [21, 22.5, true]]);
+});

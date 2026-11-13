@@ -6,6 +6,7 @@ import { ago, compass, dayKey, dayLabel, hh, hourOf, labelOf, msToKn, n0, n1, sp
 import { setPrefs, usePrefs, type Reading } from '../services/prefs';
 import { publicLive, useHisto, useLive, type Histo, type Live } from '../services/perso';
 import { monthStats } from '../services/stats';
+import { hourSlots } from './hourslots';
 import { goBack } from '../services/nav';
 import { EDITEURS, webcamsCherchees, webcamsOf } from '../services/webcams';
 import { Badge, DiscIcon, Fav, Section, Seg, SessionRow, SportSeg } from '../components/ui';
@@ -84,32 +85,24 @@ export function LiveBox({ live, spot, names, histo }: { live: Live[] | null; spo
   );
 }
 
-/** Relevés de la journée d'une balise : moyennes horaires (historique du script) puis relevés des 3 dernières heures. */
 function DayReadings({ l, h, sport }: { l: Live; h: Histo['spots'][string] | null; sport: 'wing' | 'kite' }) {
-  const today = dayKey(Date.now());
-  const hours = (h?.jour ?? []).filter((x) => dayKey(x[0]) === today);
-  const recent = (l.pts ?? []).filter((p, k, a) => k === a.length - 1 || k % 3 === 0);   // un relevé toutes les 15 min environ
-  const lastHour = hours.length ? hours[hours.length - 1][0] : 0;
-  const pts: { t: number; v: number; g: number | null; d: string | null; fine: boolean }[] = [
-    ...hours.map((x) => ({ t: x[0], v: x[1], g: x[2], d: x[3], fine: false })),
-    ...recent.filter((p) => p[0] > lastHour + 30 * 60e3).map((p) => ({ t: p[0], v: p[1], g: null, d: p[2] || null, fine: true })),
-  ];
-  if (!pts.length) return <span class="faint small">Pas encore de relevé aujourd’hui.</span>;
-  const max = Math.max(20, ...pts.map((p) => p.g ?? p.v));
+  const slots = hourSlots(h?.jour ?? [], l.pts ?? [], Date.now());
+  if (!slots.length) return <span class="faint small">Pas encore de relevé aujourd’hui.</span>;
+  const max = Math.max(20, ...slots.map((p) => p.g ?? p.v));
   return (
-    <div class="dayread" role="table" aria-label={`Relevés d’aujourd’hui à ${l.name}`}>
+    <div class="dayread" role="table" aria-label={`Relevés d’aujourd’hui à ${l.name}, heure par heure`}>
       <div class="bars" role="row">
-        {pts.map((p) => (
-          <div key={p.t} class={`bar${p.fine ? ' fine' : ''}`} role="cell" title={`${hh(p.t)} : ${n0(p.v)} nd${p.g ? `, rafales ${n0(p.g)}` : ''}${p.d ? ` ${p.d}` : ''}`}>
+        {slots.map((p) => (
+          <div key={p.t} class={`bar${p.live ? ' fine' : ''}`} role="cell" title={`${hourOf(p.t)} h : ${n0(p.v)} nd${p.g ? `, rafales ${n0(p.g)}` : ''}${p.d ? ` ${p.d}` : ''}`}>
             <span class="v">{n0(p.v)}</span>
             <span class={`col livekn ${liveTone(p.v, sport)}`} style={{ height: `${Math.max(6, (p.v / max) * 64)}px` }} />
             <span class="d">{p.d ?? ''}</span>
             <span class="d">{p.g ? `raf ${n0(p.g)}` : ''}</span>
-            <span class="t">{p.fine ? hh(p.t).replace(':00', '') : `${hourOf(p.t)}h`}</span>
+            <span class="t">{hourOf(p.t)}h</span>
           </div>
         ))}
       </div>
-      <span class="faint small">{hours.length ? 'Moyennes horaires de la balise' : 'Moyennes horaires pas encore disponibles (mise à jour du script de la super prévision)'}{recent.length ? ', puis relevés des 3 dernières heures' : ''}.</span>
+      <span class="faint small">Moyenne de chaque heure (± 30 min){slots.some((p) => p.live) ? ' ; teinte plus claire : heures récentes calculées sur les relevés en direct' : ''}.</span>
     </div>
   );
 }

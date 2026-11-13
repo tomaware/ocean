@@ -388,3 +388,4 @@ table.stats thead th:not(:first-child) { text-align: right; }
 .dayread { min-width: 0; max-width: 100%; overflow: hidden; }
 .dayread .bars { max-width: 100%; }
 .dayread .bar .col:not(.k1):not(.k2):not(.k3):not(.kite) { background: var(--c-ink-3); opacity: .35; }
+.dayread .bar .d, .dayread .bar .t { min-height: 1.3em; line-height: 1.3em; }
