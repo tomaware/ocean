@@ -336,3 +336,9 @@ Les apps actuelles restent en ligne jusqu'à ce que leur remplaçante soit véri
 ### D-53 (13/11/2026) — En direct : relevés en gras, couleurs des étoiles
 - Demande de Tom : relevés en gras, et même code couleur que les étoiles pour repérer les spots où ça souffle bien. Couleur selon le vent mesuré, mêmes seuils que les widgets : vert dès 15 nd, orange dès 20, violet dès 25 ; en wing, rouge « Kite » au-delà de 28 nd (D-49). Repère de lecture, pas une note.
 - Retiré du bas des onglets (demande de Tom) : la phrase « Session 2H = … Source : … ».
+
+### D-54 (13/11/2026) — module Favoris, Carte façon Windy, texte des Sessions 2H
+- **Favoris** (nouveau module, dans chaque onglet) : meilleure session à venir sur les spots favoris de l'onglet (même classement que Meilleure session), puis les suivantes. Sans favori : invitation à mettre l'étoile sur une fiche. Réglable comme les autres modules (Profil → Modules affichés).
+- **Spots devient Carte** : plus de liste de spots sous la carte. Carte de la fiche spot (vent Météo-France brut + particules) avec frise des 5 prochains jours, curseur 7 h → 21 h et lecture heure par heure (de 21 h on passe à 7 h le lendemain ; arrêt à la fin du 5e jour). Les repères des spots prennent la couleur des étoiles selon la note publiée de l'heure affichée (gris : pas de session, nuit, ou Kite session en wing). L'adresse `#/…/spots` est gardée.
+- **Sessions 2H** : texte « Spots à moins de 30 min du taf. Si ça rentre, mets-toi en TT. » La liste des spots retenus ne change pas (moins de 55 km de Montpellier).
+- Vérifié : 109 tests (dont la frise : départ à l'heure en cours, 21 h → 7 h le lendemain, fin au 5e jour), test d'interface 21 écrans, lecture et choix du jour sur les données publiées.

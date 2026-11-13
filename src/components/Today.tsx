@@ -222,7 +222,7 @@ export function windColor(kn: number, alpha = 1): string {
   const m = [0, 1, 2].map((i) => Math.round(c(a[1], i) + f * (c(b[1], i) - c(a[1], i))));
   return `rgba(${m[0]}, ${m[1]}, ${m[2]}, ${alpha})`;
 }
-function WindLegend() {
+export function WindLegend() {
   // échelle de vent façon Windy ; le champ coloré vient du modèle Météo-France brut (la pastille du spot garde le vent corrigé)
   const stops = [0, 5, 10, 20, 30, 40, 60];
   return (

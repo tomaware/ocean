@@ -9,6 +9,7 @@ import { Badge, Fav, Section, Seg, SportSeg } from '../components/ui';
 import { SpotMap } from '../components/SpotMap';
 import { headFor, isKiteAt, ModuleView, pickHours, starsOf } from '../components/Views';
 import { ScoreBars } from '../components/Today';
+import { MapPlayer } from '../components/MapPlayer';
 import { discName } from '../services/sport';
 import { availableSubs, shownSubIds, SUB_IDS, SUB_LABEL, type SubId, type TabLayout } from '../services/layout';
 import { seriesFor, type Series } from './series';
@@ -165,7 +166,7 @@ export function Module({ d, now, disc, sub, query }: { d: AllData; now: number; 
   let body;
   if (sub === 'sessions') body = (
     <Section title={`Sessions de 2H${tomorrowOnly ? ' demain' : ''} (Localisation ${HOME.name})`} aside={<Seg label="Spots" value={onlyFav ? 'fav' : 'all'} onChange={(v) => setOnlyFav(v === 'fav')} options={[['all', 'Tous'], ['fav', 'Favoris']]} />}>
-      <p class="faint">{tomorrowOnly ? `Demain seulement, à ${spots.filter((s) => near.has(s.id)).map((s) => s.name.replace(/\s*\(.*\)/, '')).join(', ')} ; les autres jours et spots sont dans Prévision.` : <>Spots à moins de {HOME.radiusKm} km de {HOME.name}{far.length ? ` (hors ${far.map((s) => s.name.replace(/\s*\(.*\)/, '')).join(', ')} : trop loin pour 2 h ; voir Prévision)` : ''}.{disc === 'wing' && prefs.sport === 'wing' ? ' « Ça envoie » = au moins 4 h à plus de 20 nd.' : ''}</>}</p>
+      <p class="faint">{tomorrowOnly ? `Demain seulement, à ${spots.filter((s) => near.has(s.id)).map((s) => s.name.replace(/\s*\(.*\)/, '')).join(', ')} ; les autres jours et spots sont dans Prévision.` : <>Spots à moins de 30 min du taf. Si ça rentre, mets-toi en TT.{far.length ? ` (${far.map((s) => s.name.replace(/\s*\(.*\)/, '')).join(', ')} : dans Prévision.)` : ''}{disc === 'wing' && prefs.sport === 'wing' ? ' « Ça envoie » = au moins 4 h à plus de 20 nd.' : ''}</>}</p>
       {byDay.size === 0 && <div class="card empty">Aucune session {tomorrowOnly ? 'demain' : 'en vue'}{onlyFav ? ' sur tes favoris' : ''}.</div>}
       {[...byDay.values()].map((arr) => (
         <div key={arr[0].id} class="stack">
@@ -182,19 +183,31 @@ export function Module({ d, now, disc, sub, query }: { d: AllData; now: number; 
     </div>
   );
   else if (sub === 'prevision') body = <Prevision d={d} now={now} disc={disc} spots={spots} L={L} query={query} />;
+  // Carte (Tom, 13/11) : vent et spots heure par heure sur 5 jours, façon Windy ; plus de liste de spots dessous
   else if (sub === 'spots') body = (
-    <Section title="Spots">
-      <SpotMap spots={spots} best={best} />
-      <div class="card"><div class="list">
-        {spots.map((s) => (
-          <a key={s.id} class="session compact" href={`#/spot/${s.id}`}>
-            <div class="stack" style={{ gap: '2px' }}><strong>{s.name}</strong><span class="faint">{s.waterBody === 'lagoon' ? 'étang' : discName(disc, prefs.sport, DISC_LABEL[disc])}{s.orientation?.confidence === 'low' ? ' · orientation à confirmer' : ''}</span></div>
-            <div class="row"><Badge score={best[s.id] ?? null} /><Fav id={s.id} name={s.name} /></div>
-          </a>
-        ))}
-      </div></div>
+    <Section title="Carte">
+      <MapPlayer d={d} spots={spots} disc={disc} L={L} now={now} />
     </Section>
   );
+  // Favoris (Tom, 13/11) : meilleure session à venir sur les spots favoris de l'onglet
+  else if (sub === 'favoris') {
+    const favs = spots.filter((s) => prefs.favorites.includes(s.id));
+    const fl = all.filter((s) => prefs.favorites.includes(s.spot));
+    const rank = (s: Session) => s.peak * 0.4 + s.mean * 0.6 + Math.min(s.hours, 5) * 0.1;   // même classement que Meilleure session
+    const ft = [...fl].sort((a, b) => rank(b) - rank(a));
+    body = (
+      <Section title="Meilleure session de tes favoris">
+        {!favs.length ? <div class="card empty">Pas encore de favori dans cet onglet. Ajoute des spots avec l’étoile, sur leur fiche.</div> : <>
+          <div class="card">{ft[0] ? <SessionCard d={d} s={ft[0]} now={now} L={L} big /> : <span class="muted">Pas de session 2H en vue sur {favs.map((s) => s.name.replace(/\s*\(.*\)/, '')).join(', ')}.</span>}</div>
+          {ft.length > 1 && <>
+            <h3>Autres sessions sur tes favoris</h3>
+            <div class="card"><div class="list">{ft.slice(1, 5).map((s) => <div key={s.id} class="stack"><span class="faint">{dayLabel(s.start, now)}</span><SessionCard d={d} s={s} now={now} L={L} /></div>)}</div></div>
+          </>}
+          <p class="faint">Favoris : {favs.map((s) => s.name.replace(/\s*\(.*\)/, '')).join(', ')}.</p>
+        </>}
+      </Section>
+    );
+  }
   else body = (
     <Section title="Meilleure session à venir">
       <div class="card">{top ? <SessionCard d={d} s={top} now={now} L={L} big /> : <span class="muted">Pas de session 2H dans les prochains jours.</span>}</div>

@@ -10,30 +10,34 @@ const LETTER: Record<Discipline, string> = { wing: 'W', surf: 'S', downwind: 'D'
 
 export function SpotMap({ spots, best, focus, height, onMap }: { spots: PublicSpot[]; best: Record<string, number | null>; focus?: string; height?: number; onMap?: (m: L.Map | null) => void }) {
   const el = useRef<HTMLDivElement>(null);
+  const mapRef = useRef<L.Map | null>(null), layer = useRef<L.LayerGroup | null>(null);
+  // la carte n'est recréée que si les spots changent ; les repères suivent la note (heure de l'animation) sans la recréer
   useEffect(() => {
     if (!el.current) return;
     const map = L.map(el.current, { zoomControl: true, attributionControl: true, scrollWheelZoom: false });
     L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 17, attribution: '© contributeurs OpenStreetMap' }).addTo(map);
-    const bounds: [number, number][] = [];
-    for (const s of spots) {
-      const d = spotDiscipline(s), sc = best[s.id] ?? null, color = COLORS(sc);
-      const tip = `<strong>${s.name}</strong><br>${labelOf(sc)}${sc === null ? '' : ' · ' + n1(sc)}`;
-      if (s.kind === 'run') {
-        const line = L.polyline(s.geometry.path, { color, weight: focus === s.id ? 6 : 4, opacity: 0.9 }).addTo(map);
-        line.bindTooltip(tip).on('click', () => { location.hash = `#/spot/${s.id}`; });
-        bounds.push(...s.geometry.path);
-      } else {
-        const p = spotPos(s);
-        const icon = L.divIcon({ className: '', html: `<div class="pin" style="background:${color}${focus === s.id ? ';outline:3px solid #256D70' : ''}">${LETTER[d]}</div>`, iconSize: [28, 28], iconAnchor: [14, 14] });
-        L.marker(p, { icon, keyboard: true, title: s.name }).addTo(map).bindTooltip(tip).on('click', () => { location.hash = `#/spot/${s.id}`; });
-        bounds.push(p);
-      }
-    }
+    layer.current = L.layerGroup().addTo(map); mapRef.current = map;
+    const bounds: [number, number][] = spots.flatMap((s) => (s.kind === 'run' ? s.geometry.path : [spotPos(s)]));
     const f = focus ? spots.find((s) => s.id === focus) : null;
     if (f) map.setView(spotPos(f), 10);   // vue régionale : on voit le champ de vent autour du spot
     else if (bounds.length) map.fitBounds(bounds, { padding: [20, 20] });
     onMap?.(map);
-    return () => { onMap?.(null); map.remove(); };
+    return () => { onMap?.(null); mapRef.current = null; layer.current = null; map.remove(); };
+  }, [spots, focus]);
+  useEffect(() => {
+    const g = layer.current;
+    if (!g) return;
+    g.clearLayers();
+    for (const s of spots) {
+      const d = spotDiscipline(s), sc = best[s.id] ?? null, color = COLORS(sc);
+      const tip = `<strong>${s.name}</strong><br>${labelOf(sc)}${sc === null ? '' : ' · ' + n1(sc)}`;
+      if (s.kind === 'run') {
+        L.polyline(s.geometry.path, { color, weight: focus === s.id ? 6 : 4, opacity: 0.9 }).addTo(g).bindTooltip(tip).on('click', () => { location.hash = `#/spot/${s.id}`; });
+      } else {
+        const icon = L.divIcon({ className: '', html: `<div class="pin" style="background:${color}${focus === s.id ? ';outline:3px solid #256D70' : ''}">${LETTER[d]}</div>`, iconSize: [28, 28], iconAnchor: [14, 14] });
+        L.marker(spotPos(s), { icon, keyboard: true, title: s.name }).addTo(g).bindTooltip(tip).on('click', () => { location.hash = `#/spot/${s.id}`; });
+      }
+    }
   }, [spots, best, focus]);
   return <div class="map" ref={el} style={height ? { height: `${height}px` } : undefined} aria-label="Carte des spots" />;
 }

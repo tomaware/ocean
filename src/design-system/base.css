@@ -347,3 +347,14 @@ table.wg tr.wg-stars .stars .off { opacity: .55; }
 .livekn.k2 { background: var(--c-k2); color: #2A1400; }
 .livekn.k3 { background: var(--c-k3); color: #fff; }
 .livekn.kite { background: var(--c-kite); color: #fff; }
+
+/* Carte façon Windy : frise des jours, curseur 7 h → 21 h, lecture */
+.player { display: flex; align-items: center; gap: 12px; background: var(--c-surface); border-radius: var(--r-lg); padding: 10px 12px; box-shadow: var(--shadow-sm, none); }
+.player .play { flex: none; width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--c-accent); color: #fff; font-size: 15px; cursor: pointer; }
+.pdays { display: flex; gap: 4px; overflow-x: auto; }
+.pdays button { flex: 1 0 auto; border: 0; background: var(--c-surface-2); color: var(--c-ink-2); border-radius: var(--r-pill); padding: 6px 10px; font-size: var(--fs-sm); font-weight: 600; cursor: pointer; min-height: 32px; }
+.pdays button[aria-pressed="true"] { background: var(--c-accent); color: #fff; }
+.player input[type="range"] { width: 100%; accent-color: var(--c-accent); }
+.pticks { display: flex; justify-content: space-between; font-size: var(--fs-xs); color: var(--c-ink-3); }
+.mapplayer .mapbox .map { height: 460px; }
+@media (max-width: 560px) { .mapplayer .mapbox .map { height: 380px; } }

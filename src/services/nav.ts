@@ -34,7 +34,7 @@ export function goBack(fallback: string): void {
 
 const KEY = 'ocean.lastSub.';
 function rememberSub(hash: string): void {
-  const m = hash.match(/^#\/(wind|vague|houle)\/(meilleure|sessions|prevision|spots|direct)/);
+  const m = hash.match(/^#\/(wind|vague|houle)\/(meilleure|favoris|sessions|prevision|spots|direct)/);
   if (m) try { sessionStorage.setItem(KEY + m[1], m[2]); } catch { /* sans stockage : pas de mémoire */ }
 }
 export function lastSub(slug: string): string | null {

@@ -3,7 +3,7 @@
 import { createRequire } from 'node:module';
 const { chromium, devices } = createRequire(import.meta.url)('playwright');   // installé à part (CI : npm i --no-save playwright)
 const base = process.argv[2] ?? 'http://localhost:4173';
-const routes = [['', 'Où naviguer en wing'], ['wind/meilleure', 'Meilleure session à venir'], ['wind/sessions', 'Sessions de 2H (Localisation Montpellier)'], ['wind/prevision', 'Prévision 5 jours'], ['wind/spots', 'Spots'],
+const routes = [['', 'Où naviguer en wing'], ['wind/meilleure', 'Meilleure session à venir'], ['wind/sessions', 'Sessions de 2H (Localisation Montpellier)'], ['wind/prevision', 'Prévision 5 jours'], ['wind/spots', 'Carte'], ['wind/favoris', 'Meilleure session de tes favoris'],
   ['vague/meilleure', 'Meilleure session à venir'], ['vague/prevision', 'Prévision 5 jours'], ['vague/sessions', 'Sessions de 2H'], ['houle/prevision', 'Prévision 5 jours'], ['houle/meilleure', 'Meilleure session à venir'],
   ['spot/port-camargue', 'Jour par jour'], ['spot/carnon', 'Jour par jour'], ['spot/plagesud-grandemotte', 'Jour par jour'], ['spot/la-franqui', 'Webcams'], ['spot/beauduc', 'Webcams'], ['sessions', 'Où naviguer en wing'], ['profil', 'Mode perso'], ['fiabilite', 'Fiabilité'], ['widgets', 'Installer les widgets'], ['avis', 'Avis et commentaires']];
 const errs = [];
@@ -129,17 +129,17 @@ for (const [name, opt] of [['mobile', { ...devices['iPhone 13'], locale: 'fr-FR'
   // Profil → modules affichés (Tom, 13/11) : masquer Sessions 2H en WIND, monter Prévision en tête ; HOULE inchangé
   await p.goto(`${base}/#/profil`); await p.reload();
   await p.getByRole('list', { name: 'Modules WIND' }).getByLabel('Sessions 2H', { exact: true }).uncheck();
-  await p.getByRole('button', { name: 'Monter Prévision (WIND)' }).click();
+  await p.getByRole('button', { name: 'Monter Prévision (WIND)' }).click(); await p.getByRole('button', { name: 'Monter Prévision (WIND)' }).click();
   await p.locator('.tabs a').nth(0).click(); await p.waitForTimeout(400);
   const subs = await p.locator('.subnav a').allInnerTexts();
-  if (subs.join('|') !== 'Prévision|Meilleure session|Spots|En direct') errs.push(`${name} : modules WIND après réglage = ${subs.join(', ')}`);
+  if (subs.join('|') !== 'Prévision|Meilleure session|Favoris|Carte|En direct') errs.push(`${name} : modules WIND après réglage = ${subs.join(', ')}`);
   await p.goto(`${base}/#/houle`); await p.waitForTimeout(400);
-  if ((await p.locator('.subnav a').allInnerTexts()).join('|') !== 'Meilleure session|Prévision|Spots') errs.push(`${name} : HOULE touché par le réglage WIND`);
+  if ((await p.locator('.subnav a').allInnerTexts()).join('|') !== 'Meilleure session|Favoris|Prévision|Carte') errs.push(`${name} : HOULE touché par le réglage WIND`);
   // le dernier module affiché ne peut pas être masqué
   await p.goto(`${base}/#/profil`);
   const hl = p.getByRole('list', { name: 'Modules HOULE' });
-  await hl.getByLabel('Meilleure session', { exact: true }).uncheck(); await hl.getByLabel('Prévision', { exact: true }).uncheck();
-  if (!(await hl.getByLabel('Spots', { exact: true }).isDisabled())) errs.push(`${name} : le dernier module de HOULE peut être masqué`);
+  await hl.getByLabel('Meilleure session', { exact: true }).uncheck(); await hl.getByLabel('Favoris', { exact: true }).uncheck(); await hl.getByLabel('Prévision', { exact: true }).uncheck();
+  if (!(await hl.getByLabel('Carte', { exact: true }).isDisabled())) errs.push(`${name} : le dernier module de HOULE peut être masqué`);
   await ctx.close();
 }
 await b.close();

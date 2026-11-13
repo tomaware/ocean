@@ -1,6 +1,6 @@
 // Modules affichés par onglet (WIND, VAGUE, HOULE) et leur ordre : choisis par chacun dans le Profil, gardés sur
 // l'appareil. Un onglet garde toujours au moins un module (Meilleure session, ou le premier disponible).
-export const SUB_IDS = ['meilleure', 'sessions', 'prevision', 'spots', 'direct'] as const;
+export const SUB_IDS = ['meilleure', 'favoris', 'sessions', 'prevision', 'spots', 'direct'] as const;
 export type SubId = (typeof SUB_IDS)[number];
 export type TabLayout = { order: SubId[]; hidden: SubId[] };
 
@@ -32,6 +32,7 @@ export function toggleSub(available: SubId[], layout: TabLayout | undefined, id:
   return { order, hidden: [...hidden, id] };
 }
 
-export const SUB_LABEL: Record<SubId, string> = { meilleure: 'Meilleure session', sessions: 'Sessions 2H', prevision: 'Prévision', spots: 'Spots', direct: 'En direct' };
+// « spots » s'affiche « Carte » (Tom, 13/11) ; l'identifiant reste pour les adresses et les réglages déjà enregistrés
+export const SUB_LABEL: Record<SubId, string> = { meilleure: 'Meilleure session', favoris: 'Favoris', sessions: 'Sessions 2H', prevision: 'Prévision', spots: 'Carte', direct: 'En direct' };
 /** Modules disponibles par onglet : « En direct » en WIND seulement ; pas de Sessions 2H en HOULE (Tom, 11/11). */
 export const availableSubs = (disc: string): SubId[] => SUB_IDS.filter((x) => (x !== 'direct' || disc === 'wing') && (x !== 'sessions' || disc !== 'downwind'));
