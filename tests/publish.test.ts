@@ -85,11 +85,11 @@ test('mesure publique en direct : METAR de Marignane pour l’étang de Berre (s
   assert.deepEqual(liveObsPublic(bundle, reg, now + 4 * 3600e3), {});
 });
 
-test('carte : grille de vent publiée en nœuds et degrés, 16 × 8 points, affichage seul', () => {
+test('carte : grille de vent publiée en nœuds et degrés, 20 × 10 points, affichage seul', () => {
   const now = Date.UTC(2026, 10, 11, 8);
   const pts = windGridPoints();
-  assert.equal(pts.length, 128);
-  assert.deepEqual([pts[0].lat, pts[0].lon, pts[127].lat, pts[127].lon], [42.25, 2.75, 44, 6.5]);
+  assert.equal(pts.length, 200);
+  assert.deepEqual([pts[0].lat, pts[0].lon, pts[199].lat, pts[199].lon], [41.7, 1.8, 44.4, 7.5]);
   const times = [now - 4 * 3600e3, now, now + 3600e3];
   const values = Object.fromEntries(pts.map((p, k) => [p.id, { meteofrance_seamless: { wind_speed_10m: [1, 5, k === 3 ? null : 10], wind_direction_10m: [0, 315.4, 320] } }]));
   const g = windGridPublic({ forecasts: [{ id: 'open-meteo-vent-carte', times, values, provenance: { fetchedAt: now } }] } as any, now) as any;

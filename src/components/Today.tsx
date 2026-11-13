@@ -12,6 +12,7 @@ import { bestOf, isKiteAt, meteoAt, Stars, starsOf, SURF_WIND, WMO } from './Vie
 import { SpotMap } from './SpotMap';
 import type { Map as LMap } from 'leaflet';
 import { gridIndex, useWindField, useWindGrid } from './WindField';
+import { FullBtn, useFull } from './FullScreen';
 
 /** Heures d'une journée dans la série. */
 export const dayIdx = (s: Series, dayT: number) => { const k = dayKey(dayT); return s.times.map((_, i) => i).filter((i) => dayKey(s.times[i]) === k); };
@@ -247,6 +248,7 @@ export function MapCompass({ d, spot, s, dayT, now, best, picked }: { d: AllData
   const grid = useWindGrid();
   const gk = grid && i !== null ? gridIndex(grid, s.times[i]) : null;
   useWindField(map, grid, gk);
+  const [full, toggleFull] = useFull(map);
   const bestMap = useMemo(() => ({ [spot.id]: best }), [spot.id, best]);
   const x = i === null ? null : s.rows[i];
   const from = x === null ? null : s.discipline === 'surf' ? x.wd : s.discipline === 'wing' ? x.dir : x.from;
@@ -268,8 +270,9 @@ export function MapCompass({ d, spot, s, dayT, now, best, picked }: { d: AllData
     return <g class={cls}><line x1={ox} y1={oy} x2={ix} y2={iy} /><path d="M0 0 L-6 -12 L6 -12 Z" transform={`translate(${ix} ${iy}) rotate(${deg})`} /></g>;
   };
   return (
-    <div class="mapbox t-map">
+    <div class={`mapbox t-map${full ? ' full' : ''}`}>
       <SpotMap spots={spots} best={bestMap} focus={spot.id} onMap={setMap} />
+      <FullBtn full={full} onClick={toggleFull} />
       {grid && gk !== null && <WindLegend />}
       {grid && grid.times?.length && i !== null && gk === null && (
         <span class="windnote">Vent sur la carte : prévision du modèle jusqu’au {dayShort(grid.times[grid.times.length - 1])} à {hh(grid.times[grid.times.length - 1])}</span>

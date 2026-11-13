@@ -58,10 +58,11 @@ export function windUrl(points: CollectPoint[], models: string[]): string {
     `&wind_speed_unit=kmh&timezone=GMT&past_days=${PAST_DAYS}&forecast_days=${FORECAST_DAYS}`;
 }
 /**
- * Grille de vent pour la carte (façon Windy) : 16 × 8 points tous les 0,25°, de Leucate à Hyères, au large et à terre.
+ * Grille de vent pour la carte (façon Windy) : 20 × 10 points tous les 0,3°, de 1,8° E à 7,5° E et de 41,7° N à 44,4° N
+ * (Tom, 13/11 : le vent couvre toute la carte affichée, du Roussillon à la Côte d'Azur ; avant 16 × 8 tous les 0,25°).
  * Modèle Météo-France (AROME puis ARPEGE), brut, non corrigé : sert à l'affichage seulement (D-24), jamais aux notes.
  */
-export const WIND_GRID = { lat0: 42.25, lon0: 2.75, dLat: 0.25, dLon: 0.25, nLat: 8, nLon: 16, model: 'meteofrance_seamless', days: 5 };
+export const WIND_GRID = { lat0: 41.7, lon0: 1.8, dLat: 0.3, dLon: 0.3, nLat: 10, nLon: 20, model: 'meteofrance_seamless', days: 5 };
 export function windGridPoints(): CollectPoint[] {
   const g = WIND_GRID, out: CollectPoint[] = [];
   for (let i = 0; i < g.nLat; i++) for (let j = 0; j < g.nLon; j++)

@@ -9,6 +9,7 @@ import { seriesFor } from '../features/series';
 import { SpotMap } from './SpotMap';
 import { gridIndex, useWindField, useWindGrid } from './WindField';
 import { WindLegend } from './Today';
+import { FullBtn, useFull } from './FullScreen';
 
 import { at, H0, H1, nextDays, nextStep, startOf } from '../services/timeline';
 
@@ -27,15 +28,17 @@ export function MapPlayer({ d, spots, disc, L, now }: { d: AllData; spots: Publi
   const grid = useWindGrid();
   const gk = grid ? gridIndex(grid, t) : null;
   useWindField(map, grid, gk);
+  const [full, toggleFull] = useFull(map);
   useEffect(() => {
     if (!playing) return;
     const id = setTimeout(() => { const n = nextStep(days, cur); if (n) setCur(n); else setPlaying(false); }, 900);
     return () => clearTimeout(id);
   }, [playing, cur, days]);
   return (
-    <div class="stack mapplayer">
+    <div class={`stack mapplayer${full ? ' full' : ''}`}>
       <div class="mapbox">
-        <SpotMap spots={spots} best={best} height={460} onMap={setMap} />
+        <SpotMap spots={spots} best={best} onMap={setMap} />
+        <FullBtn full={full} onClick={toggleFull} />
         {grid && gk !== null && <WindLegend />}
         <span class="mapwhen">{dayShort(t)} · {hh(t)}</span>
       </div>

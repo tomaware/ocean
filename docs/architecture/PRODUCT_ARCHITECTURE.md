@@ -342,3 +342,8 @@ Les apps actuelles restent en ligne jusqu'à ce que leur remplaçante soit véri
 - **Spots devient Carte** : plus de liste de spots sous la carte. Carte de la fiche spot (vent Météo-France brut + particules) avec frise des 5 prochains jours, curseur 7 h → 21 h et lecture heure par heure (de 21 h on passe à 7 h le lendemain ; arrêt à la fin du 5e jour). Les repères des spots prennent la couleur des étoiles selon la note publiée de l'heure affichée (gris : pas de session, nuit, ou Kite session en wing). L'adresse `#/…/spots` est gardée.
 - **Sessions 2H** : texte « Spots à moins de 30 min du taf. Si ça rentre, mets-toi en TT. » La liste des spots retenus ne change pas (moins de 55 km de Montpellier).
 - Vérifié : 109 tests (dont la frise : départ à l'heure en cours, 21 h → 7 h le lendemain, fin au 5e jour), test d'interface 21 écrans, lecture et choix du jour sur les données publiées.
+
+### D-55 (13/11/2026) — carte plus grande, vent sur une zone plus large
+- Demande de Tom : agrandir la carte dans l'app et la zone couverte par le vent (« la simulation »).
+- **Carte** : 74 % de la hauteur de l'écran (jusqu'à 760 px) dans le module Carte, 340 px sur la fiche spot (avant 460 et 260) ; bouton plein écran sur les deux cartes (Échap ou le même bouton pour revenir), la frise et la lecture restent visibles en plein écran.
+- **Vent sur la carte** : grille Open-Meteo de 20 × 10 points tous les 0,3° (1,8° E → 7,5° E, 41,7° N → 44,4° N) au lieu de 16 × 8 tous les 0,25° (2,75° E → 6,5° E, 42,25° N → 44° N) : du Roussillon à la Côte d'Azur, au large et à terre. Toujours le modèle Météo-France brut, pour l'affichage seulement (D-24). 200 points au lieu de 128 à chaque collecte horaire.

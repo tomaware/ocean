@@ -243,7 +243,7 @@ table.wg.models th { font-weight: 500; }
 .tag { align-self: start; justify-self: start; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: var(--r-sm); background: var(--c-chip); color: var(--c-chip-ink); white-space: nowrap; }
 .tag.warn { background: var(--c-warn-soft); color: var(--c-warn); }
 .mapbox { position: relative; min-height: 220px; }
-.mapbox .map { height: 260px; }
+.mapbox .map { height: 340px; }
 .maprep { position: absolute; left: 50%; top: 50%; width: 360px; height: 280px; transform: translate(-50%, -50%); z-index: 700; pointer-events: none; overflow: visible; }
 .maprep .ring { fill: color-mix(in srgb, #FFFFFF 18%, transparent); stroke: #FFFFFF; stroke-opacity: .9; stroke-width: 1.5; }
 .maprep .cardinal { fill: #152B33; font: 700 10px var(--font); paint-order: stroke; stroke: #FFFFFF; stroke-width: 3px; }
@@ -356,5 +356,15 @@ table.wg tr.wg-stars .stars .off { opacity: .55; }
 .pdays button[aria-pressed="true"] { background: var(--c-accent); color: #fff; }
 .player input[type="range"] { width: 100%; accent-color: var(--c-accent); }
 .pticks { display: flex; justify-content: space-between; font-size: var(--fs-xs); color: var(--c-ink-3); }
-.mapplayer .mapbox .map { height: 460px; }
-@media (max-width: 560px) { .mapplayer .mapbox .map { height: 380px; } }
+/* Carte plus grande (Tom, 13/11) : presque tout l'écran, et plein écran au bouton */
+.mapplayer .mapbox .map { height: min(74vh, 760px); min-height: 420px; }
+@media (max-width: 560px) { .mapplayer .mapbox .map { height: 64vh; min-height: 360px; } }
+.fullbtn { position: absolute; right: 10px; bottom: 30px; z-index: 800; width: 40px; height: 40px; border-radius: 10px; border: 0; background: var(--c-surface); color: var(--c-ink); box-shadow: 0 2px 8px rgba(0,0,0,.25); display: grid; place-items: center; cursor: pointer; }
+.mapbox.full, .mapplayer.full { position: fixed; inset: 0; z-index: 3000; margin: 0; border-radius: 0; background: var(--c-bg); }
+.mapbox.full .map { height: 100vh !important; border-radius: 0; }
+.mapplayer.full { display: flex; flex-direction: column; gap: 0; padding: 0; }
+.mapplayer.full .mapbox { flex: 1; min-height: 0; }
+.mapplayer.full .mapbox .map { height: 100% !important; min-height: 0; border-radius: 0; }
+.mapplayer.full .player { border-radius: 0; padding-bottom: max(10px, env(safe-area-inset-bottom)); }
+.mapplayer.full > p { display: none; }
+html.mapfull, html.mapfull body { overflow: hidden; }
