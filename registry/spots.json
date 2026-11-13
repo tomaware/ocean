@@ -101,7 +101,7 @@
     },
     {
       "id": "port-camargue",
-      "name": "Port Camargue / Espiguette",
+      "name": "Plage Sud",
       "kind": "spot",
       "geometry": {
         "lat": 43.48,
@@ -204,7 +204,7 @@
     },
     {
       "id": "almanarre",
-      "name": "Almanarre (Hyères)",
+      "name": "Hyères",
       "kind": "spot",
       "geometry": {
         "lat": 43.065,
@@ -216,8 +216,10 @@
       "waterBody": "sea",
       "orientation": {
         "seaward": 245,
-        "confidence": "high",
-        "source": "plage ouest du tombolo, orientée OSO ; O et SO favorables, vent d’est listé mais de terre ici ; confirmée par Tom le 11/11/2026"
+        "seawardAlt": 110,
+        "altName": "côté est du tombolo",
+        "confidence": "medium",
+        "source": "plage ouest du tombolo (Almanarre), orientée OSO, confirmée par Tom le 11/11/2026 ; côté est du tombolo (La Capte / La Bergerie) orienté ESE (~110°, à confirmer) : Tom, 13/11 : « un bon spot de chaque côté donc toujours un choix en sécu » (D-58)"
       },
       "windStations": {
         "windsUp": "2-almanarre-salin-des-pesquiers",

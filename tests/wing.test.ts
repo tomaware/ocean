@@ -198,3 +198,16 @@ test('kite : prévision publiée sur la super prévision collectée, même prove
   assert.equal(alm.sessions.secu.length, 1);
   assert.equal(k.provenance?.kind, 'corrected');
 });
+
+// ------------------------------------------------------------------ HYÈRES : deux plages (D-58, Tom 13/11)
+// « un bon spot de chaque côté donc toujours un choix en sécu » : plage ouest (Almanarre, 245°) et côté est du
+// tombolo (~110°, à confirmer). La note prend le côté le mieux orienté. Avant → après, 20 nd rafales 24 :
+test('Hyères : le côté est du tombolo prend le relais par vent d’est (Sécu first)', () => {
+  assert.equal(spot('almanarre').name, 'Hyères');
+  assert.equal(sc('almanarre', 20, 24, 90, 'secu').score, 8);     // avant 0 (vent de terre côté Almanarre)
+  assert.match(String(sc('almanarre', 20, 24, 90, 'secu').limit), /côté est du tombolo/);
+  assert.equal(sc('almanarre', 20, 24, 45, 'secu').score, 10);    // avant 0
+  assert.equal(sc('almanarre', 20, 24, 135, 'secu').score, 8);    // avant 0
+  assert.equal(sc('almanarre', 20, 24, 290, 'secu').score, 10);   // inchangé (ONO, côté Almanarre)
+  assert.equal(sc('almanarre', 20, 24, 0, 'secu').score, 0);      // nord : side-off des deux côtés, inchangé
+});

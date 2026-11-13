@@ -78,7 +78,12 @@ export function dirFactor(windFrom: number, spot: Pick<Spot, 'orientation' | 'wa
     const bad = (o?.avoid ?? []).some((r) => inSector(windFrom, r));
     return bad ? { f: AVOID_FACTOR, sector: 'avoid', label: 'direction déconseillée sur ce plan d’eau' } : { f: 1, sector: 'closed', label: 'plan d’eau fermé' };
   }
-  const { s } = sectorOf(windFrom, o.seaward);
+  const { s, a } = sectorOf(windFrom, o.seaward);
+  // spot à deux plages (Hyères, D-58) : on prend le côté le mieux orienté pour le vent du moment
+  if (o.seawardAlt != null) {
+    const b = sectorOf(windFrom, o.seawardAlt);
+    if (b.s.f[L] > s.f[L] || (b.s.f[L] === s.f[L] && b.a < a)) return { f: b.s.f[L], sector: b.s.id, label: `${b.s.label} (${o.altName ?? 'autre côté'})` };
+  }
   return { f: s.f[L], sector: s.id, label: s.label };
 }
 
@@ -208,7 +213,7 @@ export function wingForecast(block: ForecastBlock | undefined, registry: Registr
         const r = scoreHour(kn, gust, dir, day, s, L, sport); scores[L] = r.score; limit[L] = r.limit; f[L] = r.f;
       }
       const o = s.orientation;
-      return { t, kn, gust, dir, conf: v?.confidence?.[i] ?? null, day, sector: dir === null || !o || o.seaward == null ? null : sectorOf(dir, o.seaward).s.id,
+      return { t, kn, gust, dir, conf: v?.confidence?.[i] ?? null, day, sector: dir === null || !o || o.seaward == null ? null : dirFactor(dir, s, 'secu').sector,
         kite: sport === 'wing' && kn !== null && isKite(kn, gust, day), scores, limit, f };
     }).filter((h) => h.kn !== null && h.t >= now - 3 * 3600e3);
     return {

@@ -86,7 +86,7 @@ function Prevision({ d, now, disc, spots, L, query }: { d: AllData; now: number;
   const selSpot = sel ? spots.find((s) => s.id === sel.spot) : null;
   return (
     <Section title="Prévision 5 jours">
-      <p class="faint">Chaque case se remplit selon les heures de jour à 1 ★ (vert), 2 ★ (orange) et 3 ★ (violet) ; le chiffre = heures au meilleur niveau du jour. Case vide = pas de session 2H ce jour-là.{disc === 'wing' && prefs.sport === 'wing' ? ' ★ rouge « Kite » = plus de 28 nd : Kite session, pas pour le wing (voir l’onglet Kite).' : ''} Touche une case pour le détail.</p>
+      <p class="faint">Chaque case se remplit selon les heures de jour à 1 ★ (vert), 2 ★ (orange) et 3 ★ (violet) ; touche une case pour le détail. Si ça rentre, appelle ton boss…</p>
       <div class="card table-wrap">
         <table class="grid5">
           <thead><tr><th />{spots.map((s) => <th key={s.id} title={s.name}><strong>{shortName(s)}</strong></th>)}</tr></thead>
@@ -166,7 +166,7 @@ export function Module({ d, now, disc, sub, query }: { d: AllData; now: number; 
   let body;
   if (sub === 'sessions') body = (
     <Section title={`Sessions de 2H${tomorrowOnly ? ' demain' : ''} (Localisation ${HOME.name})`} aside={<Seg label="Spots" value={onlyFav ? 'fav' : 'all'} onChange={(v) => setOnlyFav(v === 'fav')} options={[['all', 'Tous'], ['fav', 'Favoris']]} />}>
-      <p class="faint">{tomorrowOnly ? `Demain seulement, à ${spots.filter((s) => near.has(s.id)).map((s) => s.name.replace(/\s*\(.*\)/, '')).join(', ')} ; les autres jours et spots sont dans Prévision.` : <>Spots à moins de 30 min du taf. Si ça rentre, mets-toi en TT.{far.length ? ` (${far.map((s) => s.name.replace(/\s*\(.*\)/, '')).join(', ')} : dans Prévision.)` : ''}{disc === 'wing' && prefs.sport === 'wing' ? ' « Ça envoie » = au moins 4 h à plus de 20 nd.' : ''}</>}</p>
+      <p class="faint">{tomorrowOnly ? `Demain seulement, à ${spots.filter((s) => near.has(s.id)).map((s) => s.name.replace(/\s*\(.*\)/, '')).join(', ')} ; les autres jours et spots sont dans Prévision.` : 'Spots à moins de 30 min du taf. Si ça rentre, mets-toi en TT.'}</p>
       {byDay.size === 0 && <div class="card empty">Aucune session {tomorrowOnly ? 'demain' : 'en vue'}{onlyFav ? ' sur tes favoris' : ''}.</div>}
       {[...byDay.values()].map((arr) => (
         <div key={arr[0].id} class="stack">

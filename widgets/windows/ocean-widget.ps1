@@ -690,7 +690,7 @@ function New-CreneauxCard($cm, [string]$size, [double]$now) {
     $sx = Add $l3 (New-Stars $c.stars 13 $false); $sx.Margin = Th 8 0 0 0
     [void](Add $bs (T "$(Get-Round $c.kn) nd $(Get-Compass $c.dir)$(if ($c.g) { " · raf. $(Get-Round $c.g)" } else { '' })" 12 (C 'INK2') 'Bold'))
   } else { $t = Add $st (T 'Pas de créneau dans les 5 jours' 13 (C 'INK2') 'SemiBold'); $t.Margin = Th 0 0 0 10 }
-  $HEAD = @{ 'La Franqui' = 'Franqui'; 'Espiguette' = 'Espig.'; 'Almanarre' = 'Alman.' }   # en-têtes de colonne courts
+  $HEAD = @{ 'La Franqui' = 'Franqui'; 'Espiguette' = 'Espig.'; 'Almanarre' = 'Alman.'; 'Plage Sud' = 'P. Sud' }   # en-têtes de colonne courts
   $nameW = 40; $n = [math]::Max(1, $cm.grid.Count); $cw = [math]::Floor((336 - $nameW) / $n) - 3
   $hdr = Add $st (New-Stack 'Horizontal'); $hdr.Margin = Th $nameW 0 0 3
   foreach ($g in $cm.grid) {

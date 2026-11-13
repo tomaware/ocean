@@ -27,7 +27,8 @@ export interface Spot {
   disciplines: Discipline[];
   waterBody: 'sea' | 'lagoon';
   // direction du large vue de la plage (°) ; avoid = secteurs de vent déconseillés (plan d'eau fermé), [de, à] en °
-  orientation: { seaward: number | null; avoid?: [number, number][]; confidence?: 'low' | 'medium' | 'high'; source?: string } | null;
+  /** seawardAlt : second côté navigable du même spot (Hyères : l'autre plage du tombolo, D-58) */
+  orientation: { seaward: number | null; seawardAlt?: number; altName?: string; avoid?: [number, number][]; confidence?: 'low' | 'medium' | 'high'; source?: string } | null;
   swellWindow?: { min: number; max: number; ideal?: number };
   buoys?: string[];
   windStations?: { windsUp?: string; metar?: string | null };

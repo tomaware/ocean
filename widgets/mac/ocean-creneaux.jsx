@@ -282,7 +282,7 @@ function CreneauxCard({ cm, size, now }) {
       <div className="namestars"><b className="t13">{x.spot.short}</b><Stars k={x.stars} all={false} /></div><div className="row s11"><span className="ink2">{when(x, now)}</span><b>{r(x.kn)} nd {compass(x.dir)}</b></div></div>)}
       {cm.list.length < 2 && <span className="ink3 s11">Pas d'autre créneau en vue</span>}<span className="ink3 s9">{cm.label}</span></div>
   </div></Card>;
-  const HEAD = { "La Franqui": "Franqui", Espiguette: "Espig.", Almanarre: "Alman." };
+  const HEAD = { "La Franqui": "Franqui", Espiguette: "Espig.", Almanarre: "Alman.", "Plage Sud": "P. Sud" };
   return <Card size={size} url={`${APP}#/wind/prevision`}>
     {c ? <div className={`bestbig soft${c.stars}`} onClick={open(link(c.spot.id, c.s))}>
       <div className="row"><span className="eyebrow">MEILLEUR CRÉNEAU</span><span className="pill" style={{ background: FILL[c.stars] || "#888" }}>{c.h}h</span></div>

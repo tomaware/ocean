@@ -15,7 +15,7 @@
 
 const DATA = "https://tomaware.github.io/ocean/data/widget-wind.json";
 const APP = "https://tomaware.github.io/ocean/";
-const VERSION = "2026-11-13b";   // affichée dans les réglages : permet de savoir quelle version tourne
+const VERSION = "2026-11-13c";   // affichée dans les réglages : permet de savoir quelle version tourne
 // ------------------------------------------------------- mise a jour automatique
 // Le widget va chercher sa propre version publiee et reecrit son fichier. La nouvelle version s'applique au
 // rafraichissement suivant : une correction n'oblige plus a recopier le script a la main.
@@ -176,7 +176,7 @@ function medium(w, list, cfg, now) {
   right.addSpacer();
   w.url = link(c);
 }
-const HEAD = { "La Franqui": "Franqui", "Espiguette": "Espig.", "Almanarre": "Alman." };   // en-têtes de colonne courts
+const HEAD = { "La Franqui": "Franqui", "Espiguette": "Espig.", "Almanarre": "Alman.", "Plage Sud": "P. Sud" };   // en-têtes de colonne courts
 const colLabel = (s) => HEAD[s.short] || s.short;
 /** Étiquette de ligne : « Auj. » aujourd'hui, sinon « Jeu 12 » (comme le widget Windows validé le 12/11). */
 function rowLabel(key, now) {

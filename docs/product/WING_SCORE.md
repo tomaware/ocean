@@ -2,6 +2,12 @@
 
 > **Statut : validée par Tom le 10/11 (D-14, D-16) ; v1.1 le 10/11 à 12 h 41 (D-18 : « trop de vent c'est plus de 35 nœuds, sinon c'est OK ») ; v2.0 le 10/11 à 13 h 45 (D-19 : deux modes « Secu first – OffShore » au lieu des trois niveaux ; « ça envoie » quand il y a plus de 4 h de vent à plus de 20 nd) ; v2.1 le 13/11 (D-49 : « au-delà de 28 nd, 1 étoile rouge et Kite session ; 30 nd en wing c'est 0 »).**
 
+## Hyères : deux plages (13/11, D-58)
+
+Demande de Tom : « Almanarre devient Hyères ; il est plutôt offshore, il y a un bon spot de chaque côté donc toujours un choix en sécu ». Le spot a maintenant deux côtés : la plage ouest (Almanarre, ouverte vers 245°) et le côté est du tombolo (La Capte / La Bergerie, ouvert vers ~110°, à confirmer par Tom). Pour chaque heure, la direction est jugée sur le côté le mieux orienté ; le commentaire précise « côté est du tombolo » quand c'est lui. Le reste de la formule ne change pas (ce n'est pas une nouvelle version de la note).
+
+Avant / après, 20 nd rafales 24, Sécu first : vent de 45° 0 → 10 ; 90° 0 → 8 (face à la plage est) ; 135° 0 → 8 ; 290° 10 → 10 ; 0° (nord) 0 → 0 (side-off des deux côtés). Sur la prévision publiée du 13/11 : 9 heures de jour sur 60 changent (vent d'est faible samedi et dimanche, 0 → 0,5 à 5,3).
+
 ## v2.2 — pleine note dès 13 nd (13/11, D-50)
 
 Demande de Tom : « dès 13 nœuds tu peux commencer à partir en session ». La force V vaut 0 jusqu'à 10 nd, monte en ligne droite jusqu'à **1 à 13 nd**, même seuil en Sécu first et en Offshore (avant : 12 → 15 nd en Sécu first, 11 → 14 nd en Offshore). Le haut ne change pas (plein jusqu'à 28 nd, 0 à 30 nd).

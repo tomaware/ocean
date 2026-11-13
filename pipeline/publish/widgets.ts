@@ -3,7 +3,7 @@
 const DAY = new Intl.DateTimeFormat('fr-CA', { timeZone: 'Europe/Paris', year: 'numeric', month: '2-digit', day: '2-digit' });
 export const dayKeyParis = (t: number) => DAY.format(new Date(t));       // AAAA-MM-JJ
 const LEVELS = ['secu', 'offshore'] as const;
-export const SHORT: Record<string, string> = { 'la-franqui': 'La Franqui', 'la-grande-motte': 'G-Motte', 'le-ponant': 'Ponant', 'port-camargue': 'Espiguette', beauduc: 'Beauduc', 'le-jai': 'Le Jaï', almanarre: 'Almanarre' };
+export const SHORT: Record<string, string> = { 'la-franqui': 'La Franqui', 'la-grande-motte': 'G-Motte', 'le-ponant': 'Ponant', 'port-camargue': 'Plage Sud', beauduc: 'Beauduc', 'le-jai': 'Le Jaï', almanarre: 'Hyères' };
 const stars = (s: number | null) => (s === null ? 0 : s >= 8.5 ? 3 : s >= 7 ? 2 : s >= 5 ? 1 : 0);
 const circ = (ds: number[]) => {
   if (!ds.length) return null;
