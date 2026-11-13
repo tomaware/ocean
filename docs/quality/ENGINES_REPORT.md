@@ -1,6 +1,6 @@
 # Rapport d'analyse (② ANALYSE)
 
-Généré le 2026-11-13 13:39 UTC par `pipeline/engines/run.ts`, juste après la collecte.
+Généré le 2026-11-13 13:53 UTC par `pipeline/engines/run.ts`, juste après la collecte.
 
 Les moteurs des apps actuelles (copies non modifiées dans `legacy/`) sont alimentés par la collecte commune. Le test golden refait le calcul comme les apps actuelles, avec leurs propres parseurs sur les mêmes réponses brutes, et exige les mêmes notes à ±0.1.
 
@@ -14,8 +14,8 @@ Les moteurs des apps actuelles (copies non modifiées dans `legacy/`) sont alime
 | sorties-surf | ✅ | 6/6 spots notés ; 12 créneaux |
 | houle-direction-downwind | ✅ | direction de la houle (affichage, carte) : 288/288 heures |
 | sorties-downwind | ✅ | 3/3 parcours notés ; 1 meilleurs créneaux |
-| ecart-prod-surf | ✅ | notes surf OCEAN vs app en service (calcul prod. 37 min avant, même extrait Copernicus) : médiane 0.20, 90 % ≤ 1.20, max 5.10 sur 668 heures (max : vias mar. 17:00, OCEAN 8.2 / prod 3.1) |
-| ecart-prod-downwind | ✅ | notes downwind (intermédiaire, de jour) OCEAN vs app en service (calcul prod. 9 min avant) : médiane 0.00, 90 % ≤ 0.00, max 0.00 sur 117 heures |
+| ecart-prod-surf | ✅ | notes surf OCEAN vs app en service (calcul prod. 51 min avant, même extrait Copernicus) : médiane 0.20, 90 % ≤ 1.20, max 5.10 sur 668 heures (max : vias mar. 17:00, OCEAN 8.2 / prod 3.1) |
+| ecart-prod-downwind | ✅ | notes downwind (intermédiaire, de jour) OCEAN vs app en service (calcul prod. 23 min avant) : médiane 0.00, 90 % ≤ 0.00, max 0.00 sur 117 heures |
 | sorties-wing | ✅ | 7 spots notés (wing v2.0.0) ; 5 session(s) 2H en mode Sécu first sur les heures prévues |
 | confidentialite-moteurs | ✅ | aucun relevé Winds-Up ni clé dans les sorties (seuls les facteurs de correction dérivés y figurent, comme dans l’app downwind actuelle) |
 | copernicus-surf | ✅ | Copernicus Med-WAV inclus dans le moteur surf (comme l’app en service) |
@@ -24,7 +24,7 @@ Les moteurs des apps actuelles (copies non modifiées dans `legacy/`) sont alime
 
 | Quand | Spot | Note moyenne | Pic |
 |---|---|---|---|
-| mar. 17 08:00 → mar. 17 18:00 | Sète (Lazaret / Fontaine) | 7.63 | 8.36 |
+| mar. 17 08:00 → mar. 17 18:00 | Sète (Lazaret / Fontaine) | 7.63 | 8.35 |
 | mar. 17 08:00 → mar. 17 18:00 | Carnon | 7.54 | 8.2 |
 | dim. 15 08:00 → dim. 15 15:00 | La Guillotine | 7.19 | 8.59 |
 | mar. 17 08:00 → mar. 17 18:00 | Palavas-les-Flots | 7.38 | 8.14 |
