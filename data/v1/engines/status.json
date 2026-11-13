@@ -1,5 +1,5 @@
 {
- "generatedAt": 1794607187904,
+ "generatedAt": 1794607838162,
  "checks": [
   {
    "id": "golden-surf",
@@ -34,17 +34,17 @@
   {
    "id": "ecart-prod-surf",
    "ok": true,
-   "detail": "notes surf OCEAN vs app en service (calcul prod. 12 min avant, même extrait Copernicus) : médiane 0.00, 90 % ≤ 0.00, max 1.20 sur 668 heures (max : carnon sam. 03:00, OCEAN 2.6 / prod 1.4)"
+   "detail": "notes surf OCEAN vs app en service (calcul prod. 23 min avant, même extrait Copernicus) : médiane 0.00, 90 % ≤ 0.00, max 1.20 sur 664 heures (max : carnon sam. 03:00, OCEAN 2.6 / prod 1.4)"
   },
   {
    "id": "ecart-prod-downwind",
    "ok": true,
-   "detail": "notes downwind (intermédiaire, de jour) OCEAN vs app en service (calcul prod. 51 min avant) : médiane 0.00, 90 % ≤ 0.00, max 0.10 sur 120 heures"
+   "detail": "notes downwind (intermédiaire, de jour) OCEAN vs app en service (calcul prod. 61 min avant) : médiane 0.00, 90 % ≤ 0.00, max 0.10 sur 120 heures"
   },
   {
    "id": "sorties-wing",
    "ok": true,
-   "detail": "7 spots notés (wing v2.2.0) ; 10 session(s) 2H en mode Sécu first sur les heures prévues"
+   "detail": "7 spots notés (wing v2.3.0) ; 8 session(s) 2H en mode Sécu first sur les heures prévues"
   },
   {
    "id": "sorties-kite",
