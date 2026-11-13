@@ -92,6 +92,7 @@ export function useWindField(map: L.Map | null, g: WindGrid | null, k: number | 
       }
     };
     const tick = () => {
+      if (!alive()) return;
       const ctx = flow.getContext('2d')!; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       // traînées : on estompe l'image précédente plutôt que de l'effacer
       ctx.globalCompositeOperation = 'destination-in'; ctx.fillStyle = 'rgba(0,0,0,0.86)'; ctx.fillRect(0, 0, W, H);
@@ -109,7 +110,9 @@ export function useWindField(map: L.Map | null, g: WindGrid | null, k: number | 
       raf = requestAnimationFrame(tick);
     };
     const hide = () => { cancelAnimationFrame(raf); color.style.opacity = '0'; flow.style.opacity = '0'; };
-    const show = () => { paint(); color.style.opacity = ''; flow.style.opacity = ''; if (!reduce) { cancelAnimationFrame(raf); raf = requestAnimationFrame(tick); } };
+    // carte retirée entre-temps (changement d'écran) : on ne dessine plus
+    const alive = () => !!(map as unknown as { _mapPane?: unknown })._mapPane && box.isConnected;
+    const show = () => { if (!alive()) return; paint(); color.style.opacity = ''; flow.style.opacity = ''; if (!reduce) { cancelAnimationFrame(raf); raf = requestAnimationFrame(tick); } };
     map.on('zoomstart', hide); map.on('moveend zoomend resize', show);
     show();
     return () => { cancelAnimationFrame(raf); map.off('zoomstart', hide); map.off('moveend zoomend resize', show); color.remove(); flow.remove(); };

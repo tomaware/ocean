@@ -23,7 +23,8 @@ export function SpotMap({ spots, best, focus, height, onMap }: { spots: PublicSp
     else if (bounds.length) map.fitBounds(bounds, { padding: [20, 20] });
     onMap?.(map);
     return () => { onMap?.(null); mapRef.current = null; layer.current = null; map.remove(); };
-  }, [spots, focus]);
+    // dépend de la liste des identifiants, pas du tableau : un nouveau tableau aux mêmes spots ne recrée pas la carte
+  }, [spots.map((s) => s.id).join(','), focus]);
   useEffect(() => {
     const g = layer.current;
     if (!g) return;
