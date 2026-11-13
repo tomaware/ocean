@@ -4,7 +4,7 @@
 
 ## Hyères : deux plages (13/11, D-58)
 
-Demande de Tom : « Almanarre devient Hyères ; il est plutôt offshore, il y a un bon spot de chaque côté donc toujours un choix en sécu ». Le spot a maintenant deux côtés : la plage ouest (Almanarre, ouverte vers 245°) et le côté est du tombolo (La Capte / La Bergerie, ouvert vers ~110°, à confirmer par Tom). Pour chaque heure, la direction est jugée sur le côté le mieux orienté ; le commentaire précise « côté est du tombolo » quand c'est lui. Le reste de la formule ne change pas (ce n'est pas une nouvelle version de la note).
+Demande de Tom : « Almanarre devient Hyères ; il est plutôt offshore, il y a un bon spot de chaque côté donc toujours un choix en sécu ». Le spot a maintenant deux côtés : la plage ouest (Almanarre, ouverte vers 245°) et le côté est du tombolo (La Capte / La Bergerie, ouvert vers ~110°, confirmé par Tom le 13/11). Pour chaque heure, la direction est jugée sur le côté le mieux orienté ; le commentaire précise « côté est du tombolo » quand c'est lui. Le reste de la formule ne change pas (ce n'est pas une nouvelle version de la note).
 
 Avant / après, 20 nd rafales 24, Sécu first : vent de 45° 0 → 10 ; 90° 0 → 8 (face à la plage est) ; 135° 0 → 8 ; 290° 10 → 10 ; 0° (nord) 0 → 0 (side-off des deux côtés). Sur la prévision publiée du 13/11 : 9 heures de jour sur 60 changent (vent d'est faible samedi et dimanche, 0 → 0,5 à 5,3).
 

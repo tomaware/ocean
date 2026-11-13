@@ -218,8 +218,8 @@
         "seaward": 245,
         "seawardAlt": 110,
         "altName": "côté est du tombolo",
-        "confidence": "medium",
-        "source": "plage ouest du tombolo (Almanarre), orientée OSO, confirmée par Tom le 11/11/2026 ; côté est du tombolo (La Capte / La Bergerie) orienté ESE (~110°, à confirmer) : Tom, 13/11 : « un bon spot de chaque côté donc toujours un choix en sécu » (D-58)"
+        "confidence": "high",
+        "source": "plage ouest du tombolo (Almanarre), orientée OSO, confirmée par Tom le 11/11/2026 ; côté est du tombolo (La Capte / La Bergerie) orienté ESE (~110°), confirmé par Tom le 13/11/2026 ; Tom, 13/11 : « un bon spot de chaque côté donc toujours un choix en sécu » (D-58)"
       },
       "windStations": {
         "windsUp": "2-almanarre-salin-des-pesquiers",

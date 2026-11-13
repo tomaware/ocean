@@ -358,5 +358,5 @@ Les apps actuelles restent en ligne jusqu'à ce que leur remplaçante soit véri
 
 ### D-58 (13/11/2026) — noms de spots, Hyères à deux plages, textes des modules
 - Noms : « Port Camargue / Espiguette » devient **Plage Sud** ; « Almanarre (Hyères) » devient **Hyères** (identifiants inchangés : adresses, favoris et réglages gardés).
-- **Hyères** : deux côtés navigables (ouest 245°, est ~110° à confirmer) ; la direction est jugée sur le meilleur côté (`orientation.seawardAlt`). Avant / après et vérification sur la prévision réelle : `WING_SCORE.md`, `tests/wing.test.ts`.
+- **Hyères** : deux côtés navigables (ouest 245°, est ~110°, confirmé par Tom le 13/11) ; la direction est jugée sur le meilleur côté (`orientation.seawardAlt`). Avant / après et vérification sur la prévision réelle : `WING_SCORE.md`, `tests/wing.test.ts`.
 - Textes (WIND, VAGUE, HOULE) — Prévision : « Chaque case se remplit selon les heures de jour à 1 ★ (vert), 2 ★ (orange) et 3 ★ (violet) ; touche une case pour le détail. Si ça rentre, appelle ton boss… » ; Sessions 2H : « Spots à moins de 30 min du taf. Si ça rentre, mets-toi en TT. » (liste des spots éloignés et définition de « Ça envoie » retirées). La phrase sous la carte était déjà retirée (D-57).
