@@ -1,16 +1,17 @@
-WIDGET OCEAN POUR MAC — VENT, CRÉNEAUX ET VAGUE SUR LE BUREAU
-=============================================================
+WIDGETS OCEAN POUR MAC — VENT, CRÉNEAUX ET VAGUE SUR LE BUREAU
+==============================================================
 
-Trois cartes avec les mêmes données, les mêmes étoiles et les mêmes créneaux que
-l'app OCEAN (https://tomaware.github.io/ocean/), les widgets iPhone et le widget
-Windows :
+Trois widgets indépendants, comme sur l'iPhone, avec les mêmes données, les mêmes
+étoiles et les mêmes créneaux que l'app OCEAN (https://tomaware.github.io/ocean/) :
 
   - VENT : le spot de ton choix (La Grande-Motte au départ), le vent maintenant
     et dans 2 h, puis 4 jours ; en grand, aujourd'hui et demain heure par heure ;
   - CRÉNEAUX : le meilleur créneau wing en haut, puis la grille spots × jours ;
-  - VAGUE (surf, masquée au départ) : un spot surf (Carnon au départ), les vagues
-    maintenant, 4 jours ; en grand, aujourd'hui et demain heure par heure et le
+  - VAGUE (surf) : un spot surf (Carnon au départ), les vagues prévues pour
+    l'heure, 4 jours ; en grand, aujourd'hui et demain heure par heure et le
     meilleur créneau surf.
+
+Chacun se place où tu veux, en petit, moyen ou grand, et se règle à part.
 
 Le widget tourne dans Übersicht, une petite app gratuite qui affiche des widgets
 sur le bureau du Mac ; l'installateur la télécharge depuis son site officiel si
@@ -19,7 +20,9 @@ besoin (et vérifie sa signature Apple).
 Contenu du dossier :
   - installer.command      l'installation
   - desinstaller.command   pour enlever le widget
-  - ocean.jsx              le widget
+  - ocean-vent.jsx         le widget Vent
+  - ocean-creneaux.jsx     le widget Créneaux
+  - ocean-vague.jsx        le widget Vague
   - LISEZ-MOI.txt          ce fichier
 
 
@@ -37,31 +40,33 @@ INSTALLATION (environ 1 minute)
 3. Le Terminal s'ouvre et installe tout. Une seule question : le lien de ta
    super prévision (mode perso) — appuie simplement sur Entrée si tu n'en as pas.
 
-4. Le widget apparaît en haut à droite du bureau. Übersicht se lance tout seul
-   à chaque démarrage du Mac (icône dans la barre des menus).
+4. Les trois widgets apparaissent en haut à droite du bureau, l'un sous l'autre.
+   Übersicht se lance tout seul à chaque démarrage du Mac (icône dans la barre
+   des menus).
+
+Si l'ancien widget OCEAN (une seule carte à trois blocs, « ocean.jsx ») était
+installé, ses réglages sont repris par les trois nouveaux widgets et il est
+retiré (une copie reste dans le dossier d'Übersicht : ocean.jsx.ancien).
 
 
-RÉGLAGES
---------
+RÉGLAGES ET DÉPLACEMENT
+-----------------------
 
-Clic sur « ⚙ réglages » sous le widget : le fichier s'ouvre dans TextEdit.
-Change les valeurs du bloc « TES RÉGLAGES » puis enregistre (⌘S) : le widget se
-met à jour tout seul.
-
-  SPOT            spot de la carte Vent (ex. "beauduc", "le-jai")
-  MODE            "secu" (Sécu first) ou "offshore"
-  CARTE_VENT      "petit", "moyen", "grand" ou "masque"
-  CARTE_CRENEAUX  idem
-  CARTE_VAGUE     idem (surf)
-  SPOT_VAGUE      spot surf (ex. "sete", "palavas", "saintes-maries")
-  CRENEAUX_SPOTS  "tous" ou "proches" (moins de 55 km de Montpellier)
-  DISPOSITION     "colonne" (l'une sous l'autre) ou "ligne" (côte à côte)
-  POSITION        place sur l'écran (ex. "top: 40px; right: 24px;")
-
-Réinstaller une nouvelle version garde tes réglages.
+  - Glisser une carte : elle se déplace (sa place est retenue).
+  - Survoler une carte : un ⚙ apparaît dans son coin en haut à droite. Clic
+    dessus : le panneau de réglages de ce widget s'ouvre à côté.
+      VENT      spot, mode (Sécu first / OffShore), taille, thème,
+                balise en direct (brancher, changer ou retirer le lien)
+      CRÉNEAUX  mode, spots suivis (tous, proches, ou au choix spot par
+                spot), taille, thème
+      VAGUE     spot surf, taille, thème
+  - Tout est retenu d'un démarrage à l'autre, et gardé si tu réinstalles.
+  - Les widgets se mettent à jour tout seuls quand une nouvelle version est
+    publiée : rien à réinstaller.
 
 Clic sur une carte : ouvre OCEAN (fiche du spot, au bon jour pour un créneau).
-Les prévisions sont relues toutes les 5 minutes (OCEAN publie chaque heure).
+Le widget Vent relit la balise toutes les 5 minutes ; Créneaux et Vague relisent
+les prévisions toutes les 15 minutes (OCEAN publie chaque heure).
 « ● Winds-Up abonné · 6 min » : vent mesuré par la balise (ton abonnement ;
 « public » si la connexion à Winds-Up échoue : pages publiques, 2 h de retard) ;
 « prévision corrigée » : pas de balise, vent prévu pour l'heure (corrigé par la
@@ -73,13 +78,13 @@ MODE PERSO : BALISES WINDS-UP EN DIRECT
 ---------------------------------------
 
 Si tu as ton script Google « super prévision », colle son lien quand
-l'installateur le demande. Il est rangé dans le trousseau du Mac (élément
-« ocean.superprevision »), jamais dans le widget. Le vent mesuré par la balise
-remplace alors le vent prévu.
+l'installateur le demande, ou plus tard : ⚙ du widget Vent → « Brancher… ». Il
+est rangé dans le trousseau du Mac (élément « ocean.superprevision »), jamais
+dans les widgets. Le vent mesuré par la balise remplace alors le vent prévu.
 
 
 DÉSINSTALLATION
 ---------------
 
-Clic droit sur « desinstaller.command » → Ouvrir. Übersicht et tes autres
-widgets restent en place.
+Clic droit sur « desinstaller.command » → Ouvrir : les trois widgets OCEAN sont
+retirés. Übersicht et tes autres widgets restent en place.

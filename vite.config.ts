@@ -10,7 +10,9 @@ export const WINDOWS_ZIP = 'ocean-widget-windows.zip';
 const WINDOWS_FILES = ['installer.cmd', 'desinstaller.cmd', 'ocean-widget.ps1', 'LISEZ-MOI.txt'];
 /** Widget Mac (Übersicht) : un .zip (les .command gardent le droit d'exécution). */
 export const MAC_ZIP = 'ocean-widget-mac.zip';
-const MAC_FILES = ['installer.command', 'desinstaller.command', 'ocean.jsx', 'LISEZ-MOI.txt'];
+/** Les trois widgets Mac (Vent, Créneaux, Vague), aussi publiés seuls : chacun se met à jour en relisant sa version publiée. */
+export const MAC_WIDGETS = ['ocean-vent.jsx', 'ocean-creneaux.jsx', 'ocean-vague.jsx'];
+const MAC_FILES = ['installer.command', 'desinstaller.command', ...MAC_WIDGETS, 'LISEZ-MOI.txt'];
 
 /** Archive .zip minimale (deflate), sans dépendance. */
 export function zip(files: { name: string; data: Buffer; exec?: boolean }[], date = new Date()): Buffer {
@@ -52,6 +54,7 @@ const widgets = (): Plugin => ({
     const dir = `${opt.dir ?? 'dist'}/widgets`;
     mkdirSync(dir, { recursive: true });
     for (const [from, to] of WIDGET_FILES) copyFileSync(from, `${dir}/${to}`);
+    for (const f of MAC_WIDGETS) copyFileSync(`widgets/mac/${f}`, `${dir}/${f}`);
     writeFileSync(`${dir}/${WINDOWS_ZIP}`, windowsZip());
     writeFileSync(`${dir}/${MAC_ZIP}`, macZip());
   },

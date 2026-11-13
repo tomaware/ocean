@@ -172,16 +172,16 @@ export function WidgetsPage() {
       {os === 'mac' && (
         <Section title={<span class="row"><Laptop size={18} /> Mac</span>}>
           <div class="card stack">
-            <strong>Le widget OCEAN sur le bureau</strong>
-            <span class="small">Les cartes <b>Vent</b>, <b>Créneaux</b> et <b>Vague</b> (surf), chacune en petit, moyen ou grand, sans iPhone. Il tourne dans Übersicht, une app gratuite que l’installateur télécharge si besoin.</span>
-            <div class="row"><a class="btn primary" href="./widgets/ocean-widget-mac.zip" download><Download size={16} /> Télécharger le widget Mac (.zip)</a></div>
+            <strong>Les widgets OCEAN sur le bureau</strong>
+            <span class="small">Trois widgets indépendants, comme sur l’iPhone : <b>Vent</b>, <b>Créneaux</b> et <b>Vague</b> (surf), chacun en petit, moyen ou grand, sans iPhone. Ils tournent dans Übersicht, une app gratuite que l’installateur télécharge si besoin.</span>
+            <div class="row"><a class="btn primary" href="./widgets/ocean-widget-mac.zip" download><Download size={16} /> Télécharger les widgets Mac (.zip)</a></div>
             <Steps>
               <li>Double-clic sur le fichier téléchargé pour l’extraire.</li>
               <li>Dans le dossier, <b>clic droit</b> sur <b>installer.command</b> → <b>Ouvrir</b> → <b>Ouvrir</b> (la première fois, macOS bloque le double-clic sur un fichier venu d’Internet ; sinon : Réglages Système → Confidentialité et sécurité → <b>Ouvrir quand même</b>).</li>
-              <li>Le Terminal installe tout ; s’il pose une question sur la super prévision, appuie sur <b>Entrée</b>. Le widget apparaît en haut à droite du bureau et revient à chaque démarrage.</li>
+              <li>Le Terminal installe tout ; s’il pose une question sur la super prévision, appuie sur <b>Entrée</b>. Les trois widgets apparaissent en haut à droite du bureau et reviennent à chaque démarrage. Un ancien widget OCEAN est remplacé, ses réglages repris.</li>
             </Steps>
-            <span class="small"><b>Régler</b> : clic sur <b>⚙ réglages</b> sous le widget, change les valeurs du bloc « TES RÉGLAGES » (spot, mode, taille de chaque carte, spot surf…) puis <b>⌘S</b>. Une nouvelle version installée garde tes réglages.</span>
-            {prefs.perso.enabled && <span class="small"><b>Mode perso</b> : colle le lien de ta super prévision quand l’installateur le demande ; il est rangé dans le trousseau du Mac et le widget affiche alors les balises Winds-Up en direct.</span>}
+            <span class="small"><b>Déplacer</b> : glisse la carte. <b>Régler</b> : survole la carte, clic sur le <b>⚙</b> de son coin en haut à droite (spot, mode, spots suivis, taille, thème, balise en direct). Tout est retenu, et les widgets se mettent à jour tout seuls.</span>
+            {prefs.perso.enabled && <span class="small"><b>Mode perso</b> : colle le lien de ta super prévision quand l’installateur le demande (ou plus tard : ⚙ du widget Vent → Brancher…) ; il est rangé dans le trousseau du Mac et le widget Vent affiche alors les balises Winds-Up en direct.</span>}
             <span class="faint">Pour l’enlever : clic droit sur <b>desinstaller.command</b> → Ouvrir.</span>
           </div>
           <div class="card stack">

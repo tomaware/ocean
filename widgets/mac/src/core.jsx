@@ -1,50 +1,35 @@
-// OCEAN — widget de bureau pour Mac (Übersicht)
-// Mêmes données, mêmes étoiles et mêmes créneaux que l'app OCEAN (https://tomaware.github.io/ocean/),
-// que les widgets iPhone et que le widget Windows. Trois cartes : Vent, Créneaux, Vague (surf).
+// OCEAN — cœur commun aux trois widgets Mac (Vent, Créneaux, Vague).
+// Recopié tel quel dans chaque widget par `node widgets/mac/build.mjs` (entre « CŒUR » et « FIN DU CŒUR ») ;
+// ne modifie que ce fichier, puis relance la commande. Les tests vérifient que les widgets livrés sont à jour.
 //
-// Réglages : modifie les valeurs ci-dessous et enregistre ; Übersicht recharge le widget tout seul.
-// (Menu Übersicht dans la barre des menus → « Open Widgets Folder » → ocean.jsx, ou clic sur ⚙ dans le widget.)
-// Clic sur une carte : ouvre OCEAN (fiche du spot, au bon jour pour un créneau).
-//
-// Mode perso (balise Winds-Up en direct) : le lien de ta super prévision est lu dans le trousseau du Mac
-// (élément « ocean.superprevision », enregistré par installer.command), jamais dans ce fichier.
-import { run } from "uebersicht";
-
-// ================================================================ TES RÉGLAGES
-const SPOT = "la-grande-motte";      // spot de la carte Vent : la-franqui, la-grande-motte, le-ponant, port-camargue, beauduc, le-jai, almanarre
-const MODE = "secu";                 // "secu" (Sécu first) ou "offshore"
-const CARTE_VENT = "moyen";          // "petit", "moyen", "grand" ou "masque"
-const CARTE_CRENEAUX = "moyen";      // idem
-const CARTE_VAGUE = "masque";        // idem (surf)
-const SPOT_VAGUE = "carnon";         // carnon, palavas, sete, vias, saintes-maries, la-couronne
-const CRENEAUX_SPOTS = "tous";       // "tous" ou "proches" (< 55 km de Montpellier)
-const DISPOSITION = "colonne";       // "colonne" (les cartes l'une sous l'autre) ou "ligne" (côte à côte)
-const POSITION = "top: 40px; right: 24px;";
-// ================================================================
+//  1. Données : mêmes règles que l'app, les widgets iPhone et le widget Windows (étoiles, créneaux, balise).
+//  2. Cartes : petit, moyen, grand.
+//  3. Widget : déplacement à la souris, panneau de réglages, réglages et position retenus (localStorage d'Übersicht),
+//     dernières données gardées hors ligne, mise à jour automatique du fichier.
 
 const DATA = "https://tomaware.github.io/ocean/data/widget-wind.json";
 const SURF = "https://tomaware.github.io/ocean/data/widget-surf.json";
 const APP = "https://tomaware.github.io/ocean/";
 const NEAR = ["la-grande-motte", "le-ponant", "port-camargue"];
 const LIVE_MAX_MIN = 90;
-const SEP = "@@OCEAN@@";
-const SELF = "ocean.jsx";
+const SEP = "@@OCEAN@@", NOLINK = "@@NOLINK@@";
+const WIDGETS_DIR = "$HOME/Library/Application Support/Übersicht/widgets";
 
-export const refreshFrequency = 5 * 60 * 1000;   // balise toutes les 5 min ; les prévisions changent toutes les heures
+// ------------------------------------------------------------------ commandes
 const curl = (u) => `curl -sL --max-time 20 "${u}?t=$(date +%s)"`;
-export const command = [
-  curl(DATA), `echo "${SEP}"`, CARTE_VAGUE !== "masque" ? curl(SURF) : "true", `echo "${SEP}"`,
-  `L=$(security find-generic-password -s ocean.superprevision -w 2>/dev/null) && [ -n "$L" ] && curl -sL --max-time 20 "$L&action=live" || true`,
-].join("; ");
-
-export const className = `${POSITION}`;
+// balise en direct : lien de la super prévision lu dans le trousseau du Mac (jamais dans le fichier)
+const LIVE_CMD = `L=$(security find-generic-password -s ocean.superprevision -w 2>/dev/null); if [ -z "$L" ]; then echo "${NOLINK}"; else curl -sL --max-time 20 "$L&action=live" || true; fi`;
+// Mise à jour automatique : le widget récupère sa version publiée et remplace son fichier (Übersicht le recharge).
+// N'écrit que si le fichier téléchargé est complet (taille + marqueur en dernière ligne) et différent.
+const majAuto = (fichier, marqueur) =>
+  `( F="${WIDGETS_DIR}/${fichier}"; T="$(mktemp)"; if [ -f "$F" ] && curl -sfL --max-time 20 "${APP}widgets/${fichier}" -o "$T" && [ "$(wc -c < "$T")" -gt 4000 ] && tail -c 120 "$T" | grep -q "${marqueur}" && ! cmp -s "$T" "$F"; then cp "$T" "$F"; fi; rm -f "$T" ) >/dev/null 2>&1 || true`;
 
 // ------------------------------------------------------------------ outils (mêmes règles que les autres widgets)
 const DIR16 = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSO", "SO", "OSO", "O", "ONO", "NO", "NNO"];
-export const compass = (d) => (d == null ? "" : DIR16[Math.round(d / 22.5) % 16]);
+const compass = (d) => (d == null ? "" : DIR16[Math.round(d / 22.5) % 16]);
 const fromText = (o) => { const k = DIR16.indexOf(String(o || "").toUpperCase().replace("W", "O")); return k < 0 ? null : k * 22.5; };
 const norm = (s) => String(s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-");
-export const starsOf = (s) => (s == null ? 0 : s >= 8.5 ? 3 : s >= 7 ? 2 : s >= 5 ? 1 : 0);
+const starsOf = (s) => (s == null ? 0 : s >= 8.5 ? 3 : s >= 7 ? 2 : s >= 5 ? 1 : 0);
 const DAYS = ["Dim.", "Lun.", "Mar.", "Mer.", "Jeu.", "Ven.", "Sam."];
 const dayKey = (t) => { const d = new Date(t); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`; };
 const dayLabel = (key, now) => (key === dayKey(now) ? "Auj." : DAYS[new Date(key + "T12:00:00").getDay()]);
@@ -62,9 +47,10 @@ const findSpot = (spots, q, def) => {
   return spots.find((s) => s.id === n) || spots.find((s) => norm(s.short) === n || norm(s.name) === n || norm(s.name).includes(n)) || spots.find((s) => s.id === def) || spots[0];
 };
 const rank = (a, b) => starsOf(b.p) - starsOf(a.p) || b.h - a.h || b.p - a.p || a.s - b.s;
+const title = (spot) => String(spot.name).split(" / ")[0].replace(/\s*\(.*\)$/, "");
 
 // ------------------------------------------------------------------ ce qui est affiché
-export function liveFor(spot, data, live, now) {
+function liveFor(spot, data, live, now) {
   for (const x of Object.values((live && live.spots) || {})) {
     const n = norm(x.nom);
     if (!(n === spot.id || n.startsWith(spot.id + "-") || n.includes(spot.id))) continue;
@@ -77,7 +63,7 @@ export function liveFor(spot, data, live, now) {
   if (o && now - o.t < LIVE_MAX_MIN * 60000) return { t: o.t, kn: o.kn, gust: o.gust, dir: o.dir, dirTxt: compass(o.dir), src: "Marignane" };
   return null;
 }
-export function ventModel(data, spot, level, live, now) {
+function ventModel(data, spot, level, live, now) {
   const L = level === "offshore" ? 6 : 5;
   const rows = spot.hours.map((h) => ({ t: h[0], kn: h[1], gust: h[2], dir: h[3], day: !!h[4], score: h[L] }));
   const near = (t) => { const x = rows.reduce((b, y) => (Math.abs(y.t - t) < Math.abs((b ? b.t : Infinity) - t) ? y : b), null); return x && Math.abs(x.t - t) <= 3600e3 ? x : null; };
@@ -102,8 +88,13 @@ export function ventModel(data, spot, level, live, now) {
   const nowV = live && !live.panne && !live.stale ? live : cur ? { t: cur.t, kn: cur.kn, gust: cur.gust, dir: cur.dir, dirTxt: compass(cur.dir), src: "prévu" } : live && live.stale ? live : null;
   return { spot, now: nowV, panne: !!(live && live.panne), stale: live && live.stale ? live.t : null, in2: near(now + 2 * 3600e3), days, detail };
 }
-export function creneauxModel(data, level, onlyNear, now) {
-  const spots = onlyNear ? data.spots.filter((s) => NEAR.includes(s.id)) : data.spots;
+// spots suivis : "tous", "proches" (moins de 55 km de Montpellier) ou une liste choisie dans les réglages
+function spotsSuivis(data, sel) {
+  const ids = sel === "proches" ? NEAR : Array.isArray(sel) && sel.length ? sel : null;
+  return ids ? data.spots.filter((s) => ids.includes(s.id)) : data.spots;
+}
+function creneauxModel(data, level, sel, now) {
+  const spots = spotsSuivis(data, sel);
   const list = [];
   for (const sp of spots) for (const s of sp.sessions[level] || []) if (s.e > now) list.push({ ...s, spot: sp, stars: starsOf(s.p) });
   list.sort(rank);
@@ -118,10 +109,11 @@ export function creneauxModel(data, level, onlyNear, now) {
     const top = x[2] ? 3 : x[1] ? 2 : 1;
     return { has: true, n: x, label: `${x[top - 1] || ses.reduce((a, s) => a + s.h, 0)}h`, kn, day: d };
   }) }));
-  return { level, label: `${level === "offshore" ? "OffShore" : "Sécu first"}${onlyNear ? " · proches" : ""}`, list, grid, days };
+  const quoi = sel === "proches" ? " · proches" : Array.isArray(sel) && sel.length ? ` · ${spots.length} spot${spots.length > 1 ? "s" : ""}` : "";
+  return { level, label: `${level === "offshore" ? "OffShore" : "Sécu first"}${quoi}`, list, grid, days };
 }
 const WIND_KIND = { offshore: "vent de terre", "side-off": "side-off", side: "vent de côté", "side-on": "side-on", onshore: "vent de mer", "pétole": "pas de vent" };
-export function vagueModel(surf, spot, now) {
+function vagueModel(surf, spot, now) {
   const rows = spot.hours.map((h) => ({ t: h[0], hb: h[1], lo: h[2], hi: h[3], tp: h[4], sd: h[5], ws: h[6], wd: h[7], wk: h[8], day: !!h[9], score: h[10] }));
   const cur = rows.reduce((b, x) => (Math.abs(x.t - now) < Math.abs((b ? b.t : Infinity) - now) ? x : b), null);
   const days = surf.days.slice(0, 4).map((d) => {
@@ -143,12 +135,70 @@ export function vagueModel(surf, spot, now) {
   return { spot, now: cur && Math.abs(cur.t - now) <= 3600e3 ? cur : null, days, detail, best: all[0] || null };
 }
 
+// ------------------------------------------------------------------ état du widget : réglages, position, données
+const load = (k) => { try { return JSON.parse(localStorage.getItem(k) || "null"); } catch (e) { return null; } };
+const save = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) { /* stockage plein ou interdit */ } };
+// réglages : ceux retenus par le Mac, sinon ceux de départ (écrits tout de suite, pour survivre à une mise à jour du fichier)
+function prefsOf(key, defauts) {
+  const p = load(key + ".reglages");
+  if (p && typeof p === "object") return { ...defauts, ...p };
+  save(key + ".reglages", defauts);
+  return { ...defauts };
+}
+function reducer(key, defauts) {
+  return (event, prev) => {
+    const s = { ...prev, prefs: prev.prefs || prefsOf(key, defauts) };
+    switch (event.type) {
+      case "UB/COMMAND_RAN": case "DATA": return { ...s, output: event.output };
+      case "SETTINGS": return { ...s, settings: event.open };
+      case "PREFS": save(key + ".reglages", event.prefs); return { ...s, prefs: event.prefs };
+      case "POS": return { ...s, pos: { x: event.x, y: event.y } };
+      case "END_MOVE": { const p = { ...s.prefs, ...(s.pos || {}) }; save(key + ".reglages", p); return { ...s, prefs: p, pos: null }; }
+      default: return s;
+    }
+  };
+}
+const jsonOf = (s) => { try { const x = JSON.parse(String(s || "").trim()); return x && typeof x === "object" ? x : null; } catch (e) { return null; } };
+// dernières données gardées si hors ligne
+function withCache(key, fresh) {
+  if (fresh && fresh.spots) { save(key + ".donnees", fresh); return { data: fresh, cached: false }; }
+  const old = load(key + ".donnees");
+  return old && old.spots ? { data: old, cached: true } : { data: null, cached: false };
+}
+
+// ------------------------------------------------------------------ souris : un glisser déplace, un clic ouvre OCEAN
+let moved = false;   // le clic qui suit un déplacement n'ouvre rien
+const stop = (f) => (e) => { if (e && e.stopPropagation) e.stopPropagation(); f(e); };
+const open = (url) => (e) => { if (e && e.stopPropagation) e.stopPropagation(); if (moved) { moved = false; return; } run(`open "${url}"`); };
+function startMove(e, dispatch, x, y) {
+  if (e.button !== 0 || (e.target && e.target.closest && e.target.closest("[data-btn]"))) return;
+  e.preventDefault();
+  moved = false;
+  const x0 = e.clientX, y0 = e.clientY;
+  const mm = (ev) => {
+    if (!moved && Math.abs(ev.clientX - x0) + Math.abs(ev.clientY - y0) < 4) return;   // un clic qui tremble n'est pas un déplacement
+    moved = true;
+    dispatch({ type: "POS", x: Math.max(0, x + ev.clientX - x0), y: Math.max(0, y + ev.clientY - y0) });
+  };
+  const mu = () => { window.removeEventListener("mousemove", mm); window.removeEventListener("mouseup", mu); if (moved) dispatch({ type: "END_MOVE" }); };
+  window.addEventListener("mousemove", mm); window.addEventListener("mouseup", mu);
+}
+const ecranL = () => (typeof window !== "undefined" && window.innerWidth ? window.innerWidth : 1440);
+const LARGEUR = { petit: 170, moyen: 364, grand: 364 };
+// position : celle retenue, sinon en haut à droite de l'écran, chaque widget à sa hauteur
+function placeOf(state, prefs, yDefaut) {
+  const w = LARGEUR[prefs.taille] || 364;
+  const x = state.pos ? state.pos.x : prefs.x != null ? prefs.x : Math.max(0, ecranL() - w - 24);
+  const y = state.pos ? state.pos.y : prefs.y != null ? prefs.y : yDefaut;
+  return { x, y, w, side: x + w / 2 > ecranL() / 2 ? "gauche" : "droite" };
+}
+const themeOf = (p) => (p.theme === "clair" ? "light" : p.theme === "sombre" ? "dark" : "auto");
+
 // ------------------------------------------------------------------ dessin
 const SCALE = [[5, "#FFFFFF", "#3E5157"], [8, "#DDF3FA", "#152B33"], [11, "#A9E3EE", "#152B33"], [14, "#7FDDB0", "#0F3322"], [17, "#B5EA62", "#21360A"],
   [20, "#F2EC4E", "#383300"], [23, "#FFC94D", "#3A2700"], [26, "#FFA04A", "#3A1A00"], [30, "#F66A4B", "#FFFFFF"], [999, "#D9386E", "#FFFFFF"]];
 const wc = (kn) => SCALE.find((s) => (kn ?? 0) < s[0]);
 const FILL = ["", "#23A26A", "#EE7F1B", "#8A4FD8"];
-const open = (url) => (e) => { e.stopPropagation(); run(`open "${url}"`); };
 const Num = ({ kn, w = 36, h = 20, size = 13 }) => { const c = wc(kn); return <span className="num" style={{ width: w, height: h, fontSize: size, background: c[1], color: c[2] }}>{r(kn)}</span>; };
 const Arrow = ({ from, size = 13 }) => (from == null ? <span style={{ width: size, height: size, display: "inline-block" }} /> :
   <svg width={size} height={size} viewBox="-10 -10 20 20" style={{ transform: `rotate(${(from + 180) % 360}deg)` }}><path d="M0,-9 L6,7 L0,3.5 L-6,7 Z" fill="currentColor" /></svg>);
@@ -163,9 +213,8 @@ const srcText = (m, now, short) => {
   if (m.stale != null) return short ? `prévision (balise ${ago(m.stale, now)})` : `prévision · balise il y a ${ago(m.stale, now)}`;
   return short ? "prévision" : m.spot && m.spot.source === "corrected" ? "prévision corrigée" : "prévision";
 };
-// chiffre du vent mesuré en direct : vert dès 15 nd, orange dès 20, violet dès 25 ; nom court du spot pour les titres
+// chiffre du vent mesuré en direct : vert dès 15 nd, orange dès 20, violet dès 25
 const nowColor = (m) => (!m.now || m.now.src === "prévu" || m.now.stale || m.now.kn == null ? undefined : m.now.kn >= 25 ? "var(--k3)" : m.now.kn >= 20 ? "var(--k2)" : m.now.kn >= 15 ? "var(--k1)" : undefined);
-const title = (spot) => String(spot.name).split(" / ")[0].replace(/\s*\(.*\)$/, "");
 const Big = ({ m, size }) => (
   <div className="big"><span style={{ fontSize: size, color: nowColor(m) }}>{m.now ? r(m.now.kn) : "–"}</span>
     <span className="bigside">{m.now && <Arrow from={m.now.dir} size={Math.round(size / 2.2)} />}<b>nd {m.now ? m.now.dirTxt || compass(m.now.dir) : ""}</b></span></div>);
@@ -173,7 +222,7 @@ const gustText = (m) => (m.now && m.now.gust != null ? `${m.now.src === "balise"
 
 // heures passées retirées ; colonnes réparties sur toute la largeur de la carte
 function HourGrid({ hours, rows }) {
-  const cols = hours.filter((x) => x.has && !x.past);
+  const cols = hours.filter((x) => x.has);
   if (!cols.length) return null;
   return <div className="hgrid">{cols.map((x) => (
     <div key={x.h} className="hcol"><span className="hh">{x.h}</span>{rows(x)}<span className="sb" style={{ background: x.stars > 0 ? FILL[x.stars] : undefined }} /></div>))}</div>;
@@ -206,8 +255,8 @@ function CreneauxCard({ cm, size, now }) {
   if (size === "moyen") return <Card size={size} url={`${APP}#/wind/prevision`}><div className="hrow">
     <div className={`best soft${c.stars}`} onClick={open(link(c.spot.id, c.s))}><Stars k={c.stars} size={16} all={false} /><div><b className="t15">{c.spot.short}</b><div className="ink2 sb12">{when(c, now)}</div></div><b className="s12">{r(c.kn)} nd {compass(c.dir)}</b></div>
     <div className="list">{cm.list.slice(1, 4).map((x) => <div key={x.spot.id + x.s} className="item" onClick={open(link(x.spot.id, x.s))}>
-      <div className="row"><b className="t13">{x.spot.short}</b><Stars k={x.stars} all={false} /></div><div className="row s11"><span className="ink2">{when(x, now)}</span><b>{r(x.kn)} nd {compass(x.dir)}</b></div></div>)}
-      {cm.list.length < 2 && <span className="ink3 s11">Pas d'autre créneau en vue</span>}<span className="ink3 s9 bottom">{cm.label}</span></div>
+      <div className="namestars"><b className="t13">{x.spot.short}</b><Stars k={x.stars} all={false} /></div><div className="row s11"><span className="ink2">{when(x, now)}</span><b>{r(x.kn)} nd {compass(x.dir)}</b></div></div>)}
+      {cm.list.length < 2 && <span className="ink3 s11">Pas d'autre créneau en vue</span>}<span className="ink3 s9">{cm.label}</span></div>
   </div></Card>;
   const HEAD = { "La Franqui": "Franqui", Espiguette: "Espig.", Almanarre: "Alman." };
   return <Card size={size} url={`${APP}#/wind/prevision`}>
@@ -220,7 +269,8 @@ function CreneauxCard({ cm, size, now }) {
       <tbody>{cm.days.map((d, i) => <tr key={d}><th>{d === dayKey(now) ? "Auj." : cap(new Date(d + "T12:00:00").toLocaleDateString("fr-FR", { weekday: "short", day: "numeric" }).replace(".", ""))}</th>
         {cm.grid.map((g) => { const x = g.cells[i]; return <td key={g.spot.id}>{x.has
           ? <span className="fill" onClick={open(link(g.spot.id, new Date(d + "T12:00:00").getTime()))} style={{ background: `linear-gradient(to right, ${FILL[3]} 0 ${(x.n[2] / x.n[3]) * 100}%, ${FILL[2]} 0 ${((x.n[2] + x.n[1]) / x.n[3]) * 100}%, ${FILL[1]} 0 ${((x.n[2] + x.n[1] + x.n[0]) / x.n[3]) * 100}%, transparent 0)` }}><i>{x.label}</i></span>
-          : <span className="kn">{x.kn != null ? r(x.kn) : ""}</span>}</td>; })}</tr>)}</tbody></table></Card>;
+          : <span className="kn">{x.kn != null ? r(x.kn) : ""}</span>}</td>; })}</tr>)}</tbody></table>
+    <span className="ink3 s9 legend">{cm.label}</span></Card>;
 }
 function VagueNow({ m, size }) {
   const n = m.now;
@@ -228,95 +278,116 @@ function VagueNow({ m, size }) {
     <div className="ink2 sb12">{n ? `${n.tp ?? "–"} s · houle ${compass(n.sd)}` : " "}</div>
     {n && n.ws != null && <div className="wline"><Num kn={n.ws} w={24} h={16} size={10} /><Arrow from={n.wd} size={11} /><span className="ink2 sb11">{WIND_KIND[n.wk] || compass(n.wd)}</span></div>}</div>;
 }
+// « prévi » et pas « maintenant » : ce sont des prévisions (Tom, 13/11, comme sur l'iPhone)
 function VagueCard({ m, size, now }) {
   const url = link(m.spot.id), d0 = m.days[0];
-  if (size === "petit") return <Card size={size} url={url}><div className="row"><b className="t14">{m.spot.short}</b><span className="src">maintenant</span></div>
+  if (size === "petit") return <Card size={size} url={url}><div className="row"><b className="t14">{m.spot.short}</b><span className="src">prévi</span></div>
     <VagueNow m={m} size={26} /><div className="row"><span className="ink2 sb11">{d0 && d0.cr !== "—" ? d0.cr : "pas de créneau"}</span><Stars k={d0 ? d0.stars : 0} size={12} /></div></Card>;
   if (size === "moyen") return <Card size={size} url={url}><div className="hrow">
-    <div className="left"><b className="t14">{m.spot.short}</b><span className="src">maintenant</span><VagueNow m={m} size={24} /></div>
+    <div className="left"><b className="t14">{m.spot.short}</b><span className="src">prévi</span><VagueNow m={m} size={24} /></div>
     {m.days.map((d) => <div key={d.label} className="dcol"><b>{d.label}</b><Stars k={d.stars} size={9} /><b className="t12">{d.hb == null ? "–" : `${m1(d.hb)} m`}</b><span className="ink2 s10">{d.tp ? `${d.tp} s` : ""}</span><span className="s10">{d.cr}</span></div>)}
   </div></Card>;
   return <Card size={size} url={url}>
-    <div className="row"><b className="t15">{title(m.spot)}</b><span className="src">maintenant</span></div><VagueNow m={m} size={30} />
-    {m.detail.map((d) => { const hMax = Math.max(1.2, ...d.hours.filter((x) => x.has && !x.past).map((x) => x.hb ?? 0)); return <div key={d.label}>
+    <div className="row"><b className="t15">{title(m.spot)}</b><span className="src">prévi</span></div><VagueNow m={m} size={30} />
+    {m.detail.map((d) => { const hMax = Math.max(1.2, ...d.hours.filter((x) => x.has).map((x) => x.hb ?? 0)); return <div key={d.label}>
       <div className="row dh"><span><b className="t13">{d.label}</b> <span className="ink3 s11">{d.date}</span> {d.stars > 0 && <Stars k={d.stars} all={false} />}</span>{d.hbMax > 0 && <b className="s11">jusqu'à {m1(d.hbMax)} m{(() => { const t = [...new Set(d.hours.filter((x) => x.has && x.tp != null).map((x) => x.tp))].sort((a, b) => a - b); return t.length ? ` · ${t[0]}${t.length > 1 ? `–${t[t.length - 1]}` : ""} s` : ""; })()}</b>}</div>
       <HourGrid hours={d.hours} rows={(x) => <span className="frag"><b className="s8">{m1(x.hb)}</b><span className="wbar"><i style={{ height: Math.max(2, Math.round(((x.hb ?? 0) / hMax) * 13)) }} /></span>
         <Num kn={x.ws} w={18} h={15} size={10} /><Arrow from={x.wd} size={10} /></span>} /></div>; })}
     {m.best && <div className="bestline" onClick={open(link(m.best.spot.id, m.best.s))}><span className="eyebrow">MEILLEUR CRÉNEAU SURF</span>
       <div><Stars k={m.best.stars} size={12} all={false} /> <b className="s12">{m.best.spot.short} · {when(m.best, now)} · {m1(m.best.hb)} m · {m.best.tp ?? "–"} s</b></div></div>}</Card>;
 }
+const Empty = ({ nom }) => <div className="card petit"><b className="t14">OCEAN · {nom}</b><div className="ink2 s12 mid">Pas de données pour le moment (hors ligne ?). Nouvel essai dans quelques minutes.</div></div>;
 
-// ------------------------------------------------------------------ données (dernières gardées si hors ligne)
-const CACHE = "ocean-widget-mac";
-export function parse(output) {
-  const [a, b, c] = String(output || "").split(SEP);
-  const j = (s) => { try { const x = JSON.parse(String(s || "").trim()); return x && typeof x === "object" ? x : null; } catch (e) { return null; } };
-  const wind = j(a), surf = j(b), live = j(c);
-  let cached = false, saved = null;
-  try { saved = JSON.parse(localStorage.getItem(CACHE) || "null"); } catch (e) { saved = null; }
-  const out = { wind: wind && wind.spots ? wind : null, surf: surf && surf.spots ? surf : null, live };
-  if (!out.wind && saved && saved.wind) { out.wind = saved.wind; cached = true; }
-  if (!out.surf && saved && saved.surf) out.surf = saved.surf;
-  try { if (wind && wind.spots) localStorage.setItem(CACHE, JSON.stringify({ wind: out.wind, surf: out.surf })); } catch (e) { /* stockage plein ou interdit */ }
-  return { ...out, cached };
+// ------------------------------------------------------------------ panneau de réglages (⚙ en haut à droite de la carte)
+const Seg = ({ value, options, onPick }) => (
+  <div className="seg">{options.map(([v, l]) => <span key={v} data-btn="1" className={v === value ? "on" : ""} onClick={stop(() => onPick(v))}>{l}</span>)}</div>);
+const Chips = ({ items, isOn, onPick }) => (
+  <div className="chips">{items.map(([v, l]) => <span key={v} data-btn="1" className={isOn(v) ? "on" : ""} onClick={stop(() => onPick(v))}>{l}</span>)}</div>);
+const TAILLES = [["petit", "Petit"], ["moyen", "Moyen"], ["grand", "Grand"]];
+const THEMES = [["auto", "Auto"], ["clair", "Clair"], ["sombre", "Sombre"]];   // « Auto » : clair ou sombre comme le Mac
+const MODES = [["secu", "Sécu first"], ["offshore", "OffShore"]];
+function Panel({ titre, side, dispatch, refresh, children }) {
+  return <div data-btn="1" className={`card settings ${side}`} onClick={(e) => e.stopPropagation()}>
+    <div className="row"><b className="t14">{titre}</b><span data-btn="1" className="x" title="Fermer" onClick={stop(() => dispatch({ type: "SETTINGS", open: false }))}>✕</span></div>
+    {children}
+    <div className="sep" />
+    <div className="row"><span className="ink3 s10">Glisse la carte pour la déplacer. Tout est retenu.</span><span data-btn="1" className="pillbtn" onClick={stop(refresh)}>Actualiser</span></div>
+  </div>;
+}
+// la carte, son bouton ⚙ (au survol), l'avis hors ligne et le panneau de réglages
+function Shell({ state, dispatch, prefs, place, card, panel, cached }) {
+  return <div className={`ocean ${themeOf(prefs)}`} style={{ left: place.x, top: place.y }} onMouseDown={(e) => startMove(e, dispatch, place.x, place.y)}>
+    <style>{STYLE}</style>
+    <div className="wrap">
+      {card}
+      <span data-btn="1" className="gearbtn" title="Réglages" onClick={stop(() => dispatch({ type: "SETTINGS", open: !state.settings }))}>⚙</span>
+      {cached ? <div className="offline">hors ligne · dernières données</div> : null}
+      {state.settings ? panel : null}
+    </div>
+  </div>;
 }
 
-export function view(output, now = Date.now()) {
-  const { wind, surf, live, cached } = parse(output);
-  if (!wind) return <div className="ocean"><style>{STYLE}</style><div className="card petit"><b className="t14">OCEAN</b><div className="ink2 s12 mid">Pas de données pour le moment (hors ligne ?). Nouvel essai dans quelques minutes.</div></div></div>;
-  const level = MODE === "offshore" ? "offshore" : "secu";
-  const cards = [];
-  if (CARTE_VENT !== "masque") { const sp = findSpot(wind.spots, SPOT, "la-grande-motte"); cards.push(<VentCard key="v" m={ventModel(wind, sp, level, liveFor(sp, wind, live, now), now)} size={CARTE_VENT} now={now} />); }
-  if (CARTE_CRENEAUX !== "masque") cards.push(<CreneauxCard key="c" cm={creneauxModel(wind, level, CRENEAUX_SPOTS === "proches", now)} size={CARTE_CRENEAUX} now={now} />);
-  if (CARTE_VAGUE !== "masque" && surf) cards.push(<VagueCard key="s" m={vagueModel(surf, findSpot(surf.spots, SPOT_VAGUE, "carnon"), now)} size={CARTE_VAGUE} now={now} />);
-  return <div className={`ocean ${DISPOSITION === "ligne" ? "ligne" : ""}`}><style>{STYLE}</style>{cards}
-    <div className="foot">{cached ? "hors ligne : dernières données · " : ""}<span className="gear" onClick={(e) => { e.stopPropagation(); run(`open -e "$HOME/Library/Application Support/Übersicht/widgets/${SELF}"`); }}>⚙ réglages</span></div></div>;
-}
-export const render = ({ output }) => view(output);
-
+// ------------------------------------------------------------------ styles (couleurs OCEAN ; tout est préfixé .ocean :
+// les widgets Übersicht partagent la même page, un style non préfixé déteindrait sur les autres widgets)
+const LIGHT = "--bg:#FFFFFF;--cell:#F2F3F0;--ink:#152B33;--ink2:#3E5157;--ink3:#5C6E74;--live:#17804F;--off:#D6DCD6;--line:#E4E8E4;--none:#E6E9E5;--k1:#23A26A;--k2:#EE7F1B;--k3:#8A4FD8;--s1:#E3F4EC;--s2:#FDEBDC;--s3:#F3ECFC;--wave:#2F8FB0;--acc:#256D70;--accink:#FFFFFF;--shadow:rgba(0,0,0,.22);";
+const DARK = "--bg:#16262C;--cell:#1E3138;--ink:#EAF1EF;--ink2:#B7C8C6;--ink3:#8EA4A3;--live:#4CC38A;--off:#33494F;--line:#25393F;--none:#25393F;--k1:#4CC38A;--k2:#F5A04A;--k3:#B38BF5;--s1:#1D3A30;--s2:#3A2A1A;--s3:#2E2440;--wave:#5BB8D6;--acc:#75CDC5;--accink:#0D191E;--shadow:rgba(0,0,0,.45);";
 const STYLE = `
-.ocean { --bg:#FFFFFF; --cell:#F2F3F0; --ink:#152B33; --ink2:#3E5157; --ink3:#5C6E74; --live:#17804F; --off:#D6DCD6; --line:#E4E8E4; --none:#E6E9E5;
-  --k1:#23A26A; --k2:#EE7F1B; --k3:#8A4FD8; --s1:#E3F4EC; --s2:#FDEBDC; --s3:#F3ECFC; --wave:#2F8FB0;
-  display:flex; flex-direction:column; gap:12px; align-items:flex-end; font-family:-apple-system,"SF Pro Text","Helvetica Neue",sans-serif; color:var(--ink);
-  font-variant-numeric: tabular-nums; -webkit-font-smoothing: antialiased; }
-@media (prefers-color-scheme: dark) { .ocean { --bg:#16262C; --cell:#1E3138; --ink:#EAF1EF; --ink2:#B7C8C6; --ink3:#8EA4A3; --live:#4CC38A; --off:#33494F; --line:#25393F; --none:#25393F;
-  --k1:#4CC38A; --k2:#F5A04A; --k3:#B38BF5; --s1:#1D3A30; --s2:#3A2A1A; --s3:#2E2440; --wave:#5BB8D6; } }
-.ocean.ligne { flex-direction:row; align-items:flex-start; }
-.card { box-sizing:border-box; background:var(--bg); border:1px solid var(--line); border-radius:22px; padding:14px 14px 12px; box-shadow:0 6px 22px rgba(0,0,0,.22); cursor:pointer;
-  display:flex; flex-direction:column; justify-content:space-between; gap:4px; }
-.card.petit { width:170px; min-height:170px; } .card.moyen { width:364px; min-height:170px; } .card.grand { width:364px; min-height:330px; justify-content:flex-start; }
-.row { display:flex; justify-content:space-between; align-items:center; gap:6px; } .hrow { display:flex; gap:4px; height:100%; }
-.left { width:112px; margin-right:8px; display:flex; flex-direction:column; justify-content:space-between; }
-.t12{font-size:12px;font-weight:800} .t13{font-size:13px;font-weight:800} .t14{font-size:14px;font-weight:800} .t15{font-size:15px;font-weight:800} .t18{font-size:18px;font-weight:800} .t19{font-size:19px;font-weight:800}
-.s8{font-size:8px} .s9{font-size:9px} .s10{font-size:10px} .s11{font-size:11px} .s12{font-size:12px} .sb11{font-size:11px;font-weight:600} .sb12{font-size:12px;font-weight:600} .sb13{font-size:13px;font-weight:600}
-.ink2{color:var(--ink2)} .ink3{color:var(--ink3)} .right{text-align:right}
-.src { font-size:10px; font-weight:700; color:var(--ink3); white-space:nowrap; } .src.live { color:var(--live); }
-.eyebrow { font-size:10px; font-weight:700; letter-spacing:.08em; color:var(--ink3); }
-.big { display:flex; align-items:center; gap:6px; } .big > span:first-child { font-weight:900; line-height:1; }
-.bigside { display:flex; flex-direction:column; gap:2px; font-size:11px; }
-.num { display:inline-flex; align-items:center; justify-content:center; border-radius:5px; font-weight:900; }
-.stars { font-weight:700; letter-spacing:1px; white-space:nowrap; } .stars .off{color:var(--off)} .stars .k1{color:var(--k1)} .stars .k2{color:var(--k2)} .stars .k3{color:var(--k3)}
-.dcol { width:50px; background:var(--cell); border-radius:10px; padding:6px 2px; display:flex; flex-direction:column; align-items:center; gap:4px; font-size:11px; }
-.dh { margin:8px 0 3px; }
-.hgrid { display:flex; gap:1px; background:var(--cell); border-radius:10px; padding:4px 3px; }
-.frag { display:contents; }
-.hcol { width:21px; display:flex; flex-direction:column; align-items:center; gap:1px; } .hcol.dim { opacity:.35; }
-.hh { font-size:9px; font-weight:600; color:var(--ink3); } .sb { width:19px; height:4px; border-radius:2px; background:var(--none); margin-top:auto; }
-.cr { margin:3px 0 0 2px; }
-.legend { font-size:9px; color:var(--ink3); margin-top:auto; padding-top:6px; }
-.mid { margin:auto 0; }
-.best { width:120px; flex:none; border-radius:14px; padding:10px; display:flex; flex-direction:column; justify-content:space-between; margin-right:8px; }
-.soft0{background:var(--cell)} .soft1{background:var(--s1)} .soft2{background:var(--s2)} .soft3{background:var(--s3)}
-.list { flex:1; display:flex; flex-direction:column; gap:6px; } .bottom { margin-top:auto; }
-.bestbig { border-radius:14px; padding:9px 12px 10px; margin:8px 0 10px; display:flex; flex-direction:column; gap:2px; }
-.pill { color:#fff; font-size:11px; font-weight:900; border-radius:8px; padding:1px 7px; }
-.cgrid { border-collapse:separate; border-spacing:3px; margin:0 -3px; width:calc(100% + 6px); table-layout:fixed; }
-.cgrid th { font-size:9px; font-weight:700; color:var(--ink3); text-align:center; white-space:nowrap; overflow:hidden; } .cgrid thead th:first-child, .cgrid tbody th { width:44px; } .cgrid tbody th { font-size:11px; font-weight:900; color:var(--ink); text-align:left; }
-.cgrid td { background:var(--cell); border-radius:6px; height:28px; padding:0; text-align:center; overflow:hidden; }
-.cgrid .fill { display:flex; align-items:center; justify-content:center; height:100%; } .cgrid .fill i { font-style:normal; font-size:10px; font-weight:900; background:var(--bg); border-radius:7px; padding:1px 4px; }
-.cgrid .kn { font-size:10px; font-weight:600; color:var(--ink3); }
-.vnow { display:flex; flex-direction:column; gap:2px; } .vnow b:first-child { font-weight:900; } .wline { display:flex; align-items:center; gap:4px; margin-top:2px; }
-.wbar { height:13px; display:flex; align-items:flex-end; } .wbar i { display:block; width:100%; background:var(--wave); border-radius:2px; }
-.bestline { background:var(--cell); border-radius:10px; padding:6px 8px; margin-top:8px; }
-.foot { font-size:10px; color:rgba(255,255,255,.75); text-shadow:0 1px 2px rgba(0,0,0,.5); } .gear { cursor:pointer; }
+.ocean{position:absolute;${LIGHT}font-family:-apple-system,"SF Pro Text","Helvetica Neue",sans-serif;color:var(--ink);font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased;user-select:none;-webkit-user-select:none;cursor:default}
+@media (prefers-color-scheme: dark){.ocean.auto{${DARK}}}
+.ocean.dark{${DARK}}
+.ocean .wrap{position:relative}
+.ocean .card{box-sizing:border-box;background:var(--bg);border:1px solid var(--line);border-radius:22px;padding:14px 14px 12px;box-shadow:0 6px 22px var(--shadow);cursor:pointer;display:flex;flex-direction:column;justify-content:space-between;gap:4px}
+.ocean .card.petit{width:170px;min-height:170px}.ocean .card.moyen{width:364px;min-height:170px}.ocean .card.grand{width:364px;justify-content:flex-start}
+/* moyen : les colonnes occupent toute la hauteur de la carte, pas de vide en bas (Tom, 13/11) */
+.ocean .card.moyen>.hrow{flex:1;align-items:stretch}
+.ocean .gearbtn{position:absolute;top:-9px;right:-9px;width:24px;height:24px;border-radius:12px;background:var(--bg);border:1px solid var(--line);box-shadow:0 2px 8px var(--shadow);display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--ink2);cursor:pointer;opacity:0;transition:opacity .15s}
+.ocean .wrap:hover .gearbtn{opacity:1}
+.ocean .offline{position:absolute;left:14px;bottom:-18px;font-size:10px;color:rgba(255,255,255,.85);text-shadow:0 1px 2px rgba(0,0,0,.6)}
+.ocean .settings{position:absolute;top:0;width:280px;cursor:default;justify-content:flex-start;gap:6px}
+.ocean .settings.gauche{right:calc(100% + 12px)}.ocean .settings.droite{left:calc(100% + 12px)}
+.ocean .settings .x{cursor:pointer;color:var(--ink3);font-size:13px;padding:2px 4px}
+.ocean .lab{font-size:11px;font-weight:700;color:var(--ink3);margin-top:6px}
+.ocean .seg{display:flex;background:var(--cell);border-radius:9px;padding:2px;gap:2px}
+.ocean .seg span{flex:1;text-align:center;font-size:11px;font-weight:600;padding:5px 4px;border-radius:7px;cursor:pointer;color:var(--ink2)}
+.ocean .seg span.on{background:var(--bg);color:var(--ink);box-shadow:0 1px 3px var(--shadow)}
+.ocean .chips{display:flex;flex-wrap:wrap;gap:4px}
+.ocean .chips span{font-size:11px;font-weight:600;padding:4px 8px;border-radius:12px;background:var(--cell);color:var(--ink2);cursor:pointer}
+.ocean .chips span.on{background:var(--acc);color:var(--accink)}
+.ocean .sep{height:1px;background:var(--line);margin:6px 0 2px}
+.ocean .pillbtn{font-size:11px;font-weight:700;padding:4px 10px;border-radius:12px;background:var(--cell);color:var(--ink);cursor:pointer;white-space:nowrap}
+.ocean .linkbtn{font-size:11px;font-weight:600;color:var(--acc);cursor:pointer}
+.ocean .row{display:flex;justify-content:space-between;align-items:center;gap:6px}.ocean .hrow{display:flex;gap:4px;height:100%}
+.ocean .namestars{display:flex;align-items:center;gap:6px}
+.ocean .left{width:112px;margin-right:8px;display:flex;flex-direction:column;justify-content:space-between}
+.ocean .t12{font-size:12px;font-weight:800}.ocean .t13{font-size:13px;font-weight:800}.ocean .t14{font-size:14px;font-weight:800}.ocean .t15{font-size:15px;font-weight:800}.ocean .t18{font-size:18px;font-weight:800}.ocean .t19{font-size:19px;font-weight:800}
+.ocean .s8{font-size:8px}.ocean .s9{font-size:9px}.ocean .s10{font-size:10px}.ocean .s11{font-size:11px}.ocean .s12{font-size:12px}.ocean .sb11{font-size:11px;font-weight:600}.ocean .sb12{font-size:12px;font-weight:600}.ocean .sb13{font-size:13px;font-weight:600}
+.ocean .ink2{color:var(--ink2)}.ocean .ink3{color:var(--ink3)}.ocean .right{text-align:right}
+.ocean .src{font-size:10px;font-weight:700;color:var(--ink3);white-space:nowrap}.ocean .src.live{color:var(--live)}
+.ocean .eyebrow{font-size:10px;font-weight:700;letter-spacing:.08em;color:var(--ink3)}
+.ocean .big{display:flex;align-items:center;gap:6px}.ocean .big>span:first-child{font-weight:900;line-height:1}
+.ocean .bigside{display:flex;flex-direction:column;gap:2px;font-size:11px}
+.ocean .num{display:inline-flex;align-items:center;justify-content:center;border-radius:5px;font-weight:900}
+.ocean .stars{font-weight:700;letter-spacing:1px;white-space:nowrap}.ocean .stars .off{color:var(--off)}.ocean .stars .k1{color:var(--k1)}.ocean .stars .k2{color:var(--k2)}.ocean .stars .k3{color:var(--k3)}
+.ocean .dcol{width:50px;background:var(--cell);border-radius:10px;padding:6px 2px;display:flex;flex-direction:column;align-items:center;justify-content:space-evenly;gap:4px;font-size:11px}
+.ocean .dh{margin:8px 0 3px}
+.ocean .hgrid{display:flex;gap:2px;background:var(--cell);border-radius:10px;padding:5px}
+.ocean .frag{display:contents}
+.ocean .hcol{flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;gap:1px}
+.ocean .hcol .num,.ocean .hcol .wbar{width:100%;max-width:32px}
+.ocean .hh{font-size:9px;font-weight:600;color:var(--ink3)}.ocean .sb{width:100%;max-width:32px;height:5px;border-radius:2px;background:var(--none);margin-top:auto}
+.ocean .legend{margin-top:auto;padding-top:6px}
+.ocean .mid{margin:auto 0}
+.ocean .best{width:120px;flex:none;border-radius:14px;padding:10px;display:flex;flex-direction:column;justify-content:center;gap:6px;margin-right:8px}
+.ocean .soft0{background:var(--cell)}.ocean .soft1{background:var(--s1)}.ocean .soft2{background:var(--s2)}.ocean .soft3{background:var(--s3)}
+.ocean .list{flex:1;display:flex;flex-direction:column;justify-content:center;gap:6px}
+.ocean .bestbig{border-radius:14px;padding:9px 12px 10px;margin:8px 0 10px;display:flex;flex-direction:column;gap:2px}
+.ocean .pill{color:#fff;font-size:11px;font-weight:900;border-radius:8px;padding:1px 7px}
+.ocean .cgrid{border-collapse:separate;border-spacing:3px;margin:0 -3px;width:calc(100% + 6px);table-layout:fixed}
+.ocean .cgrid th{font-size:9px;font-weight:700;color:var(--ink3);text-align:center;white-space:nowrap;overflow:hidden}.ocean .cgrid thead th:first-child,.ocean .cgrid tbody th{width:44px}.ocean .cgrid tbody th{font-size:11px;font-weight:900;color:var(--ink);text-align:left}
+.ocean .cgrid td{background:var(--cell);border-radius:6px;height:28px;padding:0;text-align:center;overflow:hidden}
+.ocean .cgrid .fill{display:flex;align-items:center;justify-content:center;height:100%}.ocean .cgrid .fill i{font-style:normal;font-size:10px;font-weight:900;background:var(--bg);border-radius:7px;padding:1px 4px}
+.ocean .cgrid .kn{font-size:10px;font-weight:600;color:var(--ink3)}
+.ocean .vnow{display:flex;flex-direction:column;gap:2px}.ocean .vnow b:first-child{font-weight:900}.ocean .wline{display:flex;align-items:center;gap:4px;margin-top:2px}
+.ocean .wbar{height:13px;display:flex;align-items:flex-end}.ocean .wbar i{display:block;width:100%;background:var(--wave);border-radius:2px}
+.ocean .bestline{background:var(--cell);border-radius:10px;padding:6px 8px;margin-top:8px}
 `;

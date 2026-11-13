@@ -1,0 +1,40 @@
+name: Widgets Mac OCEAN — tests et images
+
+# Données d'essai FICTIVES (dépôt et images publics). Rendu réel des trois widgets Übersicht par WebKit (moteur d'Übersicht).
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ["widgets/mac/**", "tests/widget-mac.test.ts", "tests/widgets/mac.mjs", "tests/widgets/fixture.ts", "tests/ui/mac-previews.mjs", ".github/workflows/widget-mac.yml"]
+
+permissions:
+  contents: write
+
+jobs:
+  mac:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env: { TZ: Europe/Paris }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - name: Tests (trois widgets, cœur commun à jour)
+        run: node --test tests/widget-mac.test.ts
+      - name: Images (WebKit)
+        run: |
+          npm i --no-save playwright
+          npx playwright install --with-deps webkit
+          node tests/ui/mac-previews.mjs captures webkit
+          test "$(ls captures/*.png | wc -l)" -ge 10
+      - name: Publier les images (branche captures-mac)
+        if: always()
+        run: |
+          [ -d captures ] || exit 0
+          git config user.name "ocean-bot"; git config user.email "ocean-bot@users.noreply.github.com"
+          cp -r captures "$RUNNER_TEMP/cap"
+          git checkout --orphan captures-mac-tmp; git rm -rfq .
+          cp "$RUNNER_TEMP"/cap/* . ; git add *.png
+          git commit -qm "Images des widgets Mac OCEAN ($GITHUB_SHA)"
+          git push -fq origin HEAD:captures-mac
