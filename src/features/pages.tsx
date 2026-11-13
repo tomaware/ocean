@@ -4,7 +4,8 @@ import type { AllData, Discipline, Level, PublicSpot, Session } from '../service
 import { DISC_LABEL, LEVEL_LABEL, LEVELS_FOR, spotDiscipline } from '../services/data';
 import { ago, compass, dayKey, dayLabel, hh, hourOf, labelOf, msToKn, n0, n1, span } from '../services/format';
 import { setPrefs, usePrefs, type Reading } from '../services/prefs';
-import { publicLive, useLive, type Live } from '../services/perso';
+import { publicLive, useHisto, useLive, type Histo, type Live } from '../services/perso';
+import { monthStats } from '../services/stats';
 import { goBack } from '../services/nav';
 import { EDITEURS, webcamsCherchees, webcamsOf } from '../services/webcams';
 import { Badge, DiscIcon, Fav, Section, Seg, SessionRow, SportSeg } from '../components/ui';
@@ -43,8 +44,9 @@ export function liveTone(kn: number | null | undefined, sport: 'wing' | 'kite'):
   if (sport === 'wing' && kn > 28) return 'kite';
   return kn >= 25 ? 'k3' : kn >= 20 ? 'k2' : kn >= 15 ? 'k1' : '';
 }
-export function LiveBox({ live, spot }: { live: Live[] | null; spot?: string }) {
+export function LiveBox({ live, spot, names, histo }: { live: Live[] | null; spot?: string; names?: Record<string, string>; histo?: Histo | null }) {
   const prefs = usePrefs();
+  const [open, setOpen] = useState<string | null>(spot ?? null);
   // la balise Winds-Up (mode perso) passe avant la mesure publique du même spot (Le Jaï : METAR de Marignane)
   const all = (live ?? []).filter((l) => !spot || l.spot === spot);
   const rows = all.filter((l) => !l.src || !all.some((x) => !x.src && x.spot === l.spot));
@@ -54,19 +56,83 @@ export function LiveBox({ live, spot }: { live: Live[] | null; spot?: string }) 
     <div class="card" style={{ borderColor: 'var(--c-accent)' }}>
       <div class="row"><Radio size={16} color="var(--c-accent)" /><strong>En direct</strong>{perso && <span class="chip accent">mode perso · visible sur cet appareil seulement</span>}</div>
       <div class="list">
-        {rows.map((l) => (
-          <div key={l.spot + (l.src ?? '')} class="row between">
-            <span class="stack" style={{ gap: 0 }}><span>{l.name}</span>{l.src && <span class="faint">{l.src}</span>}</span>
-            {l.panne ? <span class="small">anémomètre en panne</span> : (
-              <span class="row small" style={{ gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-                <strong class={`livekn ${liveTone(l.kn, prefs.sport)}`}>{n0(l.kn)} nd {l.dir ?? ''}{liveTone(l.kn, prefs.sport) === 'kite' ? ' · Kite' : ''}</strong>
-                {l.gust != null && <strong>raf. {n0(l.gust)}</strong>}
-                {l.t && <span class="faint">{ago(l.t)}</span>}
-              </span>
-            )}
+        {rows.map((l) => {
+          // noms de l'app (Plage Sud, Hyères…) plutôt que ceux de Winds-Up
+          const name = names?.[l.spot] ?? l.name, can = !l.src && !l.panne, on = can && open === l.spot;
+          const line = (
+            <>
+              <span class="stack" style={{ gap: 0 }}><span>{name}</span>{l.src && <span class="faint">{l.src}</span>}</span>
+              {l.panne ? <span class="small">anémomètre en panne</span> : (
+                <span class="row small" style={{ gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                  <strong class={`livekn ${liveTone(l.kn, prefs.sport)}`}>{n0(l.kn)} nd {l.dir ?? ''}{liveTone(l.kn, prefs.sport) === 'kite' ? ' · Kite' : ''}</strong>
+                  {l.gust != null && <strong>raf. {n0(l.gust)}</strong>}
+                  {l.t && <span class="faint">{ago(l.t)}</span>}
+                </span>
+              )}
+            </>
+          );
+          return (
+            <div key={l.spot + (l.src ?? '')} class="stack" style={{ gap: '8px' }}>
+              {can ? <button type="button" class="row between liverow" aria-expanded={on} onClick={() => setOpen(on ? null : l.spot)}>{line}</button>
+                : <div class="row between">{line}</div>}
+              {on && <DayReadings l={l} h={histo?.spots[l.spot] ?? null} sport={prefs.sport} />}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+/** Relevés de la journée d'une balise : moyennes horaires (historique du script) puis relevés des 3 dernières heures. */
+function DayReadings({ l, h, sport }: { l: Live; h: Histo['spots'][string] | null; sport: 'wing' | 'kite' }) {
+  const today = dayKey(Date.now());
+  const hours = (h?.jour ?? []).filter((x) => dayKey(x[0]) === today);
+  const recent = (l.pts ?? []).filter((p, k, a) => k === a.length - 1 || k % 3 === 0);   // un relevé toutes les 15 min environ
+  const lastHour = hours.length ? hours[hours.length - 1][0] : 0;
+  const pts: { t: number; v: number; g: number | null; d: string | null; fine: boolean }[] = [
+    ...hours.map((x) => ({ t: x[0], v: x[1], g: x[2], d: x[3], fine: false })),
+    ...recent.filter((p) => p[0] > lastHour + 30 * 60e3).map((p) => ({ t: p[0], v: p[1], g: null, d: p[2] || null, fine: true })),
+  ];
+  if (!pts.length) return <span class="faint small">Pas encore de relevé aujourd’hui.</span>;
+  const max = Math.max(20, ...pts.map((p) => p.g ?? p.v));
+  return (
+    <div class="dayread" role="table" aria-label={`Relevés d’aujourd’hui à ${l.name}`}>
+      <div class="bars" role="row">
+        {pts.map((p) => (
+          <div key={p.t} class={`bar${p.fine ? ' fine' : ''}`} role="cell" title={`${hh(p.t)} : ${n0(p.v)} nd${p.g ? `, rafales ${n0(p.g)}` : ''}${p.d ? ` ${p.d}` : ''}`}>
+            <span class="v">{n0(p.v)}</span>
+            <span class={`col livekn ${liveTone(p.v, sport)}`} style={{ height: `${Math.max(6, (p.v / max) * 64)}px` }} />
+            <span class="d">{p.d ?? ''}</span>
+            <span class="d">{p.g ? `raf ${n0(p.g)}` : ''}</span>
+            <span class="t">{p.fine ? hh(p.t).replace(':00', '') : `${hourOf(p.t)}h`}</span>
           </div>
         ))}
       </div>
+      <span class="faint small">{hours.length ? 'Moyennes horaires de la balise' : 'Moyennes horaires pas encore disponibles (mise à jour du script de la super prévision)'}{recent.length ? ', puis relevés des 3 dernières heures' : ''}.</span>
+    </div>
+  );
+}
+
+/** Stats des spots (mode perso) : jours du mois avec au moins une heure de jour à 15 nd ou plus. */
+export function SpotStats({ histo, absent, spots }: { histo: Histo | null; absent: boolean; spots: { id: string; name: string }[] }) {
+  if (absent) return <div class="card faint small">Stats des spots : ajoute l’historique au script de la super prévision (fichier « historique.gs », une fois) pour les voir ici.</div>;
+  if (!histo) return null;
+  const rows = spots.filter((s) => histo.spots[s.id]?.jours.length);
+  if (!rows.length) return null;
+  const now = Date.now(), cols = monthStats(histo.spots[rows[0].id].jours, now).map((m) => m.label);
+  return (
+    <div class="card stack">
+      <div class="row"><strong>Stats des spots</strong><span class="chip accent">mode perso</span></div>
+      <table class="stats">
+        <thead><tr><th scope="col">Spot</th>{cols.map((c) => <th key={c} scope="col">{c}</th>)}</tr></thead>
+        <tbody>{rows.map((s) => (
+          <tr key={s.id}><th scope="row">{s.name}</th>{monthStats(histo.spots[s.id].jours, now).map((m) => (
+            <td key={m.label}>{m.measured ? <><strong>{m.days} j</strong> <span class="faint">/ {m.measured}</span></> : <span class="faint">—</span>}</td>
+          ))}</tr>
+        ))}</tbody>
+      </table>
+      <span class="faint small">Jours avec au moins une heure à {histo.seuil} nd de moyenne ou plus entre {histo.heures[0]} h et {histo.heures[1]} h, sur les jours relevés par la balise (Winds-Up).</span>
     </div>
   );
 }
@@ -120,6 +186,7 @@ function SpotView({ d, spot, now, day: dayParam }: { d: AllData; spot: PublicSpo
   const level = levelFor(prefs, disc);
   const s = seriesFor(d, spot, disc, level);
   const live = useLive(disc === 'wing' ? [spot.id] : []);
+  const histo = useHisto(disc === 'wing' && live.live?.length ? [spot.id] : []);
   const sessions = upcoming(d, now).filter((x) => x.spot === id && (x.level === 'tous' || x.level === level));
   const reading: Reading = disc !== 'wing' && prefs.reading === 'expert' ? 'detail' : prefs.reading;   // pas d'Expert pour VAGUE et HOULE
   const future = s ? s.rows.map((r, i) => ({ r, i })).filter(({ i }) => s.times[i] >= now - 3600e3) : [];
@@ -146,7 +213,8 @@ function SpotView({ d, spot, now, day: dayParam }: { d: AllData; spot: PublicSpo
         {disc === 'wing' && <SportSeg />}
         {s?.levels && <Seg<Level> label={disc === 'wing' ? 'Mode' : 'Niveau de pratique'} value={level} onChange={(v) => setPrefs((p) => ({ ...p, levels: { ...p.levels, [disc]: v } }))} options={LEVELS_FOR[disc].map((l) => [l, LEVEL_LABEL[l]] as [Level, string])} />}
       </div>
-      {disc === 'wing' && <LiveBox live={[...(live.live ?? []), ...publicLive(d.meteo?.obs, [spot])]} spot={spot.id} />}
+      {disc === 'wing' && <LiveBox live={[...(live.live ?? []), ...publicLive(d.meteo?.obs, [spot])]} spot={spot.id} names={{ [spot.id]: spot.name }} histo={histo.histo} />}
+      {disc === 'wing' && <SpotStats histo={histo.histo} absent={histo.absent} spots={[spot]} />}
       <Webcams id={spot.id} />
       {s?.notice && <div class="notice">{s.notice}</div>}
       {!s ? <div class="notice warn">Pas de prévision disponible pour ce spot dans la dernière mise à jour.</div> : (

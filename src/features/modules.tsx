@@ -4,7 +4,7 @@ import type { AllData, Discipline, Level, PublicSpot, Session } from '../service
 import { DISC_LABEL, distanceKm, HOME, LEVEL_LABEL, LEVELS_FOR, SESSION_SPOTS, SESSION_TOMORROW_ONLY, spotDiscipline } from '../services/data';
 import { compass, dayKey, dayLabel, dayShort, hh, hourOf, n0, n1, span } from '../services/format';
 import { setPrefs, usePrefs } from '../services/prefs';
-import { publicLive, useLive } from '../services/perso';
+import { publicLive, useHisto, useLive } from '../services/perso';
 import { Badge, Fav, Section, Seg, SportSeg } from '../components/ui';
 import { SpotMap } from '../components/SpotMap';
 import { headFor, isKiteAt, ModuleView, pickHours, starsOf } from '../components/Views';
@@ -13,7 +13,7 @@ import { MapPlayer } from '../components/MapPlayer';
 import { discName } from '../services/sport';
 import { availableSubs, shownSubIds, SUB_IDS, SUB_LABEL, type SubId, type TabLayout } from '../services/layout';
 import { seriesFor, type Series } from './series';
-import { bestScoreBySpot, Freshness, levelFor, LiveBox, matches, moduleOf, upcoming } from './pages';
+import { bestScoreBySpot, Freshness, levelFor, LiveBox, matches, SpotStats, moduleOf, upcoming } from './pages';
 
 export const SUBS = SUB_IDS.map((id) => ({ id, label: SUB_LABEL[id] }));
 export type Sub = SubId;
@@ -151,6 +151,7 @@ export function Module({ d, now, disc, sub, query }: { d: AllData; now: number; 
   const [onlyFav, setOnlyFav] = useState(false);
   const spots = d.spots.filter((s) => spotDiscipline(s) === disc);
   const live = useLive(disc === 'wing' ? spots.map((s) => s.id) : []);
+  const histo = useHisto(disc === 'wing' && live.live?.length ? spots.map((s) => s.id) : []);
   const best = useMemo(() => bestScoreBySpot(d, prefs, now), [d, prefs, now]);
   const all = upcoming(d, now).filter((s) => s.discipline === disc && matches(s, prefs));
   const top = d.sessions.best[L]?.[disc] ?? null;
@@ -178,7 +179,8 @@ export function Module({ d, now, disc, sub, query }: { d: AllData; now: number; 
   );
   else if (sub === 'direct' && disc === 'wing') body = (
     <div class="stack">
-      <LiveBox live={[...(live.live ?? []), ...publicLive(d.meteo?.obs, spots)].sort((a, b) => spots.findIndex((s) => s.id === a.spot) - spots.findIndex((s) => s.id === b.spot))} />
+      <LiveBox live={[...(live.live ?? []), ...publicLive(d.meteo?.obs, spots)].sort((a, b) => spots.findIndex((s) => s.id === a.spot) - spots.findIndex((s) => s.id === b.spot))} names={Object.fromEntries(spots.map((s) => [s.id, s.name]))} histo={histo.histo} />
+      <SpotStats histo={histo.histo} absent={histo.absent} spots={spots} />
       {!prefs.perso.enabled && <p class="faint">Les balises Winds-Up s’affichent en mode perso (Profil). Le Jaï : mesure publique de l’aéroport de Marignane, pour tous.</p>}
     </div>
   );

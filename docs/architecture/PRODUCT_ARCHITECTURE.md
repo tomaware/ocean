@@ -360,3 +360,10 @@ Les apps actuelles restent en ligne jusqu'à ce que leur remplaçante soit véri
 - Noms : « Port Camargue / Espiguette » devient **Plage Sud** ; « Almanarre (Hyères) » devient **Hyères** (identifiants inchangés : adresses, favoris et réglages gardés).
 - **Hyères** : deux côtés navigables (ouest 245°, est ~110°, confirmé par Tom le 13/11) ; la direction est jugée sur le meilleur côté (`orientation.seawardAlt`). Avant / après et vérification sur la prévision réelle : `WING_SCORE.md`, `tests/wing.test.ts`.
 - Textes (WIND, VAGUE, HOULE) — Prévision : « Chaque case se remplit selon les heures de jour à 1 ★ (vert), 2 ★ (orange) et 3 ★ (violet) ; touche une case pour le détail. Si ça rentre, appelle ton boss… » ; Sessions 2H : « Spots à moins de 30 min du taf. Si ça rentre, mets-toi en TT. » (liste des spots éloignés et définition de « Ça envoie » retirées). La phrase sous la carte était déjà retirée (D-57).
+
+### D-59 (13/11/2026) — En direct : noms de l'app, relevés du jour, stats des spots (mode perso)
+- Les relevés en direct prennent les noms de l'app (Plage Sud, Hyères…) au lieu de ceux de Winds-Up.
+- Toucher une balise (mode perso) ouvre ses relevés du jour : moyennes horaires (direction, rafale max), puis les relevés des 3 dernières heures, aux couleurs des étoiles (D-53).
+- **Stats des spots** sous le direct : pour chaque spot, jours du mois en cours et du mois précédent avec au moins une heure de jour (8 h → 19 h) à 15 nd de moyenne ou plus, « sur N jours relevés ».
+- Source : la feuille « Observations » que le script de la super prévision remplit déjà toutes les heures (~3 mois). Nouvel appel `?action=histo` à **ajouter par Tom** au script (`widgets/super-prevision/historique.gs` : aucune clé, aucun identifiant) ; même lien secret que le direct. Rien n'est publié : relevés Winds-Up visibles seulement sur l'appareil qui a le lien. Sans l'ajout, l'app l'indique et le reste marche comme avant.
+- Vérifié : ajout du script exécuté sur une fausse feuille (heures du jour, jours à 15 nd, lignes « écart » ignorées) ; tests des stats ; écran contrôlé sur iPhone avec un faux lien perso (aucune vraie donnée Winds-Up utilisée).

@@ -368,3 +368,23 @@ table.wg tr.wg-stars .stars .off { opacity: .55; }
 .mapplayer.full .player { border-radius: 0; padding-bottom: max(10px, env(safe-area-inset-bottom)); }
 .mapplayer.full > p { display: none; }
 html.mapfull, html.mapfull body { overflow: hidden; }
+
+/* En direct : ligne à toucher, relevés du jour, stats des spots (mode perso, Tom 13/11) */
+.liverow { width: 100%; border: 0; background: none; color: inherit; font: inherit; text-align: left; padding: 0; cursor: pointer; min-height: 40px; }
+.liverow[aria-expanded="true"] > span:first-child { font-weight: 700; }
+.dayread { display: flex; flex-direction: column; gap: 6px; background: var(--c-surface-2); border-radius: var(--r-md); padding: 10px; }
+.dayread .bars { display: flex; align-items: flex-end; gap: 3px; overflow-x: auto; padding-bottom: 2px; }
+.dayread .bar { flex: 1 0 28px; display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: var(--fs-xs); }
+.dayread .bar .v { font-weight: 700; font-variant-numeric: tabular-nums; }
+.dayread .bar .col { display: block; width: 100%; max-width: 26px; padding: 0; border-radius: 4px 4px 0 0; }
+.dayread .bar.fine .col { opacity: .75; }
+.dayread .bar .d, .dayread .bar .t { color: var(--c-ink-3); white-space: nowrap; font-size: 10px; }
+table.stats { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
+table.stats th, table.stats td { text-align: left; padding: 6px 4px; border-bottom: 1px solid var(--c-line); }
+table.stats thead th { font-weight: 600; color: var(--c-ink-3); text-transform: capitalize; }
+table.stats td { text-align: right; white-space: nowrap; }
+table.stats thead th:not(:first-child) { text-align: right; }
+.card .list > .stack { min-width: 0; }
+.dayread { min-width: 0; max-width: 100%; overflow: hidden; }
+.dayread .bars { max-width: 100%; }
+.dayread .bar .col:not(.k1):not(.k2):not(.k3):not(.kite) { background: var(--c-ink-3); opacity: .35; }
