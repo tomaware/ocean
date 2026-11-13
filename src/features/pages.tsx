@@ -102,7 +102,6 @@ function DayReadings({ l, h, sport }: { l: Live; h: Histo['spots'][string] | nul
           </div>
         ))}
       </div>
-      <span class="faint small">Moyenne de chaque heure (± 30 min){slots.some((p) => p.live) ? ' ; teinte plus claire : heures récentes calculées sur les relevés en direct' : ''}.</span>
     </div>
   );
 }
