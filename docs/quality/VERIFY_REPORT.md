@@ -1,6 +1,6 @@
 # Remise en question (③)
 
-Généré le 2026-11-13 22:46 UTC par `pipeline/verify/run.ts`.
+Généré le 2026-11-13 23:00 UTC par `pipeline/verify/run.ts`.
 
 Erreur = prévu − mesuré. Vent en m/s aux stations METAR (aéroports), vagues : hauteur significative en m aux bouées Candhis. « courtTerme » = modèles sur les 3 derniers jours (pas une vraie prévision) ; « archive » = prévisions réellement émises N h avant.
 
@@ -25,7 +25,7 @@ Erreur = prévu − mesuré. Vent en m/s aux stations METAR (aéroports), vagues
 
 | Bouée | Classement |
 |---|---|
-| 03001 | meteofrance_wave 0.11 · ewam 0.13 · ecmwf_wam025 0.23 · gwam 0.30 · ncep_gfswave025 0.94 |
+| 03001 | meteofrance_wave 0.11 · ewam 0.14 · ecmwf_wam025 0.23 · gwam 0.30 · ncep_gfswave025 0.94 |
 | 03404 | meteofrance_wave 0.14 · ncep_gfswave025 0.18 · ewam 0.22 · ecmwf_wam025 0.26 · gwam 0.34 |
 | 01101 | meteofrance_wave 0.13 · ncep_gfswave025 0.22 · ewam 0.23 · ecmwf_wam025 0.27 · gwam 0.34 |
 
