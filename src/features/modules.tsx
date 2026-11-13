@@ -223,7 +223,7 @@ export function Module({ d, now, disc, sub, query }: { d: AllData; now: number; 
         <div class="module-body">
           {!meta.available && <div class="notice warn">Prévision indisponible pour cette mise à jour : {meta.note || meta.source}</div>}
           {body}
-          <p class="faint">Session 2H = au moins 2 h d’affilée à 5/10 ou plus, de jour{disc === 'wing' && !kite ? ', hors Kite session (plus de 28 nd)' : ''}. Source : {meta.source}.</p>
+          {/* définition des sessions et source : retirées à la demande de Tom (13/11) */}
         </div>
       </div>
     </>

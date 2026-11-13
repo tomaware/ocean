@@ -36,7 +36,15 @@ export function Freshness({ d, now }: { d: AllData; now: number }) {
   );
 }
 
+/** Couleur du vent mesuré, mêmes couleurs que les étoiles et que les widgets : vert dès 15 nd, orange dès 20, violet dès 25 ;
+ *  en wing, rouge « Kite » au-delà de 28 nd (D-49). Repère de lecture seulement : ce n'est pas une note. */
+export function liveTone(kn: number | null | undefined, sport: 'wing' | 'kite'): string {
+  if (kn == null) return '';
+  if (sport === 'wing' && kn > 28) return 'kite';
+  return kn >= 25 ? 'k3' : kn >= 20 ? 'k2' : kn >= 15 ? 'k1' : '';
+}
 export function LiveBox({ live, spot }: { live: Live[] | null; spot?: string }) {
+  const prefs = usePrefs();
   // la balise Winds-Up (mode perso) passe avant la mesure publique du même spot (Le Jaï : METAR de Marignane)
   const all = (live ?? []).filter((l) => !spot || l.spot === spot);
   const rows = all.filter((l) => !l.src || !all.some((x) => !x.src && x.spot === l.spot));
@@ -49,7 +57,13 @@ export function LiveBox({ live, spot }: { live: Live[] | null; spot?: string }) 
         {rows.map((l) => (
           <div key={l.spot + (l.src ?? '')} class="row between">
             <span class="stack" style={{ gap: 0 }}><span>{l.name}</span>{l.src && <span class="faint">{l.src}</span>}</span>
-            <span class="small">{l.panne ? 'anémomètre en panne' : `${n0(l.kn)} nd ${l.dir ?? ''}${l.gust != null ? ` · raf. ${n0(l.gust)}` : ''}${l.t ? ' · ' + ago(l.t) : ''}`}</span>
+            {l.panne ? <span class="small">anémomètre en panne</span> : (
+              <span class="row small" style={{ gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                <strong class={`livekn ${liveTone(l.kn, prefs.sport)}`}>{n0(l.kn)} nd {l.dir ?? ''}{liveTone(l.kn, prefs.sport) === 'kite' ? ' · Kite' : ''}</strong>
+                {l.gust != null && <strong>raf. {n0(l.gust)}</strong>}
+                {l.t && <span class="faint">{ago(l.t)}</span>}
+              </span>
+            )}
           </div>
         ))}
       </div>

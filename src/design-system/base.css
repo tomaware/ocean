@@ -340,3 +340,10 @@ table.wg tr.wg-stars .stars .off { opacity: .55; }
 .modlist input { width: 18px; height: 18px; accent-color: var(--c-accent, #256D70); }
 .modlist .mv { border: 0; background: var(--c-surface); color: var(--c-ink); border-radius: 8px; width: 32px; height: 32px; cursor: pointer; font-weight: 700; }
 .modlist .mv:disabled { opacity: .3; cursor: default; }
+
+/* En direct : relevés en gras, couleur des étoiles selon le vent mesuré (vert 15, orange 20, violet 25 ; rouge Kite > 28 en wing) */
+.livekn { padding: 2px 8px; border-radius: var(--r-pill); background: var(--c-surface-2); color: var(--c-ink); white-space: nowrap; }
+.livekn.k1 { background: var(--c-k1); color: #06281A; }
+.livekn.k2 { background: var(--c-k2); color: #2A1400; }
+.livekn.k3 { background: var(--c-k3); color: #fff; }
+.livekn.kite { background: var(--c-kite); color: #fff; }

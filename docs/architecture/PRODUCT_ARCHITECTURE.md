@@ -332,3 +332,7 @@ Les apps actuelles restent en ligne jusqu'à ce que leur remplaçante soit véri
 - Choix de Tom : un réglage **par onglet** (WIND, VAGUE, HOULE) ; un module reste toujours affiché (le dernier ne peut pas être décoché ; un réglage vide ou abîmé revient à Meilleure session).
 - Profil → « Modules affichés » : case à cocher et flèches ↑ ↓ par module. Le premier module affiché s'ouvre quand on touche l'onglet ; la colonne de gauche et le menu de l'onglet suivent l'ordre choisi. Une adresse vers un module masqué ouvre le premier module affiché. Réglage gardé sur l'appareil (`src/services/layout.ts`, préférences).
 - Vérifié : tests unitaires (`tests/layout.test.ts`) et test d'interface (masquer Sessions 2H en WIND, monter Prévision en tête, HOULE inchangé, dernier module non masquable), sur mobile, ordinateur et sombre.
+
+### D-53 (13/11/2026) — En direct : relevés en gras, couleurs des étoiles
+- Demande de Tom : relevés en gras, et même code couleur que les étoiles pour repérer les spots où ça souffle bien. Couleur selon le vent mesuré, mêmes seuils que les widgets : vert dès 15 nd, orange dès 20, violet dès 25 ; en wing, rouge « Kite » au-delà de 28 nd (D-49). Repère de lecture, pas une note.
+- Retiré du bas des onglets (demande de Tom) : la phrase « Session 2H = … Source : … ».
