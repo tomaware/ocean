@@ -236,6 +236,7 @@ export function Module({ d, now, disc, sub, query }: { d: AllData; now: number; 
                 <div key={k} class="stack" style={{ gap: '4px' }}>
                   <span class="faint">{dayLabel(t, now)}</span>
                   <ScoreBars s={ser} dayT={t} now={now} />
+                  <DayChart d={d} spot={sp} dayT={t} level={L} title=" " />
                 </div>
               ); })}
             </div>
