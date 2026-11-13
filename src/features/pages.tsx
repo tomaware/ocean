@@ -12,6 +12,7 @@ import { discName } from '../services/sport';
 import { Chart } from '../components/Chart';
 import { CondCards, Criteria, DayTabs, daysOf, MapCompass, NoteCard } from '../components/Today';
 import { seriesFor } from './series';
+import { availableSubs, moveSub, shownSubIds, SUB_LABEL, toggleSub, type SubId } from '../services/layout';
 import { headFor, ModelsTable, ModuleView, pickHours } from '../components/Views';
 
 export const levelFor = (prefs: ReturnType<typeof usePrefs>, d: Discipline): Level => prefs.levels[d];
@@ -209,6 +210,36 @@ function SpotView({ d, spot, now, day: dayParam }: { d: AllData; spot: PublicSpo
 }
 
 // ------------------------------------------------------------------ Profil
+/** Profil : modules d'un onglet, à cocher et à ranger (Tom, 13/11). */
+function TabModules({ slug, tab, disc }: { slug: string; tab: string; disc: Discipline }) {
+  const prefs = usePrefs();
+  const avail = availableSubs(disc), layout = prefs.modules[slug];
+  const shown = shownSubIds(avail, layout);
+  const order = [...shown, ...avail.filter((x) => !shown.includes(x))];
+  const set = (fn: (l: typeof layout) => typeof layout) => setPrefs((p) => ({ ...p, modules: { ...p.modules, [slug]: fn(p.modules[slug])! } }));
+  const move = (id: SubId, dir: -1 | 1) => set((l) => moveSub(avail, l, id, dir));
+  return (
+    <div class="stack" style={{ gap: '6px' }}>
+      <div class="row between"><strong>{tab}</strong><span class="faint small">{shown.length} / {avail.length} affichés</span></div>
+      <ul class="modlist" aria-label={`Modules ${tab}`}>
+        {order.map((id) => {
+          const on = shown.includes(id), k = shown.indexOf(id);
+          return (
+            <li key={id} class={on ? '' : 'off'}>
+              <label class="row" style={{ gap: '8px' }}><input type="checkbox" checked={on} disabled={on && shown.length === 1}
+                onChange={() => set((l) => toggleSub(avail, l, id))} />{SUB_LABEL[id]}</label>
+              {on && <span class="row" style={{ gap: '4px' }}>
+                <button type="button" class="mv" aria-label={`Monter ${SUB_LABEL[id]} (${tab})`} disabled={k === 0} onClick={() => move(id, -1)}>↑</button>
+                <button type="button" class="mv" aria-label={`Descendre ${SUB_LABEL[id]} (${tab})`} disabled={k === shown.length - 1} onClick={() => move(id, 1)}>↓</button>
+              </span>}
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
 export function Profile({ d }: { d: AllData }) {
   const prefs = usePrefs();
   const [url, setUrl] = useState(prefs.perso.url);
@@ -229,6 +260,12 @@ export function Profile({ d }: { d: AllData }) {
         <div class="card">
           {prefs.favorites.length ? <div class="list">{prefs.favorites.map((id) => d.spots.find((s) => s.id === id)).filter(Boolean).map((s) => <div key={s!.id} class="row between"><a href={`#/spot/${s!.id}`}>{s!.name}</a><Fav id={s!.id} name={s!.name} /></div>)}</div>
             : <span class="muted">Ajoute des spots avec l’étoile, dans WIND, VAGUE ou HOULE.</span>}
+        </div>
+      </Section>
+      <Section title="Modules affichés">
+        <div class="card stack" style={{ gap: 'var(--s-4)' }}>
+          <p class="faint">Pour chaque onglet, coche les modules à afficher et range-les dans l’ordre voulu. Le premier s’ouvre quand tu touches l’onglet. Un module reste toujours affiché.</p>
+          {MODULES.map((m) => <TabModules key={m.slug} slug={m.slug} tab={m.tab} disc={m.disc} />)}
         </div>
       </Section>
       <Section title="Affichage">

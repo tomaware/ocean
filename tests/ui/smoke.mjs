@@ -126,6 +126,20 @@ for (const [name, opt] of [['mobile', { ...devices['iPhone 13'], locale: 'fr-FR'
   await p.locator('.tabs a').nth(0).click(); await p.waitForTimeout(300);
   if (!(await p.evaluate(() => location.hash)).startsWith('#/wind/prevision')) errs.push(`${name} : WIND ne rouvre pas le dernier module (${await p.evaluate(() => location.hash)})`);
   if (name === 'ordinateur' && (await p.locator('.side a').count()) < 6) errs.push(`${name} : colonne de gauche absente`);
+  // Profil → modules affichés (Tom, 13/11) : masquer Sessions 2H en WIND, monter Prévision en tête ; HOULE inchangé
+  await p.goto(`${base}/#/profil`); await p.reload();
+  await p.getByRole('list', { name: 'Modules WIND' }).getByLabel('Sessions 2H', { exact: true }).uncheck();
+  await p.getByRole('button', { name: 'Monter Prévision (WIND)' }).click();
+  await p.locator('.tabs a').nth(0).click(); await p.waitForTimeout(400);
+  const subs = await p.locator('.subnav a').allInnerTexts();
+  if (subs.join('|') !== 'Prévision|Meilleure session|Spots|En direct') errs.push(`${name} : modules WIND après réglage = ${subs.join(', ')}`);
+  await p.goto(`${base}/#/houle`); await p.waitForTimeout(400);
+  if ((await p.locator('.subnav a').allInnerTexts()).join('|') !== 'Meilleure session|Prévision|Spots') errs.push(`${name} : HOULE touché par le réglage WIND`);
+  // le dernier module affiché ne peut pas être masqué
+  await p.goto(`${base}/#/profil`);
+  const hl = p.getByRole('list', { name: 'Modules HOULE' });
+  await hl.getByLabel('Meilleure session', { exact: true }).uncheck(); await hl.getByLabel('Prévision', { exact: true }).uncheck();
+  if (!(await hl.getByLabel('Spots', { exact: true }).isDisabled())) errs.push(`${name} : le dernier module de HOULE peut être masqué`);
   await ctx.close();
 }
 await b.close();

@@ -326,3 +326,9 @@ Les apps actuelles restent en ligne jusqu'à ce que leur remplaçante soit véri
 - **Pipeline** : le moteur wing calcule aussi le kite (`wingForecast(…, 'kite')`), publié dans `kite.json` ; les créneaux kite sont dans `sessions.json` avec la discipline « kite » (« Ça envoie » réservé au wing). Contrôle `sorties-kite` dans l'analyse.
 - **App** : bascule Wing | Kite en haut de WIND et de la fiche spot, gardée sur l'appareil. L'app ne recalcule rien : elle affiche `kite.json` et les créneaux kite à la place des données wing (`src/services/sport.ts`). Sans `kite.json` (ancienne publication), l'app reste en wing.
 - **Vérifié** : 104 tests, contrôle des types, test d'interface (20 écrans en wing synthèse, wing expert et kite, sur 4 affichages) sur les données réellement publiées rejouées avec les nouvelles notes. **Widgets** : toujours en wing.
+
+### D-52 (13/11/2026) — modules affichés et leur ordre, réglés par chacun
+- Demande de Tom : pouvoir choisir dans les préférences quels modules (Meilleure session, Sessions 2H, Prévision, Spots, En direct) s'affichent dans chaque onglet, et dans quel ordre, pour que chacun règle son affichage.
+- Choix de Tom : un réglage **par onglet** (WIND, VAGUE, HOULE) ; un module reste toujours affiché (le dernier ne peut pas être décoché ; un réglage vide ou abîmé revient à Meilleure session).
+- Profil → « Modules affichés » : case à cocher et flèches ↑ ↓ par module. Le premier module affiché s'ouvre quand on touche l'onglet ; la colonne de gauche et le menu de l'onglet suivent l'ordre choisi. Une adresse vers un module masqué ouvre le premier module affiché. Réglage gardé sur l'appareil (`src/services/layout.ts`, préférences).
+- Vérifié : tests unitaires (`tests/layout.test.ts`) et test d'interface (masquer Sessions 2H en WIND, monter Prévision en tête, HOULE inchangé, dernier module non masquable), sur mobile, ordinateur et sombre.

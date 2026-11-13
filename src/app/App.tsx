@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'preact/hooks';
 import { LayoutGrid, Menu, MessageSquare, Moon, ShieldCheck, Sun, User, X } from 'lucide-preact';
 import { spotDiscipline, useData } from '../services/data';
 import { MODULES, moduleOf, Profile, Reliability, SpotPage } from '../features/pages';
-import { Module, subsFor, type Sub } from '../features/modules';
+import { Module, shownSubs, type Sub } from '../features/modules';
 import { FeedbackPage, WidgetsPage } from '../features/extras';
 import { setPrefs, usePrefs } from '../services/prefs';
 import { installNav, lastSub } from '../services/nav';
@@ -60,7 +60,9 @@ export function App() {
   else if (route.name === 'widgets') page = <WidgetsPage />;
   else {
     const m = mod ?? MODULES[0];
-    const sub: Sub = (subsFor(m.disc).find((x) => x.id === (route.id ?? lastSub(m.slug)))?.id ?? 'meilleure') as Sub;
+    // modules affichés et leur ordre (Profil) ; adresse vers un module masqué → premier module affiché
+    const shown = shownSubs(m.disc, prefs.modules[m.slug]);
+    const sub: Sub = (shown.find((x) => x.id === (route.id ?? lastSub(m.slug)))?.id ?? shown[0].id) as Sub;
     page = <Module key={m.disc} d={data} now={now} disc={m.disc} sub={sub} query={route.query} />;
   }
   return (
@@ -69,7 +71,9 @@ export function App() {
         <a class="brand" href="#/wind" aria-label="OCEAN, accueil"><img src="./icon.svg" width="26" height="26" alt="" /><span>OCEAN</span></a>
         <nav class="tabs" aria-label="Disciplines">
           {MODULES.map((m) => {
-            return <a key={m.slug} href={`#/${m.slug}/${lastSub(m.slug) ?? 'meilleure'}`} aria-current={tab === m.slug ? 'page' : undefined}>{m.tab}</a>;
+            const shown = shownSubs(m.disc, prefs.modules[m.slug]);
+            const to = shown.find((x) => x.id === lastSub(m.slug))?.id ?? shown[0].id;
+            return <a key={m.slug} href={`#/${m.slug}/${to}`} aria-current={tab === m.slug ? 'page' : undefined}>{m.tab}</a>;
           })}
         </nav>
         <div class="row" style={{ gap: '6px' }}>
@@ -92,8 +96,9 @@ export function App() {
       </header>
       <div class="body">
         <aside class="side" aria-label="Modules">
-          {mod && subsFor(mod.disc).map((x) => {
-            const cur = route.name === mod.slug && (route.id ?? lastSub(mod.slug) ?? 'meilleure') === x.id;
+          {mod && shownSubs(mod.disc, prefs.modules[mod.slug]).map((x, k, all) => {
+            const at = route.id ?? lastSub(mod.slug);
+            const cur = route.name === mod.slug && (all.some((y) => y.id === at) ? at === x.id : k === 0);
             return <a key={x.id} href={`#/${mod.slug}/${x.id}`} aria-current={cur ? 'page' : undefined}>{x.label}</a>;
           })}
           {mod && <hr />}

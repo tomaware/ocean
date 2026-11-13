@@ -10,20 +10,15 @@ import { SpotMap } from '../components/SpotMap';
 import { headFor, isKiteAt, ModuleView, pickHours, starsOf } from '../components/Views';
 import { ScoreBars } from '../components/Today';
 import { discName } from '../services/sport';
+import { availableSubs, shownSubIds, SUB_IDS, SUB_LABEL, type SubId, type TabLayout } from '../services/layout';
 import { seriesFor, type Series } from './series';
 import { bestScoreBySpot, Freshness, levelFor, LiveBox, matches, moduleOf, upcoming } from './pages';
 
-export const SUBS = [
-  { id: 'meilleure', label: 'Meilleure session' },
-  { id: 'sessions', label: 'Sessions 2H' },
-  { id: 'prevision', label: 'Prévision' },
-  { id: 'spots', label: 'Spots' },
-  { id: 'direct', label: 'En direct' },
-] as const;
-export type Sub = (typeof SUBS)[number]['id'];
-/** « En direct » : WIND seulement (balises Winds-Up en mode perso, mesure publique de Marignane pour Le Jaï). */
-// HOULE : pas de Sessions 2H (2 h ne font pas un downwind, Tom 11/11)
-export const subsFor = (disc: Discipline) => SUBS.filter((x) => (x.id !== 'direct' || disc === 'wing') && (x.id !== 'sessions' || disc !== 'downwind'));
+export const SUBS = SUB_IDS.map((id) => ({ id, label: SUB_LABEL[id] }));
+export type Sub = SubId;
+export const subsFor = (disc: Discipline) => availableSubs(disc).map((id) => SUBS.find((x) => x.id === id)!);
+/** Modules affichés dans l'onglet, dans l'ordre choisi dans le Profil (Tom, 13/11) ; au moins un. */
+export const shownSubs = (disc: Discipline, layout?: TabLayout | null) => shownSubIds(subsFor(disc).map((x) => x.id), layout).map((id) => SUBS.find((x) => x.id === id)!);
 
 // ------------------------------------------------------------ vue d'une journée, propre à chaque onglet
 export const chipColors = (sc: number | null) =>
@@ -223,7 +218,7 @@ export function Module({ d, now, disc, sub, query }: { d: AllData; now: number; 
       </header>
       <div class="module">
         <nav class="subnav" aria-label={`Modules ${m.tab}`}>
-          {subsFor(disc).map((x) => <a key={x.id} href={`#/${m.slug}/${x.id}`} aria-current={sub === x.id ? 'page' : undefined}>{x.label}</a>)}
+          {shownSubs(disc, prefs.modules[m.slug]).map((x) => <a key={x.id} href={`#/${m.slug}/${x.id}`} aria-current={sub === x.id ? 'page' : undefined}>{x.label}</a>)}
         </nav>
         <div class="module-body">
           {!meta.available && <div class="notice warn">Prévision indisponible pour cette mise à jour : {meta.note || meta.source}</div>}
