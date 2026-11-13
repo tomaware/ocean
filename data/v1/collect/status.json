@@ -1,11 +1,11 @@
 {
- "generatedAt": 1794598426226,
+ "generatedAt": 1794598640171,
  "status": [
   {
    "id": "open-meteo-marine",
    "ok": true,
    "message": "ok",
-   "durationMs": 984,
+   "durationMs": 1011,
    "points": 17,
    "models": [
     "meteofrance_wave",
@@ -24,7 +24,7 @@
    "id": "copernicus-medwav",
    "ok": true,
    "message": "ok",
-   "durationMs": 336,
+   "durationMs": 151,
    "points": 15,
    "models": [
     "copernicus"
@@ -39,7 +39,7 @@
    "id": "open-meteo-vent-moteurs",
    "ok": true,
    "message": "ok",
-   "durationMs": 343,
+   "durationMs": 349,
    "points": 77,
    "models": [
     "meteofrance_seamless",
@@ -55,7 +55,7 @@
    "id": "open-meteo-meteo",
    "ok": true,
    "message": "ok",
-   "durationMs": 52,
+   "durationMs": 51,
    "points": 16,
    "models": [
     "best_match"
@@ -70,7 +70,7 @@
    "id": "open-meteo-vent-spots",
    "ok": true,
    "message": "ok",
-   "durationMs": 57,
+   "durationMs": 68,
    "points": 11,
    "models": [
     "meteofrance_arome_france_hd",
@@ -91,7 +91,7 @@
    "id": "open-meteo-vent-carte",
    "ok": true,
    "message": "ok",
-   "durationMs": 123,
+   "durationMs": 130,
    "points": 200,
    "models": [
     "meteofrance_seamless"
@@ -106,7 +106,7 @@
    "id": "super-prevision",
    "ok": true,
    "message": "ok",
-   "durationMs": 1406,
+   "durationMs": 1775,
    "points": 7,
    "models": [
     "super-prevision"
@@ -121,35 +121,35 @@
    "id": "candhis",
    "ok": true,
    "message": "ok",
-   "durationMs": 86,
+   "durationMs": 36,
    "points": 5,
    "models": [],
    "values": 33198,
    "missing": 3464,
    "rejected": 0,
    "lastObservationAgeMin": {
-    "03001": 64,
-    "03404": 64,
-    "01102": 6094,
-    "01101": 64,
-    "06601": 33904
+    "03001": 67,
+    "03404": 67,
+    "01102": 6097,
+    "01101": 67,
+    "06601": 33907
    }
   },
   {
    "id": "metar",
    "ok": true,
    "message": "ok",
-   "durationMs": 219,
+   "durationMs": 1877,
    "points": 4,
    "models": [],
    "values": 1200,
    "missing": 419,
    "rejected": 0,
    "lastObservationAgeMin": {
-    "LFMT": 4,
-    "LFMP": 4,
-    "LFTH": 4,
-    "LFML": 4
+    "LFMT": 7,
+    "LFMP": 7,
+    "LFTH": 7,
+    "LFML": 7
    }
   }
  ],
@@ -177,7 +177,7 @@
   {
    "id": "fraicheur-copernicus",
    "ok": true,
-   "detail": "extrait de 0.7 h (15 points, 270 h) (seuil 30 h)"
+   "detail": "extrait de 0.8 h (15 points, 270 h) (seuil 30 h)"
   },
   {
    "id": "points-copernicus",
@@ -237,12 +237,12 @@
   {
    "id": "fraicheur-candhis",
    "ok": true,
-   "detail": "03001 64 min · 03404 64 min · 01101 64 min (seuil 180 min)"
+   "detail": "03001 67 min · 03404 67 min · 01101 67 min (seuil 180 min)"
   },
   {
    "id": "fraicheur-metar",
    "ok": true,
-   "detail": "LFMT 4 min · LFMP 4 min · LFTH 4 min · LFML 4 min (seuil 120 min)"
+   "detail": "LFMT 7 min · LFMP 7 min · LFTH 7 min · LFML 7 min (seuil 120 min)"
   },
   {
    "id": "confidentialite",
