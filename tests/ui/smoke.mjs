@@ -3,7 +3,7 @@
 import { createRequire } from 'node:module';
 const { chromium, devices } = createRequire(import.meta.url)('playwright');   // installé à part (CI : npm i --no-save playwright)
 const base = process.argv[2] ?? 'http://localhost:4173';
-const routes = [['', 'Où naviguer en wing'], ['wind/meilleure', 'Meilleure session à venir'], ['wind/sessions', 'Sessions de 2H (Localisation Montpellier)'], ['wind/prevision', 'Prévision 5 jours'], ['wind/spots', 'Carte'], ['wind/favoris', 'Meilleure session de tes favoris'],
+const routes = [['', 'Où naviguer en wing'], ['wind/meilleure', 'Meilleure session à venir'], ['wind/sessions', 'Sessions de 2H (Localisation Montpellier)'], ['wind/prevision', 'Prévision 5 jours'], ['wind/spots', 'Carte'], ['wind/favoris', 'Tes favoris'],
   ['vague/meilleure', 'Meilleure session à venir'], ['vague/prevision', 'Prévision 5 jours'], ['vague/sessions', 'Sessions de 2H'], ['houle/prevision', 'Prévision 5 jours'], ['houle/meilleure', 'Meilleure session à venir'],
   ['spot/port-camargue', 'Jour par jour'], ['spot/carnon', 'Jour par jour'], ['spot/plagesud-grandemotte', 'Jour par jour'], ['spot/la-franqui', 'Webcams'], ['spot/beauduc', 'Webcams'], ['sessions', 'Où naviguer en wing'], ['profil', 'Mode perso'], ['fiabilite', 'Fiabilité'], ['widgets', 'Installer les widgets'], ['avis', 'Avis et commentaires']];
 // tous les modules affichés pour parcourir chaque écran (le réglage de base en masque, testé plus bas)
@@ -56,9 +56,11 @@ for (const [name, opt] of [['mobile', { ...devices['iPhone 13'], locale: 'fr-FR'
       if (r.endsWith('/prevision')) {
         // la grille : 5 jours × spots, et le détail s'ouvre au clic
         const n = await p.locator('table.grid5 tbody tr').count();
-        if (await p.locator('table.grid5 .cell:not(.s):not(.kite)').filter({ hasText: /\d/ }).count()) errs.push(`${name} #/${r} : chiffres dans les cases sans session`);
+        // cases (Tom, 13/11) : colonnes des heures de jour + note du jour ; G-Motte et Le Ponant retirés de la grille WIND
+        if (r === 'wind/prevision' && (await p.locator('table.grid5 thead th').allInnerTexts()).some((t) => /G-Motte|Ponant/.test(t))) errs.push(`${name} #/${r} : G-Motte / Le Ponant encore dans la grille`);
+        if (!(await p.locator('table.grid5 .minicols svg rect').count())) errs.push(`${name} #/${r} : pas de colonnes dans les cases`);
         // case « Kite session » (D-49) : pas de créneau wing, seulement l'étoile rouge « Kite »
-        for (const t of await p.locator('table.grid5 .cell.kite').allInnerTexts()) if (!/Kite/.test(t)) errs.push(`${name} #/${r} : case kite sans « Kite » (${t})`);
+
         if (n !== 5) errs.push(`${name} #/${r} : ${n} jours dans la grille`);
         await p.locator('table.grid5 .cell').first().click();
         if (!(await p.locator('.daychart').count())) errs.push(`${name} #/${r} : pas de détail au clic`);

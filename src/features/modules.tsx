@@ -49,8 +49,35 @@ const fillOf = (n: number[], day: number, kh = 0) => {
 };
 const shortName = (s: PublicSpot) => s.name.replace(/\s*\(.*\)/, '').replace('Port Camargue / Espiguette', 'Espiguette').replace('Saintes-Maries-de-la-Mer', 'Stes-Maries').replace('La Grande-Motte', 'G-Motte').replace(/^Plage Sud/, 'P. Sud').replace(/→ La Grande-Motte$/, '→ G-Motte');
 
-function Prevision({ d, now, disc, spots, L, query }: { d: AllData; now: number; disc: Discipline; spots: PublicSpot[]; L: Level; query: URLSearchParams }) {
+/** Favoris : aujourd'hui et demain ; le soir (plus d'heure de jour à venir), demain et après-demain. */
+function favDays(s: Series, now: number): number[] {
+  const left = s.times.some((t, i) => dayKey(t) === dayKey(now) && s.day[i] && t + 3600e3 > now);
+  return left ? [now, now + 86400e3] : [now + 86400e3, now + 2 * 86400e3];
+}
+/** Case de la Prévision 5 jours (Tom, 13/11) : une colonne par heure de jour, couleur des étoiles, et la note du jour
+ *  (meilleure heure hors « Kite session »). */
+function MiniCols({ s, dayT }: { s: Series | null | undefined; dayT: number }) {
+  if (!s) return null;
+  const k = dayKey(dayT), idx = s.times.map((_, i) => i).filter((i) => dayKey(s.times[i]) === k && s.day[i]);
+  if (!idx.length) return null;
+  const tone = (i: number) => (isKiteAt(s, i) ? 'var(--c-kite)' : ['var(--c-k0)', 'var(--c-k1)', 'var(--c-k2)', 'var(--c-k3)'][starsOf(s.score[i])]);
+  const best = Math.max(-1, ...idx.filter((i) => !isKiteAt(s, i)).map((i) => s.score[i] ?? -1));
+  const kite = idx.some((i) => isKiteAt(s, i));
+  return (
+    <span class="minicols" aria-hidden="true">
+      <svg viewBox={`0 0 ${idx.length * 10} 40`} preserveAspectRatio="none">
+        {idx.map((i, j) => { const h = Math.max(3, ((isKiteAt(s, i) ? 10 : s.score[i] ?? 0) / 10) * 40); return <rect key={i} x={j * 10 + 1} y={40 - h} width="8" height={h} rx="1.5" fill={tone(i)} />; })}
+      </svg>
+      {best > 0 && <span class={`cell-l k${starsOf(best)}`}>{n1(best)}{starsOf(best) === 0 && kite ? <span class="stars sm kite"><span class="on"> ★</span></span> : null}</span>}
+    </span>
+  );
+}
+
+// WIND : La Grande-Motte et Le Ponant retirés de la grille (Tom, 13/11) ; toujours dans Carte et Sessions 2H
+const GRID_HIDE: Partial<Record<Discipline, string[]>> = { wing: ['la-grande-motte', 'le-ponant'] };
+function Prevision({ d, now, disc, spots: all, L, query }: { d: AllData; now: number; disc: Discipline; spots: PublicSpot[]; L: Level; query: URLSearchParams }) {
   const prefs = usePrefs();
+  const spots = useMemo(() => all.filter((s) => !(GRID_HIDE[disc] ?? []).includes(s.id)), [all, disc]);
   const days = useMemo(() => [0, 1, 2, 3, 4].map((k) => now + k * 86400e3), [Math.floor(now / 3600e3)]);
   const series = useMemo(() => Object.fromEntries(spots.map((s) => [s.id, seriesFor(d, s, disc, L)])), [d, spots, disc, L]);
   // case ouverte gardée dans l'adresse : en revenant d'une fiche spot, on retrouve la grille telle qu'on l'a laissée
@@ -86,7 +113,7 @@ function Prevision({ d, now, disc, spots, L, query }: { d: AllData; now: number;
   const selSpot = sel ? spots.find((s) => s.id === sel.spot) : null;
   return (
     <Section title="Prévision 5 jours">
-      <p class="faint">Chaque case se remplit selon les heures de jour à 1 ★ (vert), 2 ★ (orange) et 3 ★ (violet) ; touche une case pour le détail. Si ça rentre, appelle ton boss…</p>
+      <p class="faint">Chaque case se remplit selon les heures de jour à 1 ★ (vert), 2 ★ (orange) et 3 ★ (violet) ;<br />touche une case pour le détail. Si ça rentre, appelle ton boss…</p>
       <div class="card table-wrap">
         <table class="grid5">
           <thead><tr><th />{spots.map((s) => <th key={s.id} title={s.name}><strong>{shortName(s)}</strong></th>)}</tr></thead>
@@ -99,10 +126,10 @@ function Prevision({ d, now, disc, spots, L, query }: { d: AllData; now: number;
                   const on = sel?.spot === sp.id && sel?.day === dayT;
                   return (
                     <td key={sp.id}>
-                      <button type="button" class={`cell${c.session ? ' s' : c.kh ? ' kite' : ''}${on ? ' sel' : ''}`} style={c.session || c.kh ? { background: fillOf(c.n, c.day, c.kh) } : undefined}
+                      <button type="button" class={`cell${c.session ? ' s' : c.kh ? ' kite' : ''}${on ? ' sel' : ''}`}
                         aria-pressed={on} aria-label={`${sp.name}, ${dayLabel(dayT, now)} : ${c.session ? `${c.n[2] ? `${c.n[2]} h à 3 étoiles, ` : ''}${c.n[1] ? `${c.n[1]} h à 2 étoiles, ` : ''}${c.n[0]} h à 1 étoile${c.kh ? `, ${c.kh} h Kite session` : ''}` : c.kh ? `pas de session wing, ${c.kh} h Kite session (plus de 28 nœuds)` : c.text === '—' ? 'pas de prévision' : 'pas de session'}`}
                         onClick={() => setSel(on ? null : { spot: sp.id, day: dayT })}>
-                        {c.session ? <span class="cell-l">{c.n[c.top - 1] || c.hours}h <span class={`stars sm k${c.top}`}><span class="on">{'★'.repeat(c.top)}</span></span></span> : c.kh ? <span class="cell-l">{c.kh}h <span class="stars sm kite"><span class="on">★</span><span class="kt">Kite</span></span></span> : c.text}
+                        {c.text === '—' ? c.text : <MiniCols s={series[sp.id]} dayT={dayT} />}
                       </button>
                     </td>
                   );
@@ -192,21 +219,23 @@ export function Module({ d, now, disc, sub, query }: { d: AllData; now: number; 
     </Section>
   );
   // Favoris (Tom, 13/11) : meilleure session à venir sur les spots favoris de l'onglet
+  // Favoris (Tom, 13/11) : prévision du jour et du lendemain de chaque spot favori, sans « meilleure session »
   else if (sub === 'favoris') {
     const favs = spots.filter((s) => prefs.favorites.includes(s.id));
-    const fl = all.filter((s) => prefs.favorites.includes(s.spot));
-    const rank = (s: Session) => s.peak * 0.4 + s.mean * 0.6 + Math.min(s.hours, 5) * 0.1;   // même classement que Meilleure session
-    const ft = [...fl].sort((a, b) => rank(b) - rank(a));
     body = (
-      <Section title="Meilleure session de tes favoris">
-        {!favs.length ? <div class="card empty">Pas encore de favori dans cet onglet. Ajoute des spots avec l’étoile, sur leur fiche.</div> : <>
-          <div class="card">{ft[0] ? <SessionCard d={d} s={ft[0]} now={now} L={L} big /> : <span class="muted">Pas de session 2H en vue sur {favs.map((s) => s.name.replace(/\s*\(.*\)/, '')).join(', ')}.</span>}</div>
-          {ft.length > 1 && <>
-            <h3>Autres sessions sur tes favoris</h3>
-            <div class="card"><div class="list">{ft.slice(1, 5).map((s) => <div key={s.id} class="stack"><span class="faint">{dayLabel(s.start, now)}</span><SessionCard d={d} s={s} now={now} L={L} /></div>)}</div></div>
-          </>}
-          <p class="faint">Favoris : {favs.map((s) => s.name.replace(/\s*\(.*\)/, '')).join(', ')}.</p>
-        </>}
+      <Section title="Tes favoris">
+        {!favs.length ? <div class="card empty">Pas encore de favori dans cet onglet. Ajoute des spots avec l’étoile, sur leur fiche.</div>
+          : favs.map((sp) => { const ser = seriesFor(d, sp, disc, L); return (
+            <div key={sp.id} class="card stack">
+              <a href={`#/spot/${sp.id}`} class="row between" style={{ textDecoration: 'none', color: 'inherit' }}><strong class="big">{sp.name}</strong><span class="small">Fiche →</span></a>
+              {!ser ? <span class="muted">Pas de prévision.</span> : favDays(ser, now).map((t) => { const k = t; return (
+                <div key={k} class="stack" style={{ gap: '4px' }}>
+                  <span class="faint">{dayLabel(t, now)}</span>
+                  <ScoreBars s={ser} dayT={t} now={now} />
+                </div>
+              ); })}
+            </div>
+          ); })}
       </Section>
     );
   }

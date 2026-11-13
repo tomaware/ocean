@@ -389,3 +389,13 @@ table.stats thead th:not(:first-child) { text-align: right; }
 .dayread .bars { max-width: 100%; }
 .dayread .bar .col:not(.k1):not(.k2):not(.k3):not(.kite) { background: var(--c-ink-3); opacity: .35; }
 .dayread .bar .d, .dayread .bar .t { min-height: 1.3em; line-height: 1.3em; }
+/* Prévision 5 jours : colonnes des heures de jour dans chaque case + note du jour (Tom, 13/11) */
+.grid5 .cell { position: relative; overflow: hidden; min-height: 58px; }
+.minicols { position: absolute; inset: 4px 6px; display: block; }
+.minicols svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.minicols { inset: 3px 5px; }
+/* note du jour en haut à droite, colonnes des heures dessous sur toute la largeur (lisible aussi sur téléphone) */
+.minicols svg { top: auto !important; bottom: 0; height: 52% !important; width: 100% !important; }
+.minicols .cell-l { position: absolute; right: 0; top: 0; font-variant-numeric: tabular-nums; padding: 0 5px; font-size: 12px; line-height: 1.35; }
+.minicols .cell-l.k0 { color: var(--c-ink-3); font-weight: 600; }
+.minicols .cell-l.k1 { color: var(--c-k1); } .minicols .cell-l.k2 { color: var(--c-k2); } .minicols .cell-l.k3 { color: var(--c-k3); }

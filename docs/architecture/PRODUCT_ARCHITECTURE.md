@@ -372,3 +372,7 @@ Les apps actuelles restent en ligne jusqu'à ce que leur remplaçante soit véri
 - Retour de Tom (Plage Sud, lundi) : 11 nd rafales 15 notée 7,3, « devrait donner genre 4 » ; 15/21 à 8,7 jugé juste. Cause : la moyenne vent + rafales (rafales > 1,3 × vent) combinée à la note pleine dès 13 nd (D-50).
 - Choix validé par Tom : montée de la force sur le **vent moyen seul, de 9 à 13 nd** ; rafales seulement en pénalité (R). Haut de la plage (28 → 30 nd) et « Kite session » inchangés (vent de la note, D-49). Kite inchangé.
 - Avant / après et rejeu sur la prévision réelle : `WING_SCORE.md` (v2.3), `tests/wing.test.ts`.
+
+### D-61 (13/11/2026) — Favoris en prévision du jour, cases de la Prévision 5 jours en colonnes
+- **Favoris** : plus de « meilleure session » ; pour chaque spot favori, les barres de note heure par heure d'aujourd'hui et de demain (le soir, quand il n'y a plus d'heure de jour : demain et après-demain).
+- **Prévision 5 jours** : chaque case montre une colonne par heure de jour (hauteur = note, couleur des étoiles, rouge pour la Kite session) et la note du jour (meilleure heure hors Kite session) en haut à droite. La Grande-Motte et Le Ponant sont retirés de la grille WIND (toujours dans Carte et Sessions 2H). Phrase d'aide sur deux lignes.
