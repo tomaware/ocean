@@ -63,7 +63,7 @@ test('points de collecte = exactement ceux des moteurs actuels', () => {
   }
   assert.equal(plan.marine.length, new Set([...surfPts, ...dwPts].map((p: CollectPoint) => p.id)).size);
   assert.equal(plan.windSpots.filter((p) => p.id.startsWith('spot_')).length, 7);   // 6 spots de la super prévision + étang de Berre
-  assert.deepEqual(plan.windSpots.filter((p) => p.id.startsWith('st_')).map((p) => p.id), ['st_LFMT', 'st_LFMP', 'st_LFTH', 'st_LFML']);   // LFML : Marignane, pour l'étang de Berre
+  assert.deepEqual(plan.windSpots.filter((p) => p.id.startsWith('st_')).map((p) => p.id), ['st_LFMT', 'st_LFMP', 'st_LFTH', 'st_LFML', 'st_LFMI']);   // LFML : Marignane, pour l'étang de Berre ; LFMI : Istres, pour Beauduc (D-66)
   assert.ok(plan.engineWind.length >= 6 + 6 + 63 + 2);   // 6 spots surf (registre du 10/11)
   assert.ok(marineUrl(plan.marine).includes('past_days=3') && windUrl(plan.windSpots, SPOT_WIND_MODELS).includes('meteofrance_arome_france_hd'));
 });

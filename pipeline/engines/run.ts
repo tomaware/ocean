@@ -42,8 +42,12 @@ async function main(): Promise<void> {
   const live = readPrivate('super-prevision-live.json');
   const checks: Check[] = [];
 
-  const ocean = runEngines(inputsFromBundle(bundle, registry, live, now));
-  const raw = { marine: readPrivate('raw-open-meteo-marine.json'), wind: readPrivate('raw-open-meteo-vent-moteurs.json'), candhis: readPrivate('raw-candhis.json') ?? {}, superSpots: readPrivate('raw-super-prevision-spots.json'), live, copernicus: readPrivate('raw-copernicus.json') };
+  // D-66 : la version publique n'utilise plus la super prévision (corrigée avec Winds-Up), ni pour le vent wing/kite
+  // ni pour le recalage du vent downwind. Le calcul « avec super prévision » ne sert plus qu'à la comparaison avant/après.
+  const publicInputs = () => { const x = inputsFromBundle(bundle, registry, live, now); x.downwind.superPrev = null; return x; };
+  const ocean = runEngines(publicInputs());
+  const before = bundle.forecasts.some((f) => f.id === 'super-prevision') ? runEngines(inputsFromBundle(bundle, registry, live, now)) : null;
+  const raw = { marine: readPrivate('raw-open-meteo-marine.json'), wind: readPrivate('raw-open-meteo-vent-moteurs.json'), candhis: readPrivate('raw-candhis.json') ?? {}, superSpots: null, live: null, copernicus: readPrivate('raw-copernicus.json') };
   let golden: ReturnType<typeof compareOutputs> | null = null;
   if (raw.marine && raw.wind) {
     golden = compareOutputs(ocean, runEngines(inputsLegacy(raw, registry, now)));
@@ -52,9 +56,9 @@ async function main(): Promise<void> {
   } else checks.push({ id: 'golden', ok: false, detail: 'réponses brutes absentes (data/private) : lancer la collecte dans le même job' });
 
   const sp = bundle.forecasts.find((f) => f.id === 'super-prevision');
-  const corr = ocean.downwindJSON.correction as { spot: string; hours: number; live: boolean; ratioMoy: number | null }[];
-  checks.push({ id: 'correction-vent-downwind', ok: !sp || corr.length > 0,
-    detail: sp ? `${corr.length} spot(s) de recalage : ` + corr.map((c) => `${c.spot} ${c.hours} h (× ${c.ratioMoy} en moyenne)${c.live ? ' + relevé récent' : ''}`).join(', ') : 'super prévision absente → vent AROME / ECMWF brut' });
+  checks.push({ id: 'correction-vent-downwind', ok: (ocean.downwindJSON.correction as unknown[]).length === 0,
+    detail: 'aucune correction Winds-Up dans la version publique (D-66) : vent des modèles AROME / ECMWF, comme quand la super prévision est absente' + (sp ? ' ; super prévision lue pour la comparaison avant/après seulement' : '') });
+  if (before) checks.push(compareDownwind(before.downwindJSON, ocean.downwindJSON));
   const surfN = ocean.surfJSON.spots.filter((s: any) => s.h.score.some((x: number | null) => x !== null)).length;
   checks.push({ id: 'sorties-surf', ok: surfN === ocean.surfJSON.spots.length, detail: `${surfN}/${ocean.surfJSON.spots.length} spots notés ; ${ocean.surfJSON.windows.length} créneaux` });
   const dwN = ocean.downwindJSON.runs.filter((r: any) => r.hours.length > 0).length;
@@ -69,9 +73,11 @@ async function main(): Promise<void> {
   // spots hors super prévision (étang de Berre, D-22) : modèle le plus juste aux METAR des 3 derniers jours
   const ranking = verifyShortTerm(bundle).wind as ModelRanking;
   const altWind = { block: bundle.forecasts.find((f) => f.id === 'open-meteo-vent-spots'), ranking };
-  const wing = wingForecast(sp, registry, now, altWind);
+  // Prévision vent (publique, D-66) : chaque spot sur le modèle le plus juste à sa station METAR, sans super prévision
+  const wing = wingForecast(undefined, registry, now, altWind);
   // kitesurf (D-51) : même vent, même formule, plage de vent kite
-  const kite = wingForecast(sp, registry, now, altWind, 'kite');
+  const kite = wingForecast(undefined, registry, now, altWind, 'kite');
+  if (sp) checks.push(compareWing(wingForecast(sp, registry, now, altWind), wing, now));
   const nSess = wing.spots.reduce((a, x) => a + x.sessions.secu.length, 0);
   const nWing = registry.spots.filter((x) => x.disciplines.includes('wing')).length;
   for (const x of wing.spots.filter((y) => (y.source as { kind: string }).kind === 'forecast')) {
@@ -101,6 +107,32 @@ async function main(): Promise<void> {
   for (const c of checks) console.log(`[analyse] ${c.ok ? 'OK ' : 'KO '} ${c.id} : ${c.detail}`);
   if (checks.some((c) => c.id === 'confidentialite-moteurs' && !c.ok)) process.exit(2);
   if (checks.some((c) => c.id.startsWith('golden') && !c.ok)) process.exit(3);
+}
+
+type WingOut = ReturnType<typeof wingForecast>;
+/** Avant / après D-66 (information, aucun relevé) : notes wing Sécu first de jour, super prévision vs Prévision vent publique. */
+export function compareWing(a: WingOut, b: WingOut, now: number): Check {
+  const parts: string[] = []; const all: number[] = [];
+  for (const x of a.spots) {
+    const y = b.spots.find((z) => z.id === x.id); if (!y) continue;
+    const idx = new Map(y.hours.map((h) => [h.t, h]));
+    const d: number[] = [];
+    for (const h of x.hours) { const k = idx.get(h.t); if (h.t >= now && h.day && k && h.scores.secu !== null && k.scores.secu !== null) d.push(k.scores.secu - h.scores.secu); }
+    if (!d.length) continue;
+    all.push(...d);
+    const mean = d.reduce((p, q) => p + q, 0) / d.length, mad = d.reduce((p, q) => p + Math.abs(q), 0) / d.length;
+    parts.push(`${x.name} ${mean >= 0 ? '+' : ''}${mean.toFixed(1)} (écart moyen ${mad.toFixed(1)}), sessions ${x.sessions.secu.length}→${y.sessions.secu.length}`);
+  }
+  const mad = all.length ? all.reduce((p, q) => p + Math.abs(q), 0) / all.length : 0;
+  return { id: 'avant-apres-vent-wing', ok: true, detail: `D-66, notes wing Sécu first de jour, après − avant : ${all.length} heures, écart moyen ${mad.toFixed(2)} ; ` + parts.join(' ; ') };
+}
+export function compareDownwind(a: any, b: any): Check {
+  const d: number[] = [];
+  for (const r of a.runs) { const q = b.runs.find((x: any) => x.id === r.id); if (!q) continue;
+    const idx = new Map<number, number[]>(q.hours.map((h: number[]) => [h[0], h]));
+    for (const h of r.hours as number[][]) { const k = idx.get(h[0]); if (k && h[13] && h[11] != null && k[11] != null) d.push(k[11] - h[11]); } }
+  const mad = d.length ? d.reduce((p, q) => p + Math.abs(q), 0) / d.length : 0, mean = d.length ? d.reduce((p, q) => p + q, 0) / d.length : 0;
+  return { id: 'avant-apres-vent-downwind', ok: true, detail: `D-66, notes downwind (intermédiaire, de jour), après − avant : ${d.length} heures, moyenne ${mean >= 0 ? '+' : ''}${mean.toFixed(2)}, écart moyen ${mad.toFixed(2)} ; meilleurs créneaux ${a.best.length}→${b.best.length}` };
 }
 
 // Production actuelle (information) : les apps en service tournent à d'autres minutes, avec d'autres horizons

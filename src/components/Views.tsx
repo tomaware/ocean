@@ -185,13 +185,13 @@ export function ModelsTable({ d, spot, s, from }: { d: AllData; spot: PublicSpot
         <tbody>
           <tr class="wg-days"><th />{idx.map(({ t }, k) => <td key={t} class={k === 0 || dayKey(idx[k - 1].t) !== dayKey(t) ? 'sep' : ''}>{k === 0 || dayKey(idx[k - 1].t) !== dayKey(t) ? dayShort(t) : ''}</td>)}</tr>
           <tr class="wg-h"><th>Heure</th>{idx.map(({ t }) => <td key={t}>{hourOf(t)}</td>)}</tr>
-          <tr class="wg-v"><th><strong>Corrigé</strong></th>{idx.map(({ t }) => <td key={t} style={windColor(corrected(t))}><strong>{n0(corrected(t))}</strong></td>)}</tr>
+          <tr class="wg-v"><th><strong>{s.windKind === 'corrected' ? 'Corrigé' : 'Retenu'}</strong></th>{idx.map(({ t }) => <td key={t} style={windColor(corrected(t))}><strong>{n0(corrected(t))}</strong></td>)}</tr>
           {Object.entries(models).map(([m, v]) => (
             <tr key={m} class="wg-v"><th>{MODEL_NAME[m] ?? m}</th>{idx.map(({ t, i }) => <td key={t} style={windColor(v.kn[i])} title={`rafales ${n0(v.gust[i])} · ${compass(v.dir[i])}`}>{n0(v.kn[i])}</td>)}</tr>
           ))}
         </tbody>
       </table>
-      <span class="chip-legend">Vent moyen (nd) de chaque modèle avant correction ; « Corrigé » = super prévision (modèles pondérés par leur erreur aux balises).</span>
+      <span class="chip-legend">{s.windKind === 'corrected' ? 'Vent moyen (nd) de chaque modèle avant correction ; « Corrigé » = super prévision (privée, modèles pondérés par leur erreur aux balises).' : 'Vent moyen (nd) de chaque modèle ; « Retenu » = celui qui sert à la note : le plus juste aux mesures METAR ces 3 derniers jours.'}</span>
     </div>
   );
 }

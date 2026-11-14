@@ -184,7 +184,7 @@ export function wingForecast(block: ForecastBlock | undefined, registry: Registr
   const inSuper = (s: Spot) => !!block?.values['spot_' + s.id]?.['super-prevision']?.wind_speed_10m?.some((x) => x !== null);
   const isAlt = (s: Spot) => (s.windSource as { kind?: string } | undefined)?.kind === 'best-model' && !inSuper(s);
   const spots = all.filter((s) => (isAlt(s) ? !!alt?.block : !!block));
-  if (!spots.length) return { version, sport, generatedAt: now, available: false, reason: `super prévision absente : pas de note ${sport} (pas de repli sur un vent brut)`, spots: [] };
+  if (!spots.length) return { version, sport, generatedAt: now, available: false, reason: `vent absent : pas de note ${sport}`, spots: [] };
   const res = spots.map((s) => {
     let times: number[], v: Series | undefined, source: Record<string, unknown>;
     if (isAlt(s)) {
@@ -202,7 +202,7 @@ export function wingForecast(block: ForecastBlock | undefined, registry: Registr
       pickM.forEach((m, i) => { if (m && times[i] >= now - 3 * 3600e3 && (!relays.length || relays[relays.length - 1].model !== m)) relays.push({ model: m, from: times[i] }); });
       source = { kind: 'forecast', source: 'open-meteo', model: b.model, station: st, mae: b.mae, n: b.n, ranked: b.ranked, relays, fetchedAt: alt!.block!.provenance.fetchedAt,
         note: (b.ranked ? `Vent prévu par ${b.model}, le modèle le plus juste aux mesures de ${st} sur les 3 derniers jours (erreur moyenne ${b.mae} m/s, ${b.n} mesures)`
-          : `Vent prévu par ${b.model} (classement aux mesures de ${st} indisponible)`) + (relays.length > 1 ? `, puis ${relays.slice(1).map((r) => r.model).join(', ')} au-delà de son horizon` : '') + ' ; non corrigé par la super prévision.' };
+          : `Vent prévu par ${b.model} (classement aux mesures de ${st} indisponible)`) + (relays.length > 1 ? `, puis ${relays.slice(1).map((r) => r.model).join(', ')} au-delà de son horizon` : '') + ' ; non corrigé.' };
     } else {
       times = block!.times; v = block!.values['spot_' + s.id]?.['super-prevision'] as unknown as Series | undefined;
       source = { kind: 'corrected', source: 'super-prevision', fetchedAt: block!.provenance.fetchedAt };
@@ -228,7 +228,9 @@ export function wingForecast(block: ForecastBlock | undefined, registry: Registr
   });
   return {
     version, sport, generatedAt: now, available: true,
-    provenance: { source: 'super-prevision', kind: 'corrected', fetchedAt: block?.provenance.fetchedAt ?? null, note: 'Vent corrigé par la super prévision, converti en nœuds ; note calculée par OCEAN (formule ' + sport + ' v' + version + '). Spots hors super prévision : voir « source » de chaque spot.' },
+    provenance: block
+      ? { source: 'super-prevision', kind: 'corrected', fetchedAt: block.provenance.fetchedAt ?? null, note: 'Super prévision vent (privée) : vent corrigé, converti en nœuds ; note calculée par OCEAN (formule ' + sport + ' v' + version + '). Spots hors super prévision : voir « source » de chaque spot.' }
+      : { source: 'open-meteo', kind: 'forecast', fetchedAt: alt?.block?.provenance.fetchedAt ?? null, note: 'Prévision vent (publique, D-66) : pour chaque spot, le modèle Open-Meteo le plus juste aux mesures METAR de sa station sur 3 jours, relayé au-delà de son horizon ; non corrigé ; note calculée par OCEAN (formule ' + sport + ' v' + version + '). Détail dans « source » de chaque spot.' },
     levels: WIND_OF[sport], kiteKn: sport === 'wing' ? KITE_KN : null, sectors: SECTORS.map((x) => ({ id: x.id, label: x.label, upTo: x.upTo, f: x.f })),
     spots: res,
   };

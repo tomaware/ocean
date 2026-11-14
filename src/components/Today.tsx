@@ -228,7 +228,7 @@ export function WindLegend() {
   const stops = [0, 5, 10, 20, 30, 40, 60];
   return (
     <div class="windlegend" aria-hidden="true">
-      <span title="Carte : modèle Météo-France brut ; pastille du spot : vent corrigé">nd</span>
+      <span title="Carte : modèle Météo-France brut ; pastille du spot : vent de la note">nd</span>
       {/* repères espacés régulièrement, comme la légende de Windy (0, 5, 10, 20, 30, 40, 60) */}
       <span class="bar" style={{ background: `linear-gradient(to right, ${stops.map((v, k) => `${windColor(v)} ${(k / (stops.length - 1)) * 100}%`).join(', ')})` }}>
         {stops.map((v, k) => <span key={v} style={{ left: `${(k / (stops.length - 1)) * 100}%` }}>{v}</span>)}

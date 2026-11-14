@@ -178,7 +178,7 @@ export function Webcams({ id }: { id: string }) {
 
 // ------------------------------------------------------------------ Modules WIND / VAGUE / HOULE
 export const MODULES: { slug: string; disc: Discipline; tab: string; title: string; sub: string }[] = [
-  { slug: 'wind', disc: 'wing', tab: 'WIND', title: 'Où naviguer en wing ?', sub: 'Wing foil · vent corrigé par la super prévision, du Barcarès à Hyères' },
+  { slug: 'wind', disc: 'wing', tab: 'WIND', title: 'Où naviguer en wing ?', sub: 'Wing foil · prévision vent OCEAN, du Barcarès à Hyères' },
   { slug: 'vague', disc: 'surf', tab: 'VAGUE', title: 'Où surfer ?', sub: 'Surf · vagues à la côte, recalées sur les bouées, de Perafita à Carnon' },
   { slug: 'houle', disc: 'downwind', tab: 'HOULE', title: 'Quel downwind ?', sub: 'Downwind wing foil · vent + houle au large, Frontignan → Espiguette' },
 ];
@@ -383,7 +383,7 @@ export function Profile({ d }: { d: AllData }) {
           <a href="#/widgets" class="row"><LayoutGrid size={16} /> Installer les widgets (iPhone, Mac, Windows)</a>
           <a href="#/avis" class="row"><MessageSquare size={16} /> Donner un avis, signaler un bug</a>
           <a href="#/fiabilite" class="row"><ShieldCheck size={16} /> Fiabilité des prévisions et sources</a>
-          <span class="faint">OCEAN · données : Open-Meteo (Météo-France, ECMWF, DWD, NOAA), Copernicus Marine Med-WAV (generated using E.U. Copernicus Marine Service Information), bouées Candhis – Cerema (licence Etalab), METAR (NOAA), super prévision vent. Fond de carte © OpenStreetMap.</span>
+          <span class="faint">OCEAN · données : Open-Meteo (Météo-France, ECMWF, DWD, NOAA), Copernicus Marine Med-WAV (generated using E.U. Copernicus Marine Service Information), bouées Candhis – Cerema (licence Etalab), METAR (NOAA). Prévision vent : modèles Open-Meteo classés chaque heure contre les METAR (CC BY 4.0). Fond de carte © OpenStreetMap.</span>
         </div>
       </Section>
     </>
@@ -439,7 +439,7 @@ export function Reliability({ d, now }: { d: AllData; now: number }) {
       <Section title="Contrôles automatiques">
         <div class="card"><div class="list">{d.meta.checks.map((c) => <div key={c.id} class="stack" style={{ gap: '2px' }}><span class="row"><span class={`chip${c.ok ? ' accent' : ' warn'}`}>{c.ok ? 'ok' : 'à voir'}</span><strong class="small">{c.id}</strong></span><span class="faint">{c.detail}</span></div>)}</div></div>
       </Section>
-      <p class="faint">Mesures : METAR (NOAA, domaine public), Candhis – Cerema (licence Etalab). Les relevés Winds-Up servent au recalage et ne sont jamais publiés.</p>
+      <p class="faint">Mesures : METAR (NOAA, domaine public), Candhis – Cerema (licence Etalab). Aucun relevé Winds-Up n’est utilisé ni publié dans la version publique.</p>
     </>
   );
 }

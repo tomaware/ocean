@@ -9,9 +9,12 @@ export type Series = {
   kite?: boolean[];
   lines: { label: string; values: (number | null)[]; color: string; unit: string; scale?: string; dash?: number[] }[];
   levels: boolean; source: string; extra: { label: string; value: string }[]; notice?: string | null;
+  /** Wing/kite : « forecast » = Prévision vent publique (meilleur modèle aux METAR), « corrected » = super prévision (privée). */
+  windKind?: 'forecast' | 'corrected';
 };
 
 const MODEL: Record<string, string> = { meteofrance_arome_france_hd: 'AROME HD', meteofrance_arome_france: 'AROME', meteofrance_seamless: 'Météo-France', ecmwf_ifs025: 'ECMWF', icon_d2: 'ICON-D2', icon_eu: 'ICON-EU', icon_seamless: 'ICON', gfs_seamless: 'GFS', ukmo_seamless: 'UKMO', meteofrance_arpege_europe: 'ARPEGE' };
+const STATION: Record<string, string> = { LFMT: 'Montpellier', LFMP: 'Perpignan', LFTH: 'Hyères', LFML: 'Marignane', LFMI: 'Istres' };
 const SECTOR: Record<string, string> = { onshore: 'de mer', 'side-on': 'side-on', side: 'side-shore', 'side-off': 'side-off', offshore: 'de terre', closed: 'plan d’eau', avoid: 'déconseillé' };
 const SHORE: Record<string, string> = { on: 'de mer', sideon: 'side-on', side: 'side-shore', sideoff: 'side-off', off: 'de terre' };
 
@@ -36,7 +39,8 @@ export function seriesFor(d: AllData, spot: PublicSpot, disc: Discipline, level:
         { label: 'Rafales', values: hours.map((h: any) => h.gust), color: '#256D70', unit: 'nd', dash: [4, 4] },
       ],
       source: w.source?.kind === 'forecast' ? w.source.note : d.meta.disciplines.wing.source,
-      notice: w.source?.kind === 'forecast' ? `Pas dans la super prévision : vent prévu par ${MODEL[w.source.model] ?? w.source.model}${w.source.ranked ? ', le modèle le plus juste à Marignane ces 3 derniers jours' : ''}${(w.source.relays ?? []).length > 1 ? ` (relayé par ${w.source.relays.slice(1).map((r: any) => MODEL[r.model] ?? r.model).join(', ')} au-delà de son horizon)` : ''}, non corrigé.` : null,
+      windKind: w.source?.kind === 'forecast' ? 'forecast' : 'corrected',
+      notice: w.source?.kind === 'forecast' ? `Prévision vent : ${MODEL[w.source.model] ?? w.source.model}${w.source.ranked ? `, le modèle le plus juste à ${STATION[w.source.station] ?? w.source.station} ces 3 derniers jours` : ''}${(w.source.relays ?? []).length > 1 ? ` (relayé par ${w.source.relays.slice(1).map((r: any) => MODEL[r.model] ?? r.model).join(', ')} au-delà de son horizon)` : ''}, non corrigé.` : 'Super prévision vent (privée) : vent corrigé.',
       extra: [
         { label: 'Orientation', value: spot.orientation?.seaward != null ? `plage ouverte vers ${n0(spot.orientation.seaward)}° (${compass(spot.orientation.seaward)})` : 'plan d’eau fermé' },
         { label: 'Confiance orientation', value: ({ low: 'faible, à confirmer', medium: 'moyenne', high: 'élevée' } as Record<string, string>)[spot.orientation?.confidence] ?? '—' },

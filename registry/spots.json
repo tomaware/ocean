@@ -31,7 +31,12 @@
       "sources": [
         "super-prevision-vent.gs v3.4 (SPOTS)"
       ],
-      "notes": "Orientation proposée à partir de guides de spots (10/11) ; à confirmer par Tom."
+      "notes": "Orientation proposée à partir de guides de spots (10/11) ; à confirmer par Tom.",
+      "windSource": {
+        "kind": "best-model",
+        "station": "LFMP",
+        "note": "Prévision vent (publique, D-66) : modèle Open-Meteo le plus juste aux mesures METAR de la station sur 3 jours, relayé au-delà de son horizon. La super prévision (corrigée Winds-Up) reste privée."
+      }
     },
     {
       "id": "la-grande-motte",
@@ -61,7 +66,12 @@
       "sources": [
         "super-prevision-vent.gs v3.4 (SPOTS)"
       ],
-      "notes": "Orientation proposée à partir de guides de spots (10/11) ; à confirmer par Tom."
+      "notes": "Orientation proposée à partir de guides de spots (10/11) ; à confirmer par Tom.",
+      "windSource": {
+        "kind": "best-model",
+        "station": "LFMT",
+        "note": "Prévision vent (publique, D-66) : modèle Open-Meteo le plus juste aux mesures METAR de la station sur 3 jours, relayé au-delà de son horizon. La super prévision (corrigée Winds-Up) reste privée."
+      }
     },
     {
       "id": "le-ponant",
@@ -97,7 +107,12 @@
       "sources": [
         "super-prevision-vent.gs v3.4 (SPOTS)"
       ],
-      "notes": "Orientation proposée à partir de guides de spots (10/11) ; à confirmer par Tom."
+      "notes": "Orientation proposée à partir de guides de spots (10/11) ; à confirmer par Tom.",
+      "windSource": {
+        "kind": "best-model",
+        "station": "LFMT",
+        "note": "Prévision vent (publique, D-66) : modèle Open-Meteo le plus juste aux mesures METAR de la station sur 3 jours, relayé au-delà de son horizon. La super prévision (corrigée Winds-Up) reste privée."
+      }
     },
     {
       "id": "port-camargue",
@@ -127,7 +142,12 @@
       "sources": [
         "super-prevision-vent.gs v3.4 (SPOTS)"
       ],
-      "notes": "Orientation proposée à partir de guides de spots (10/11) ; à confirmer par Tom."
+      "notes": "Orientation proposée à partir de guides de spots (10/11) ; à confirmer par Tom.",
+      "windSource": {
+        "kind": "best-model",
+        "station": "LFMT",
+        "note": "Prévision vent (publique, D-66) : modèle Open-Meteo le plus juste aux mesures METAR de la station sur 3 jours, relayé au-delà de son horizon. La super prévision (corrigée Winds-Up) reste privée."
+      }
     },
     {
       "id": "beauduc",
@@ -148,7 +168,7 @@
       },
       "windStations": {
         "windsUp": "61-beauduc",
-        "metar": null
+        "metar": "LFMI"
       },
       "legacy": {
         "superPrevisionVent": "61-beauduc"
@@ -157,7 +177,12 @@
       "sources": [
         "super-prevision-vent.gs v3.4 (SPOTS)"
       ],
-      "notes": "Orientation proposée à partir de guides de spots (10/11) ; confirmée par Tom le 11/11/2026."
+      "notes": "Orientation proposée à partir de guides de spots (10/11) ; confirmée par Tom le 11/11/2026.",
+      "windSource": {
+        "kind": "best-model",
+        "station": "LFMI",
+        "note": "Prévision vent (publique, D-66) : modèle Open-Meteo le plus juste aux mesures METAR de la station sur 3 jours, relayé au-delà de son horizon. La super prévision (corrigée Winds-Up) reste privée."
+      }
     },
     {
       "id": "le-jai",
@@ -189,7 +214,8 @@
       "windSource": {
         "kind": "best-model",
         "station": "LFML",
-        "onlyIfAbsentFromSuperPrevision": true
+        "note": "Prévision vent (publique, D-66) : modèle Open-Meteo le plus juste aux mesures METAR de la station sur 3 jours, relayé au-delà de son horizon. La super prévision (corrigée Winds-Up) reste privée.",
+        "publicLive": true
       },
       "legacy": {
         "superPrevisionVent": "26-le-jai"
@@ -232,7 +258,12 @@
       "sources": [
         "super-prevision-vent.gs v3.4 (SPOTS)"
       ],
-      "notes": "Orientation proposée à partir de guides de spots (10/11) ; confirmée par Tom le 11/11/2026."
+      "notes": "Orientation proposée à partir de guides de spots (10/11) ; confirmée par Tom le 11/11/2026.",
+      "windSource": {
+        "kind": "best-model",
+        "station": "LFTH",
+        "note": "Prévision vent (publique, D-66) : modèle Open-Meteo le plus juste aux mesures METAR de la station sur 3 jours, relayé au-delà de son horizon. La super prévision (corrigée Winds-Up) reste privée."
+      }
     },
     {
       "id": "carnon",
@@ -257,12 +288,12 @@
       "surf": {
         "size": {
           "min": 0.4,
-          "ideal": 1.0,
+          "ideal": 1,
           "max": 1.6
         },
         "periodMin": 5,
         "level": "tous niveaux",
-        "shelter": 1.0
+        "shelter": 1
       },
       "buoys": [
         "03001",
@@ -306,7 +337,7 @@
         },
         "periodMin": 5,
         "level": "débutant → intermédiaire",
-        "shelter": 1.0
+        "shelter": 1
       },
       "buoys": [
         "03404",
@@ -351,7 +382,7 @@
         },
         "periodMin": 5,
         "level": "tous niveaux",
-        "shelter": 1.0
+        "shelter": 1
       },
       "buoys": [
         "03404"
@@ -389,12 +420,12 @@
       "surf": {
         "size": {
           "min": 0.4,
-          "ideal": 1.0,
+          "ideal": 1,
           "max": 1.6
         },
         "periodMin": 5,
         "level": "à valider",
-        "shelter": 1.0
+        "shelter": 1
       },
       "buoys": [
         "03404"
@@ -434,12 +465,12 @@
       "surf": {
         "size": {
           "min": 0.4,
-          "ideal": 1.0,
+          "ideal": 1,
           "max": 1.6
         },
         "periodMin": 5,
         "level": "tous niveaux (à valider)",
-        "shelter": 1.0
+        "shelter": 1
       },
       "buoys": [
         "03001"
@@ -483,7 +514,7 @@
         },
         "periodMin": 5,
         "level": "tous niveaux (à valider)",
-        "shelter": 1.0
+        "shelter": 1
       },
       "buoys": [
         "03001"
@@ -739,6 +770,12 @@
       "name": "Marseille-Marignane",
       "lat": 43.4367,
       "lon": 5.2153
+    },
+    {
+      "icao": "LFMI",
+      "name": "Istres-Le Tubé",
+      "lat": 43.5227,
+      "lon": 4.9238
     }
   ]
 }

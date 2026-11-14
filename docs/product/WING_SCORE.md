@@ -92,12 +92,12 @@ Lecture en trois niveaux :
 
 | Donnée | Source |
 |---|---|
-| Vent moyen, rafales, direction, heure par heure (6 h–21 h) | Super prévision v3.4 : vent **corrigé** (modèles pondérés par leur erreur aux balises, système champion par spot) |
-| Confiance | Super prévision (`conf`), **affichée à côté** de la note, pas mélangée dedans |
+| Vent moyen, rafales, direction, heure par heure | **Public (Prévision vent, D-66)** : modèle Open-Meteo le plus juste aux mesures METAR de la station du spot sur 3 jours (relayé au-delà de son horizon), non corrigé. **Privé (Super prévision vent)** : super prévision v3.4, vent corrigé (modèles pondérés par leur erreur aux balises Winds-Up) |
+| Confiance | Super prévision seulement (`conf`), **affichée à côté** de la note, pas mélangée dedans |
 | Jour / nuit | élévation du soleil > −2° (comme le moteur downwind) |
 | Orientation de la plage | registre, `orientation.seaward` (§ 5) |
 
-Sans super prévision, pas de note : pas de repli silencieux sur un vent brut. Les relevés Winds-Up ne servent qu'à corriger la prévision ; ils ne sont jamais affichés dans l'app publique.
+Depuis D-66 (14/11), la version publique n'utilise plus du tout Winds-Up : ni pour la prévision, ni pour la vérifier. La vérification publique se fait aux METAR (puis aux relevés libres, en cours). La formule de note est la même dans les deux versions ; seule l'entrée vent change.
 
 ## 3. Formule
 

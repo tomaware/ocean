@@ -79,7 +79,9 @@ export function liveObsPublic(bundle: CollectBundle | null, registry: Registry, 
   const out: Record<string, { t: number; kn: number | null; gust: number | null; dir: number | null; station: string; source: string }> = {};
   if (!metar) return out;
   for (const s of registry.spots) {
-    const st = (s.windSource as { station?: string } | undefined)?.station;
+    // mesure publique en direct seulement là où la station METAR représente le spot (Le Jaï / Marignane, `publicLive`)
+    const ws = s.windSource as { station?: string; publicLive?: boolean } | undefined;
+    const st = ws?.publicLive ? ws.station : undefined;
     const o = st ? metar.stations[st] : undefined;
     if (!st || !o) continue;
     const k = o.t.map((t, i) => i).filter((i) => o.t[i] <= now && o.wind_speed_10m[i] !== null).pop();
@@ -105,8 +107,8 @@ function main(): void {
     sources: collect.status.map((s: any) => ({ id: s.id, ok: s.ok, message: s.ok ? 'ok' : s.message, points: s.points, models: s.models, lastObservationAgeMin: s.lastObservationAgeMin ?? null })),
     checks: checks.map((c) => ({ id: c.id, ok: c.ok, detail: c.detail })),
     disciplines: {
-      wing: { available: !!wing.available, source: 'Vent corrigé de la super prévision (modèles pondérés par leur erreur aux balises)', note: 'Note wing v' + wing.version },
-      kite: { available: !!kite?.available, source: 'Vent corrigé de la super prévision (modèles pondérés par leur erreur aux balises)', note: kite ? 'Note kite v' + kite.version : 'Note kite indisponible' },
+      wing: { available: !!wing.available, source: 'Prévision vent : pour chaque spot, le modèle Open-Meteo le plus juste aux mesures METAR de sa station (3 derniers jours), non corrigé', note: 'Note wing v' + wing.version },
+      kite: { available: !!kite?.available, source: 'Prévision vent : pour chaque spot, le modèle Open-Meteo le plus juste aux mesures METAR de sa station (3 derniers jours), non corrigé', note: kite ? 'Note kite v' + kite.version : 'Note kite indisponible' },
       surf: { available: true, source: surf.sources?.copernicus ? 'Moteur Super Prévi Surf : 6 modèles de vagues dont Copernicus Med-WAV (4,2 km), recalés sur les bouées Candhis ; vent AROME / ECMWF' : 'Moteur Super Prévi Surf : 5 modèles de vagues recalés sur les bouées Candhis, vent AROME / ECMWF (Copernicus indisponible pour cette mise à jour)', note: surf.sources?.copernicus ? 'Generated using E.U. Copernicus Marine Service Information' : 'Copernicus absent ou trop ancien' },
       downwind: { available: true, source: 'Moteur downwind : vent AROME / ECMWF recalé sur la super prévision, houle au large (5 modèles)', note: '' },
     },
