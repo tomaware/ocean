@@ -1,0 +1,17 @@
+name: Diagnostic — balises publiques près des spots
+on: workflow_dispatch
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Balises publiques (aucune valeur de vent affichée)
+        env:
+          METEOFRANCE_KEY: ${{ secrets.METEOFRANCE_KEY }}
+          FFVL_KEY: ${{ secrets.FFVL_KEY }}
+        run: node pipeline/tools/probe-releves.ts
