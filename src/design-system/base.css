@@ -408,3 +408,4 @@ table.stats thead th:not(:first-child) { text-align: right; }
 /* Favoris : flèche « jour suivant » (Tom, 14/11) */
 .nextday { border: 0; background: var(--c-surface-2); color: var(--c-ink); width: 44px; height: 44px; border-radius: 50%; font-size: 22px; font-weight: 900; cursor: pointer; display: grid; place-items: center; }
 .nextday:hover { background: var(--c-accent); color: #fff; }
+.favday { font-size: var(--fs-md, 1.05rem); font-weight: 800; color: var(--c-ink); }

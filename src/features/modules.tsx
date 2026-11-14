@@ -68,12 +68,17 @@ function FavCard({ d, sp, disc, L, now }: { d: AllData; sp: PublicSpot; disc: Di
     <div class="card stack">
       <div class="row between">
         <a href={`#/spot/${sp.id}`} style={{ textDecoration: 'none', color: 'inherit' }}><strong class="big">{sp.name}</strong></a>
-        {days.length > 1 && <button type="button" class="nextday" aria-label={k + 1 < days.length ? `Jour suivant : ${dayLabel(days[k + 1], now)}` : `Revenir à ${dayLabel(days[0], now)}`}
-          onClick={() => setK((k + 1) % days.length)}>→</button>}
+        {/* flèches jour précédent / suivant (Tom, 14/11) : on boucle aux deux bouts */}
+        {days.length > 1 && <span class="row" style={{ gap: '6px' }}>
+          <button type="button" class="nextday" aria-label={`Jour précédent : ${dayLabel(days[(k - 1 + days.length) % days.length], now)}`}
+            onClick={() => setK((k - 1 + days.length) % days.length)}>←</button>
+          <button type="button" class="nextday" aria-label={k + 1 < days.length ? `Jour suivant : ${dayLabel(days[k + 1], now)}` : `Revenir à ${dayLabel(days[0], now)}`}
+            onClick={() => setK((k + 1) % days.length)}>→</button>
+        </span>}
       </div>
       {!ser || t === undefined ? <span class="muted">Pas de prévision.</span> : (
         <div class="stack" style={{ gap: '4px' }}>
-          <span class="faint">{dayLabel(t, now)}</span>
+          <strong class="favday">{dayLabel(t, now)}</strong>
           <ScoreBars s={ser} dayT={t} now={now} />
           <DayChart d={d} spot={sp} dayT={t} level={L} title=" " />
         </div>
