@@ -21,7 +21,9 @@ export type PublicSpot = { id: string; name: string; kind: 'spot' | 'run'; disci
 export type Meta = { generatedAt: number; sources: { id: string; ok: boolean; message: string; points: number; models: string[]; lastObservationAgeMin: Record<string, number> | null }[];
   checks: { id: string; ok: boolean; detail: string }[]; disciplines: Record<Discipline, { available: boolean; source: string; note: string }>; rules: any };
 export type AllData = { meta: Meta; spots: PublicSpot[]; sessions: { generatedAt: number; sessions: Session[]; best: Record<Level, Record<Discipline, Session | null>> };
-  wing: any; kite?: any; surf: any; downwind: any; verify: any; meteo: any };
+  wing: any; kite?: any; surf: any; downwind: any; verify: any; meteo: any;
+  /** Mode perso : super prévision vent (privée) appliquée sur cet appareil (D-66). */
+  superPrev?: { at: number; spots: number } };
 
 const FILES = ['meta', 'spots', 'sessions', 'wing', 'surf', 'downwind', 'verify', 'meteo'] as const;
 let cache: Promise<AllData> | null = null;

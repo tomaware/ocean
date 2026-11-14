@@ -5,7 +5,7 @@ import type { Sport } from './sport';
 import { DEFAULT_LAYOUT, type TabLayout } from './layout';
 
 export type Reading = 'synthese' | 'detail' | 'expert';
-export type Prefs = { sport: Sport; modules: Record<string, TabLayout>; levels: Record<Discipline, Level>; favorites: string[]; reading: Reading; perso: { enabled: boolean; url: string }; theme: 'auto' | 'light' | 'dark' };
+export type Prefs = { sport: Sport; modules: Record<string, TabLayout>; levels: Record<Discipline, Level>; favorites: string[]; reading: Reading; perso: { enabled: boolean; url: string; /** D-66 : super prévision vent (privée) à la place de la Prévision vent ; absent = oui */ superPrev?: boolean }; theme: 'auto' | 'light' | 'dark' };
 const KEY = 'ocean.prefs.v1';
 export const DEFAULT_PREFS: Prefs = { sport: 'wing', modules: DEFAULT_LAYOUT, levels: { wing: 'secu', surf: 'intermediaire', downwind: 'intermediaire' }, favorites: [], reading: 'synthese', perso: { enabled: false, url: '' }, theme: 'auto' };
 

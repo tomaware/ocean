@@ -2,7 +2,7 @@
 //   note = 10 × V(vent, niveau) × R(rafales / moyenne) × D(angle vent / plage, niveau), 0 la nuit.
 // Plages de vent recalées sur des guides wing (docs/product/WING_SCORE.md). Toute modification = décision + test golden.
 import type { ForecastBlock, Registry, Spot } from '../../src/types/contracts.ts';
-import { SurfEngine as E } from '../collect/points.ts';
+import { solarElevation } from './solar.ts';   // = SurfEngine.solarElevation (test d'égalité, D-66)
 
 export const WING_VERSION = '2.3.0';
 export const KITE_VERSION = '1.0.0';
@@ -210,7 +210,7 @@ export function wingForecast(block: ForecastBlock | undefined, registry: Registr
     const geo = s.geometry as { lat: number; lon: number };
     const hours: WingHour[] = times.map((t, i) => {
       const ms = v?.wind_speed_10m[i] ?? null, gs = v?.wind_gusts_10m[i] ?? null, dir = v?.wind_direction_10m[i] ?? null;
-      const day = E.solarElevation(t, geo.lat, geo.lon) > DAYLIGHT_ELEVATION;
+      const day = solarElevation(t, geo.lat, geo.lon) > DAYLIGHT_ELEVATION;
       const kn = ms === null ? null : Math.round(ms * MS_TO_KN * 10) / 10, gust = gs === null ? null : Math.round(gs * MS_TO_KN * 10) / 10;
       const scores = {} as Record<WingLevel, number | null>, limit = {} as Record<WingLevel, string | null>, f = {} as Record<WingLevel, WingFactors | null>;
       for (const L of WING_LEVELS) {

@@ -7,6 +7,7 @@ import { FeedbackPage, WidgetsPage } from '../features/extras';
 import { setPrefs, usePrefs } from '../services/prefs';
 import { installNav, lastSub } from '../services/nav';
 import { forSport } from '../services/sport';
+import { useSuper } from '../services/superprev';
 
 const TITLES: Record<string, string> = { fiabilite: 'Fiabilité', avis: 'Avis', widgets: 'Widgets', profil: 'Profil' };
 
@@ -27,7 +28,9 @@ export function App() {
   const dark = isDark(prefs.theme);
   const [route, setRoute] = useState(parse());
   const [now, setNow] = useState(Date.now());
-  const { data: raw, error } = useData();
+  const { data: pub, error } = useData();
+  // mode perso : super prévision vent (privée, D-66) calculée sur l'appareil à la place de la Prévision vent publique
+  const { data: raw } = useSuper(pub);
   // WIND : wing ou kite selon le choix gardé dans les préférences (D-51)
   const data = useMemo(() => (raw ? forSport(raw, prefs.sport) : null), [raw, prefs.sport]);
   // menu du téléphone (Profil, Widgets, Avis) : se ferme au changement d'écran, au toucher ailleurs ou avec Échap

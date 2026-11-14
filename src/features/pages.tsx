@@ -368,7 +368,7 @@ export function Profile({ d }: { d: AllData }) {
       </Section>
       <Section title="Mode perso">
         <div class="card stack" style={{ gap: 'var(--s-3)' }}>
-          <p class="small">Avec ton lien privé de la super prévision, l’app affiche aussi les relevés Winds-Up en direct. Le lien reste dans ce navigateur ; les relevés ne s’affichent que sur cet appareil.</p>
+          <p class="small">Avec ton lien privé de la super prévision, l’app affiche les relevés Winds-Up en direct et la Super prévision vent (corrigée aux balises) à la place de la Prévision vent publique. Le lien reste dans ce navigateur ; tout est calculé et affiché sur cet appareil seulement.</p>
           <label class="field"><span class="small">Lien de la super prévision (Apps Script)</span>
             <input type="url" inputMode="url" autoComplete="off" spellcheck={false} value={url} placeholder="https://script.google.com/macros/s/…/exec?key=…" onInput={(e) => setUrl((e.target as HTMLInputElement).value)} /></label>
           <div class="row">
@@ -376,6 +376,13 @@ export function Profile({ d }: { d: AllData }) {
             {prefs.perso.enabled && <button class="btn" type="button" onClick={() => { setUrl(''); setPrefs((p) => ({ ...p, perso: { enabled: false, url: '' } })); }}>Désactiver et effacer</button>}
           </div>
           {prefs.perso.enabled && <span class={`chip${live.error ? ' warn' : ' accent'}`}>{live.error ? `Lien injoignable : ${live.error}` : live.live ? `${live.live.length} balise(s) en direct` : 'connexion…'}</span>}
+          {prefs.perso.enabled && (
+            <label class="row" style={{ gap: 'var(--s-2)' }}>
+              <input type="checkbox" checked={prefs.perso.superPrev !== false} onChange={(e) => setPrefs((p) => ({ ...p, perso: { ...p.perso, superPrev: (e.target as HTMLInputElement).checked } }))} />
+              <span class="small"><strong>Super prévision vent (privée)</strong> à la place de la Prévision vent publique, pour le wing et le kite</span>
+            </label>
+          )}
+          {prefs.perso.enabled && prefs.perso.superPrev !== false && <span class="chip accent">{d.superPrev ? `Super prévision active : ${d.superPrev.spots} spots, calculée sur cet appareil` : 'Super prévision : connexion…'}</span>}
         </div>
       </Section>
       <Section title="À propos">
