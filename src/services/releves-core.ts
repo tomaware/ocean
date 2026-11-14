@@ -1,5 +1,7 @@
 // Relevés en sources libres (D-67), côté app : lecture de releves.json et comparaison avec Winds-Up (mode perso).
-import type { Live, Histo } from './perso.ts';
+// types repris de perso.ts (sans l'importer : perso.ts dépend des préférences du navigateur)
+type Live = { spot: string; name: string; t: number | null; kn: number | null; dir: string | null; panne: boolean; gust?: number | null; src?: string; pts?: [number, number, string][]; open?: boolean };
+type Histo = { spots: Record<string, { jour: [number, number, number | null, string | null][]; jours: [string, number, number][] }> };
 
 export const RELEVES_URL = 'https://raw.githubusercontent.com/tomaware/ocean/releves/releves.json';
 export const MAX_AGE_MIN = 90;
