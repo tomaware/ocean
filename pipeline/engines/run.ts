@@ -32,7 +32,7 @@ export function privacyEngines(text: string, live: { spots?: Record<string, { t?
   if (/winds-up\.com/i.test(text)) leaks.push('URL Winds-Up');
   if (/[?&](key|apikey|token)=/i.test(text)) leaks.push('paramètre de clé');
   for (const s of secrets) if (s && s.length > 8 && text.includes(s)) leaks.push('un secret');
-  return { id: 'confidentialite-moteurs', ok: leaks.length === 0, detail: leaks.length ? 'FUITE : ' + leaks.join(', ') : `aucun relevé Winds-Up ni clé dans les sorties (seuls les facteurs de correction dérivés y figurent, comme dans l’app downwind actuelle)${same ? ` ; ${same} relevé(s) à la même minute qu’un METAR publié, ignoré(s)` : ''}` };
+  return { id: 'confidentialite-moteurs', ok: leaks.length === 0, detail: leaks.length ? 'FUITE : ' + leaks.join(', ') : `aucun relevé Winds-Up ni clé dans les sorties (version publique sans super prévision, D-66)${same ? ` ; ${same} relevé(s) à la même minute qu’un METAR publié, ignoré(s)` : ''}` };
 }
 
 async function main(): Promise<void> {

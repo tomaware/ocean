@@ -17,7 +17,7 @@ export function widgetWind(wing: any, obs: Record<string, unknown>, now: number)
   const until = now + 5 * 86400e3;
   return {
     version: 1, generatedAt: now, days, levels: LEVELS, app: 'https://tomaware.github.io/ocean/',
-    note: 'Vent corrigé de la super prévision (nœuds), note wing v' + wing.version + ' ; Le Jaï : voir la source du spot',
+    note: 'Prévision vent (nœuds) : modèle le plus juste aux METAR de chaque spot (D-66), note wing v' + wing.version,
     spots: (wing.spots ?? []).map((s: any) => {
       const hours = s.hours.filter((h: any) => h.t >= now - 3600e3 && h.t <= until);
       const daily = Object.fromEntries(LEVELS.map((L) => [L, days.map((d) => {

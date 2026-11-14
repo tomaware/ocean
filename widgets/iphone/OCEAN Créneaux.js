@@ -3,7 +3,7 @@
 // icon-color: deep-purple; icon-glyph: calendar-alt;
 
 // OCEAN — widget « Créneaux vent » (iPhone, Scriptable) — remplace « Créneau Vent »
-// Les créneaux et les étoiles de l'app OCEAN (note wing, vent corrigé de la super prévision), sur tous les spots.
+// Les créneaux et les étoiles de l'app OCEAN (note wing, Prévision vent publique, D-66), sur tous les spots.
 // Petit : le meilleur créneau ; moyen : le meilleur + les 3 suivants ; grand : grille spots × 5 jours ;
 // écran verrouillé : le meilleur créneau en une ou trois lignes.
 //
