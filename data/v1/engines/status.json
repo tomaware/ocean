@@ -1,5 +1,5 @@
 {
- "generatedAt": 1794642188866,
+ "generatedAt": 1794648408540,
  "checks": [
   {
    "id": "golden-surf",
@@ -14,7 +14,7 @@
   {
    "id": "correction-vent-downwind",
    "ok": true,
-   "detail": "2 spot(s) de recalage : La Grande-Motte 102 h (× 1.07 en moyenne) + relevé récent, Port Camargue 57 h (× 1.08 en moyenne) + relevé récent"
+   "detail": "2 spot(s) de recalage : La Grande-Motte 54 h (× 1.12 en moyenne) + relevé récent, Port Camargue 59 h (× 1.01 en moyenne) + relevé récent"
   },
   {
    "id": "sorties-surf",
@@ -29,27 +29,27 @@
   {
    "id": "sorties-downwind",
    "ok": true,
-   "detail": "3/3 parcours notés ; 1 meilleurs créneaux"
+   "detail": "3/3 parcours notés ; 0 meilleurs créneaux"
   },
   {
    "id": "ecart-prod-surf",
    "ok": true,
-   "detail": "notes surf OCEAN vs app en service (calcul prod. 113 min avant, même extrait Copernicus) : médiane 0.00, 90 % ≤ 0.20, max 1.40 sur 660 heures (max : sete mer. 07:00, OCEAN 6.3 / prod 4.9)"
+   "detail": "notes surf OCEAN vs app en service (calcul prod. 37 min avant, même extrait Copernicus) : médiane 0.00, 90 % ≤ 0.00, max 0.10 sur 664 heures (max : palavas mar. 23:00, OCEAN 6.3 / prod 6.4)"
   },
   {
    "id": "ecart-prod-downwind",
    "ok": true,
-   "detail": "notes downwind (intermédiaire, de jour) OCEAN vs app en service (calcul prod. 16 min avant) : médiane 0.00, 90 % ≤ 0.00, max 0.00 sur 117 heures"
+   "detail": "notes downwind (intermédiaire, de jour) OCEAN vs app en service (calcul prod. 20 min avant) : médiane 0.00, 90 % ≤ 0.00, max 4.10 sur 117 heures"
   },
   {
    "id": "sorties-wing",
    "ok": true,
-   "detail": "7 spots notés (wing v2.3.0) ; 5 session(s) 2H en mode Sécu first sur les heures prévues"
+   "detail": "7 spots notés (wing v2.3.0) ; 2 session(s) 2H en mode Sécu first sur les heures prévues"
   },
   {
    "id": "sorties-kite",
    "ok": true,
-   "detail": "7 spots notés (kite v1.0.0) ; 4 session(s) 2H en mode Sécu first"
+   "detail": "7 spots notés (kite v1.0.0) ; 1 session(s) 2H en mode Sécu first"
   },
   {
    "id": "confidentialite-moteurs",
