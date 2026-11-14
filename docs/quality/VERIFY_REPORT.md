@@ -1,6 +1,6 @@
 # Remise en question (③)
 
-Généré le 2026-11-14 10:23 UTC par `pipeline/verify/run.ts`.
+Généré le 2026-11-14 10:34 UTC par `pipeline/verify/run.ts`.
 
 Erreur = prévu − mesuré. Vent en m/s aux stations METAR (aéroports), vagues : hauteur significative en m aux bouées Candhis. « courtTerme » = modèles sur les 3 derniers jours (pas une vraie prévision) ; « archive » = prévisions réellement émises N h avant.
 
@@ -16,16 +16,16 @@ Erreur = prévu − mesuré. Vent en m/s aux stations METAR (aéroports), vagues
 
 | Station | Classement |
 |---|---|
-| LFMT | gfs_seamless 2,0 · meteofrance_arome_france 2,1 · meteofrance_arome_france_hd 2,3 · icon_d2 2,5 · ecmwf_ifs025 2,6 · meteofrance_arpege_europe 2,6 · icon_eu 2,9 |
-| LFMP | meteofrance_arome_france_hd 2,0 · meteofrance_arome_france 2,1 · ecmwf_ifs025 2,8 · icon_eu 3,1 · gfs_seamless 3,2 · meteofrance_arpege_europe 3,2 |
-| LFTH | icon_eu 2,3 · meteofrance_arome_france_hd 2,4 · meteofrance_arome_france 2,4 · meteofrance_arpege_europe 2,7 · gfs_seamless 3,0 · ecmwf_ifs025 3,9 |
+| LFMT | gfs_seamless 2,0 · meteofrance_arome_france 2,0 · meteofrance_arome_france_hd 2,3 · ecmwf_ifs025 2,5 · icon_d2 2,5 · meteofrance_arpege_europe 2,7 · icon_eu 2,8 |
+| LFMP | meteofrance_arome_france_hd 2,0 · meteofrance_arome_france 2,1 · ecmwf_ifs025 2,8 · icon_eu 3,1 · gfs_seamless 3,1 · meteofrance_arpege_europe 3,2 |
+| LFTH | icon_eu 2,3 · meteofrance_arome_france_hd 2,4 · meteofrance_arome_france 2,4 · meteofrance_arpege_europe 2,7 · gfs_seamless 2,9 · ecmwf_ifs025 3,8 |
 | LFML | meteofrance_arome_france_hd 2,2 · meteofrance_arome_france 2,5 · icon_eu 2,7 · ecmwf_ifs025 3,4 · meteofrance_arpege_europe 3,9 · gfs_seamless 4,2 |
 
 ## Vagues : modèles classés par erreur moyenne (3 derniers jours, en m)
 
 | Bouée | Classement |
 |---|---|
-| 03001 | ewam 0.15 · meteofrance_wave 0.19 · ecmwf_wam025 0.30 · gwam 0.38 · ncep_gfswave025 0.89 |
+| 03001 | ewam 0.15 · meteofrance_wave 0.19 · ecmwf_wam025 0.30 · gwam 0.38 · ncep_gfswave025 0.90 |
 | 03404 | meteofrance_wave 0.14 · ncep_gfswave025 0.15 · ewam 0.20 · ecmwf_wam025 0.26 · gwam 0.29 |
 | 01101 | meteofrance_wave 0.15 · ewam 0.22 · ncep_gfswave025 0.25 · ecmwf_wam025 0.28 · gwam 0.36 |
 
@@ -37,7 +37,7 @@ Erreur = prévu − mesuré. Vent en m/s aux stations METAR (aéroports), vagues
   - 01102 : 
   - 01101 : meteofrance_wave poids 19.22, ×1.09 (MAE 0.15 m, n 163) ; ecmwf_wam025 poids 9.92, ×0.82 (MAE 0.25 m, n 163) ; ewam poids 11.35, ×0.91 (MAE 0.22 m, n 163) ; gwam poids 4.24, ×0.8 (MAE 0.32 m, n 163) ; ncep_gfswave025 poids 6.73, ×0.87 (MAE 0.22 m, n 163) ; copernicus poids 20.4, ×0.9 (MAE 0.17 m, n 103)
   - 06601 : 
-- Vent downwind : La Grande-Motte × 1.13, Port Camargue × 1.02 (super prévision + relevé récent).
+- Vent downwind : La Grande-Motte × 1.01, Port Camargue × 0.93 (super prévision + relevé récent).
 
 ## Prévisions archivées (vraie échéance)
 
