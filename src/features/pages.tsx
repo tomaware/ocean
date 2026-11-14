@@ -6,6 +6,7 @@ import { ago, compass, dayKey, dayLabel, hh, hourOf, labelOf, msToKn, n0, n1, sp
 import { setPrefs, usePrefs, type Reading } from '../services/prefs';
 import { publicLive, useHisto, useLive, type Histo, type Live } from '../services/perso';
 import { monthStats } from '../services/stats';
+import { windsUpUrl } from '../services/windsup';
 import { hourSlots } from './hourslots';
 import { goBack } from '../services/nav';
 import { EDITEURS, webcamsCherchees, webcamsOf } from '../services/webcams';
@@ -102,6 +103,25 @@ function DayReadings({ l, h, sport }: { l: Live; h: Histo['spots'][string] | nul
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+/** Public (sans mode perso) : liens vers les relevés Winds-Up de chaque spot, jamais leurs relevés (CGV Winds-Up). */
+export function WindsUpLinks({ spots }: { spots: { id: string; name: string }[] }) {
+  const rows = spots.filter((s) => windsUpUrl(s.id));
+  if (!rows.length) return null;
+  return (
+    <div class="card stack">
+      <div class="row"><Radio size={16} color="var(--c-accent)" /><strong>Relevés des balises</strong></div>
+      <div class="list">
+        {rows.map((s) => (
+          <a key={s.id} class="row between liverow" href={windsUpUrl(s.id)!} target="_blank" rel="noopener">
+            <span>{s.name}</span><span class="small">Winds-Up ↗</span>
+          </a>
+        ))}
+      </div>
+      <span class="faint small">Relevés en direct sur Winds-Up (décalés de 2 h sans abonnement).</span>
     </div>
   );
 }
@@ -206,6 +226,7 @@ function SpotView({ d, spot, now, day: dayParam }: { d: AllData; spot: PublicSpo
         {s?.levels && <Seg<Level> label={disc === 'wing' ? 'Mode' : 'Niveau de pratique'} value={level} onChange={(v) => setPrefs((p) => ({ ...p, levels: { ...p.levels, [disc]: v } }))} options={LEVELS_FOR[disc].map((l) => [l, LEVEL_LABEL[l]] as [Level, string])} />}
       </div>
       {disc === 'wing' && <LiveBox live={[...(live.live ?? []), ...publicLive(d.meteo?.obs, [spot])]} spot={spot.id} names={{ [spot.id]: spot.name }} histo={histo.histo} />}
+      {disc === 'wing' && !prefs.perso.enabled && windsUpUrl(spot.id) && <a class="btn" href={windsUpUrl(spot.id)!} target="_blank" rel="noopener">Relevés de la balise sur Winds-Up ↗</a>}
       {disc === 'wing' && <SpotStats histo={histo.histo} absent={histo.absent} spots={[spot]} />}
       <Webcams id={spot.id} />
       {s?.notice && <div class="notice">{s.notice}</div>}

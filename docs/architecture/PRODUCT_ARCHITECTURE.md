@@ -389,3 +389,8 @@ Les apps actuelles restent en ligne jusqu'à ce que leur remplaçante soit véri
 ### D-64 (14/11/2026) — widgets à jour : grille Créneaux comme la Prévision 5 jours
 - Widgets Créneaux (iPhone grand, Mac moyen/grand, Windows) : chaque case montre une colonne par heure de jour (hauteur = note, couleur des étoiles, rouge pour la Kite session) et la note du jour en haut à droite ; case plus claire sans heure à 1 étoile. Les widgets récupèrent aussi la note wing v2.3, Plage Sud / Hyères et la Kite session par les données publiées.
 - iPhone : VERSION 2026-11-14a (mise à jour automatique) ; Mac : fichiers régénérés (mise à jour automatique) ; Windows : même script publié.
+
+### D-65 (14/11/2026) — site public : lien vers Winds-Up à la place du direct
+- Les CGV de Winds-Up (lues le 14/11) : Winds-Up est « titulaire exclusif » des droits sur le site et son contenu ; « toute reproduction ou diffusion » sans « autorisation expresse écrite » est une contrefaçon. Le décalage de 2 h affiché aux non-abonnés sur leur site n'est pas une autorisation de reprise.
+- Public : le module En direct et la fiche spot n'affichent plus que des liens vers la page Winds-Up de chaque spot (`src/services/windsup.ts`) ; la mesure publique de Marignane (METAR, Le Jaï) reste.
+- Mode perso de Tom : inchangé (son abonnement, sur son appareil). Comptes test avec relevés décalés de 2 h : seulement après accord écrit de Winds-Up (décision ouverte, voir conception des comptes).

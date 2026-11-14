@@ -13,7 +13,7 @@ import { MapPlayer } from '../components/MapPlayer';
 import { discName } from '../services/sport';
 import { availableSubs, shownSubIds, SUB_IDS, SUB_LABEL, type SubId, type TabLayout } from '../services/layout';
 import { seriesFor, type Series } from './series';
-import { bestScoreBySpot, Freshness, levelFor, LiveBox, matches, SpotStats, moduleOf, upcoming } from './pages';
+import { bestScoreBySpot, Freshness, levelFor, LiveBox, matches, SpotStats, WindsUpLinks, moduleOf, upcoming } from './pages';
 
 export const SUBS = SUB_IDS.map((id) => ({ id, label: SUB_LABEL[id] }));
 export type Sub = SubId;
@@ -244,7 +244,8 @@ export function Module({ d, now, disc, sub, query }: { d: AllData; now: number; 
     <div class="stack">
       <LiveBox live={[...(live.live ?? []), ...publicLive(d.meteo?.obs, spots)].sort((a, b) => spots.findIndex((s) => s.id === a.spot) - spots.findIndex((s) => s.id === b.spot))} names={Object.fromEntries(spots.map((s) => [s.id, s.name]))} histo={histo.histo} />
       <SpotStats histo={histo.histo} absent={histo.absent} spots={spots} />
-      {!prefs.perso.enabled && <p class="faint">Les balises Winds-Up s’affichent en mode perso (Profil). Le Jaï : mesure publique de l’aéroport de Marignane, pour tous.</p>}
+      {/* public : lien vers Winds-Up (leurs CGV interdisent de rediffuser les relevés) ; Le Jaï garde la mesure publique de Marignane */}
+      {!prefs.perso.enabled && <WindsUpLinks spots={spots} />}
     </div>
   );
   else if (sub === 'prevision') body = <Prevision d={d} now={now} disc={disc} spots={spots} L={L} query={query} />;
