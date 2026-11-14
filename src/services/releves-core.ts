@@ -45,9 +45,10 @@ export function compare(r: Releves | null, h: Histo | null, spot: string): Compa
 
 export type BuoyPt = [number, number | null, number | null, number | null, number | null, number | null, number | null];
 export type Buoy = { code: string; name: string; depthM: number | null; spots: string[]; pts: BuoyPt[]; status: string };
-/** Bouées affichées dans VAGUE › En direct (D-68) : celles qui servent au moins un spot surf, mesure récente d'abord. */
+/** Bouées affichées dans VAGUE › En direct (D-68) : toutes celles du registre, mesure récente d'abord ; une bouée hors service
+ *  sans aucune mesure sur 24 h n'est montrée que si elle sert un spot surf. */
 export function buoysLive(r: Releves | null, now = Date.now()): (Buoy & { last: BuoyPt | null; fresh: boolean })[] {
-  const all = Object.values(((r as any)?.buoys ?? {}) as Record<string, Buoy>).filter((b) => b.spots.length);
+  const all = Object.values(((r as any)?.buoys ?? {}) as Record<string, Buoy>).filter((b) => b.spots.length || b.pts.length);
   return all.map((b) => { const last = [...b.pts].reverse().find((p) => p[1] !== null) ?? null; return { ...b, last, fresh: !!last && now - last[0] <= 3 * 3600e3 }; })
     .sort((a, b) => Number(b.fresh) - Number(a.fresh));
 }

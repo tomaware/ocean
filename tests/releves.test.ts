@@ -78,5 +78,5 @@ test('bouées Candhis (D-68) : 24 h, valeurs hors bornes rejetées, spots servis
   assert.equal(b['03404'].status, 'ok'); assert.equal(b['01102'].status, 'mesure ancienne');
   const live = buoysLive({ buoys: b } as any, NOW);
   assert.equal(live[0].code, '03404'); assert.equal(live[0].fresh, true); assert.equal(live[0].last![1], 0.5, 'dernière mesure valide');
-  assert.ok(live.every((x) => x.spots.length), 'seulement les bouées qui servent un spot surf');
+  assert.ok(live.every((x) => x.spots.length || x.pts.length), 'une bouée sans mesure ni spot surf est cachée');
 });

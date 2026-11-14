@@ -133,7 +133,7 @@ for (const [name, opt] of [['mobile', { ...devices['iPhone 13'], locale: 'fr-FR'
   // Profil → modules affichés (Tom, 13/11) : masquer Sessions 2H en WIND, monter Prévision en tête ; HOULE inchangé
   // réglage de base de l'app (Tom, 13/11)
   await p.evaluate(() => localStorage.removeItem('ocean.prefs.v1'));
-  for (const [t, want] of [['wind', 'En direct|Favoris|Sessions 2H|Prévision|Carte'], ['vague', 'Favoris|Sessions 2H|Prévision|Carte'], ['houle', 'Prévision|Carte']]) {
+  for (const [t, want] of [['wind', 'En direct|Favoris|Sessions 2H|Prévision|Carte'], ['vague', 'En direct|Favoris|Sessions 2H|Prévision|Carte'], ['houle', 'Prévision|Carte']]) {
     await p.goto(`${base}/#/${t}`); await p.reload(); await p.waitForTimeout(400);
     const got = (await p.locator('.subnav a').allInnerTexts()).join('|');
     if (got !== want) errs.push(`${name} : modules de base ${t} = ${got}`);

@@ -149,7 +149,7 @@ export function BuoysBox({ rel }: { rel: Releves | null }) {
           const p = b.last, on = open === b.code && b.pts.length > 0;
           const line = (
             <>
-              <span class="stack" style={{ gap: 0 }}><span>{b.name}</span><span class="faint">{b.depthM ? `${b.depthM} m de fond · ` : ''}pour {b.spots.map((n) => n.replace(/\s*\(.*\)/, '')).join(', ')}</span></span>
+              <span class="stack" style={{ gap: 0 }}><span>{b.name}</span><span class="faint">{[b.depthM ? `${b.depthM} m de fond` : '', b.spots.length ? 'pour ' + b.spots.map((n) => n.replace(/\s*\(.*\)/, '')).join(', ') : ''].filter(Boolean).join(' · ')}</span></span>
               {!b.fresh ? <span class="small faint">{p ? `dernière mesure ${ago(p[0])}` : 'hors service'}</span> : (
                 <span class="row small" style={{ gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                   <strong class="livekn">{m1(p![1])} m</strong>
