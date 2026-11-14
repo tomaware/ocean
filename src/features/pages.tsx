@@ -7,6 +7,7 @@ import { setPrefs, usePrefs, type Reading } from '../services/prefs';
 import { publicLive, useHisto, useLive, type Histo, type Live } from '../services/perso';
 import { monthStats } from '../services/stats';
 import { windsUpUrl } from '../services/windsup';
+import { compare, openLive, useReleves, type Releves } from '../services/releves';
 import { hourSlots } from './hourslots';
 import { goBack } from '../services/nav';
 import { EDITEURS, webcamsCherchees, webcamsOf } from '../services/webcams';
@@ -48,10 +49,11 @@ export function liveTone(kn: number | null | undefined, sport: 'wing' | 'kite'):
 }
 export function LiveBox({ live, spot, names, histo }: { live: Live[] | null; spot?: string; names?: Record<string, string>; histo?: Histo | null }) {
   const prefs = usePrefs();
-  const [open, setOpen] = useState<string | null>(spot ?? null);
-  // la balise Winds-Up (mode perso) passe avant la mesure publique du même spot (Le Jaï : METAR de Marignane)
+  const [open, setOpen] = useState<string | null>(null);
+  // la balise Winds-Up (mode perso) passe avant le METAR du même spot (Le Jaï : Marignane) ; les balises publiques en
+  // source libre (D-67) restent toujours affichées, juste sous Winds-Up, pour comparer
   const all = (live ?? []).filter((l) => !spot || l.spot === spot);
-  const rows = all.filter((l) => !l.src || !all.some((x) => !x.src && x.spot === l.spot));
+  const rows = all.filter((l) => !l.src || l.open || !all.some((x) => !x.src && x.spot === l.spot));
   if (!rows.length) return null;
   const perso = rows.some((l) => !l.src);
   return (
@@ -60,7 +62,7 @@ export function LiveBox({ live, spot, names, histo }: { live: Live[] | null; spo
       <div class="list">
         {rows.map((l) => {
           // noms de l'app (Plage Sud, Hyères…) plutôt que ceux de Winds-Up
-          const name = names?.[l.spot] ?? l.name, can = !l.src && !l.panne, on = can && open === l.spot;
+          const k = l.spot + (l.src ?? ''), name = names?.[l.spot] ?? l.name, can = !l.panne && (!l.src || !!l.pts?.length), on = can && open === k;
           const line = (
             <>
               <span class="stack" style={{ gap: 0 }}><span>{name}</span>{l.src && <span class="faint">{l.src}</span>}</span>
@@ -74,10 +76,10 @@ export function LiveBox({ live, spot, names, histo }: { live: Live[] | null; spo
             </>
           );
           return (
-            <div key={l.spot + (l.src ?? '')} class="stack" style={{ gap: '8px' }}>
-              {can ? <button type="button" class="row between liverow" aria-expanded={on} onClick={() => setOpen(on ? null : l.spot)}>{line}</button>
+            <div key={k} class="stack" style={{ gap: '8px' }}>
+              {can ? <button type="button" class="row between liverow" aria-expanded={on} onClick={() => setOpen(on ? null : k)}>{line}</button>
                 : <div class="row between">{line}</div>}
-              {on && <DayReadings l={l} h={histo?.spots[l.spot] ?? null} sport={prefs.sport} />}
+              {on && <DayReadings l={l} h={l.src ? null : histo?.spots[l.spot] ?? null} sport={prefs.sport} />}
             </div>
           );
         })}
@@ -103,6 +105,31 @@ function DayReadings({ l, h, sport }: { l: Live; h: Histo['spots'][string] | nul
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+/** Mode perso (D-67) : balise publique face à Winds-Up, pour savoir si on peut s'en passer. Rien n'est publié : calcul sur l'appareil. */
+export function CompareBox({ rel, histo, spots }: { rel: Releves | null; histo: Histo | null; spots: { id: string; name: string }[] }) {
+  const rows = spots.flatMap((s) => compare(rel, histo, s.id).map((c) => ({ ...c, name: s.name })));
+  if (!rows.length) return null;
+  const pct = (a: number, b: number) => (b ? Math.round((a / b) * 100) + ' %' : '—');
+  const sgn = (x: number) => (x > 0 ? '+' : '') + String(x).replace('.', ',');
+  return (
+    <div class="card stack">
+      <div class="row"><strong>Balises libres vs Winds-Up</strong><span class="chip accent">mode perso</span></div>
+      <table class="stats">
+        <thead><tr><th>Spot</th><th>Jours comparés</th><th>D’accord « ≥ 15 nd »</th><th>Écart max du jour</th><th>Aujourd’hui</th></tr></thead>
+        <tbody>{rows.map((c) => (
+          <tr key={c.spot + c.station}>
+            <td>{c.name}<br /><span class="faint">{c.station}</span></td>
+            <td>{c.days}</td>
+            <td>{pct(c.agree, c.days)}{c.days ? <span class="faint"> ({c.wuWindy} j WU / {c.openWindy} j libre)</span> : null}</td>
+            <td>{c.madMax === null ? '—' : `${String(c.madMax).replace('.', ',')} nd`}</td>
+            <td>{c.today ? `${sgn(c.today.mean)} nd en moy. (${c.today.n} h)` : '—'}</td>
+          </tr>))}</tbody>
+      </table>
+      <span class="faint small">Jour « à 15 nd » : au moins une heure de jour (8 h–19 h) à 15 nd de moyenne, même règle des deux côtés. « Aujourd’hui » : balise libre moins Winds-Up, heure par heure. Les balises libres ne sont collectées que depuis le 14/11 : il faut 2 à 3 semaines pour juger.</span>
     </div>
   );
 }
@@ -199,6 +226,7 @@ function SpotView({ d, spot, now, day: dayParam }: { d: AllData; spot: PublicSpo
   const s = seriesFor(d, spot, disc, level);
   const live = useLive(disc === 'wing' ? [spot.id] : []);
   const histo = useHisto(disc === 'wing' && live.live?.length ? [spot.id] : []);
+  const rel = useReleves();
   const sessions = upcoming(d, now).filter((x) => x.spot === id && (x.level === 'tous' || x.level === level));
   const reading: Reading = disc !== 'wing' && prefs.reading === 'expert' ? 'detail' : prefs.reading;   // pas d'Expert pour VAGUE et HOULE
   const future = s ? s.rows.map((r, i) => ({ r, i })).filter(({ i }) => s.times[i] >= now - 3600e3) : [];
@@ -225,9 +253,10 @@ function SpotView({ d, spot, now, day: dayParam }: { d: AllData; spot: PublicSpo
         {disc === 'wing' && <SportSeg />}
         {s?.levels && <Seg<Level> label={disc === 'wing' ? 'Mode' : 'Niveau de pratique'} value={level} onChange={(v) => setPrefs((p) => ({ ...p, levels: { ...p.levels, [disc]: v } }))} options={LEVELS_FOR[disc].map((l) => [l, LEVEL_LABEL[l]] as [Level, string])} />}
       </div>
-      {disc === 'wing' && <LiveBox live={[...(live.live ?? []), ...publicLive(d.meteo?.obs, [spot])]} spot={spot.id} names={{ [spot.id]: spot.name }} histo={histo.histo} />}
+      {disc === 'wing' && <LiveBox live={[...(live.live ?? []), ...openLive(rel, [spot]), ...publicLive(d.meteo?.obs, [spot])]} spot={spot.id} names={{ [spot.id]: spot.name }} histo={histo.histo} />}
       {disc === 'wing' && !prefs.perso.enabled && windsUpUrl(spot.id) && <a class="btn" href={windsUpUrl(spot.id)!} target="_blank" rel="noopener">Relevés de la balise sur Winds-Up ↗</a>}
       {disc === 'wing' && <SpotStats histo={histo.histo} absent={histo.absent} spots={[spot]} />}
+      {disc === 'wing' && <CompareBox rel={rel} histo={histo.histo} spots={[spot]} />}
       <Webcams id={spot.id} />
       {s?.notice && <div class="notice">{s.notice}</div>}
       {!s ? <div class="notice warn">Pas de prévision disponible pour ce spot dans la dernière mise à jour.</div> : (
@@ -390,7 +419,7 @@ export function Profile({ d }: { d: AllData }) {
           <a href="#/widgets" class="row"><LayoutGrid size={16} /> Installer les widgets (iPhone, Mac, Windows)</a>
           <a href="#/avis" class="row"><MessageSquare size={16} /> Donner un avis, signaler un bug</a>
           <a href="#/fiabilite" class="row"><ShieldCheck size={16} /> Fiabilité des prévisions et sources</a>
-          <span class="faint">OCEAN · données : Open-Meteo (Météo-France, ECMWF, DWD, NOAA), Copernicus Marine Med-WAV (generated using E.U. Copernicus Marine Service Information), bouées Candhis – Cerema (licence Etalab), METAR (NOAA). Prévision vent : modèles Open-Meteo classés chaque heure contre les METAR (CC BY 4.0). Fond de carte © OpenStreetMap.</span>
+          <span class="faint">OCEAN · données : balises OpenWindMap / Pioupiou (données ouvertes, attribution et partage à l’identique), Météo-France (Licence Ouverte), Open-Meteo (Météo-France, ECMWF, DWD, NOAA), Copernicus Marine Med-WAV (generated using E.U. Copernicus Marine Service Information), bouées Candhis – Cerema (licence Etalab), METAR (NOAA). Prévision vent : modèles Open-Meteo classés chaque heure contre les METAR (CC BY 4.0). Fond de carte © OpenStreetMap.</span>
         </div>
       </Section>
     </>

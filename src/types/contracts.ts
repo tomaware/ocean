@@ -32,6 +32,8 @@ export interface Spot {
   swellWindow?: { min: number; max: number; ideal?: number };
   buoys?: string[];
   windStations?: { windsUp?: string; metar?: string | null };
+  /** Balises publiques retenues pour le spot (D-67) : OpenWindMap/Pioupiou, Météo-France, FFVL */
+  openStations?: { src: 'pioupiou' | 'meteo-france' | 'ffvl'; id: string; name?: string; note?: string }[];
   legacy: Record<string, string>;               // identifiants dans les apps actuelles
   confidence: 'low' | 'medium' | 'high';
   sources: string[];

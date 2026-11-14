@@ -5,7 +5,9 @@ import { useEffect, useState } from 'preact/hooks';
 import { usePrefs } from './prefs';
 
 /** pts : relevés des 3 dernières heures (toutes les 5 min) [heure, nd, direction] */
-export type Live = { spot: string; name: string; t: number | null; kn: number | null; dir: string | null; panne: boolean; gust?: number | null; src?: string; pts?: [number, number, string][] };
+export type Live = { spot: string; name: string; t: number | null; kn: number | null; dir: string | null; panne: boolean; gust?: number | null; src?: string; pts?: [number, number, string][];
+  /** balise publique en source libre (D-67) : toujours affichée, à côté de Winds-Up en mode perso */
+  open?: boolean };
 /** Historique (mode perso, ?action=histo du script) : relevés horaires du jour et bilan par jour (~3 mois). */
 export type Histo = { seuil: number; heures: [number, number]; spots: Record<string, { jour: [number, number, number | null, string | null][]; jours: [string, number, number][] }> };
 

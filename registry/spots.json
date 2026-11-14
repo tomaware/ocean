@@ -36,7 +36,15 @@
         "kind": "best-model",
         "station": "LFMP",
         "note": "Prévision vent (publique, D-66) : modèle Open-Meteo le plus juste aux mesures METAR de la station sur 3 jours, relayé au-delà de son horizon. La super prévision (corrigée Winds-Up) reste privée."
-      }
+      },
+      "openStations": [
+        {
+          "src": "pioupiou",
+          "id": "1538",
+          "name": "Aéromodélisme Leucatois",
+          "note": "4,6 km, plateau de Leucate (diagnostic du 14/11) ; représentativité à confirmer par la comparaison avec Winds-Up"
+        }
+      ]
     },
     {
       "id": "la-grande-motte",
@@ -263,7 +271,15 @@
         "kind": "best-model",
         "station": "LFTH",
         "note": "Prévision vent (publique, D-66) : modèle Open-Meteo le plus juste aux mesures METAR de la station sur 3 jours, relayé au-delà de son horizon. La super prévision (corrigée Winds-Up) reste privée."
-      }
+      },
+      "openStations": [
+        {
+          "src": "pioupiou",
+          "id": "2133",
+          "name": "CAPT'ain NAUTIC – La Capte",
+          "note": "2,8 km, La Capte, côté est du tombolo (diagnostic du 14/11) ; représentativité à confirmer par la comparaison avec Winds-Up"
+        }
+      ]
     },
     {
       "id": "carnon",
