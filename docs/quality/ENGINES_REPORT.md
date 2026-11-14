@@ -1,6 +1,6 @@
 # Rapport d'analyse (② ANALYSE)
 
-Généré le 2026-11-14 14:31 UTC par `pipeline/engines/run.ts`, juste après la collecte.
+Généré le 2026-11-14 14:37 UTC par `pipeline/engines/run.ts`, juste après la collecte.
 
 Les moteurs des apps actuelles (copies non modifiées dans `legacy/`) sont alimentés par la collecte commune. Le test golden refait le calcul comme les apps actuelles, avec leurs propres parseurs sur les mêmes réponses brutes, et exige les mêmes notes à ±0.1.
 
@@ -15,19 +15,19 @@ Les moteurs des apps actuelles (copies non modifiées dans `legacy/`) sont alime
 | sorties-surf | ✅ | 6/6 spots notés ; 12 créneaux |
 | houle-direction-downwind | ✅ | direction de la houle (affichage, carte) : 288/288 heures |
 | sorties-downwind | ✅ | 3/3 parcours notés ; 1 meilleurs créneaux |
-| ecart-prod-surf | ✅ | notes surf OCEAN vs app en service (calcul prod. 40 min avant, même extrait Copernicus) : médiane 0.00, 90 % ≤ 0.00, max 0.10 sur 664 heures (max : palavas dim. 00:00, OCEAN 5.3 / prod 5.4) |
-| ecart-prod-downwind | ✅ | notes downwind (intermédiaire, de jour) OCEAN vs app en service (calcul prod. 27 min avant) : médiane 0.00, 90 % ≤ 0.00, max 7.80 sur 117 heures |
+| ecart-prod-surf | ✅ | notes surf OCEAN vs app en service (calcul prod. 46 min avant, même extrait Copernicus) : médiane 0.00, 90 % ≤ 0.00, max 4.00 sur 664 heures (max : carnon sam. 21:00, OCEAN 1.2 / prod 5.2) |
+| ecart-prod-downwind | ✅ | notes downwind (intermédiaire, de jour) OCEAN vs app en service (calcul prod. 33 min avant) : médiane 0.00, 90 % ≤ 0.00, max 7.80 sur 117 heures |
 | avant-apres-vent-wing | ✅ | D-66, notes wing Sécu first de jour, après − avant : 266 heures, écart moyen 0.99 ; La Franqui +0.1 (écart moyen 0.1), sessions 0→0 ; La Grande-Motte +0.1 (écart moyen 0.6), sessions 0→1 ; Le Ponant +0.8 (écart moyen 0.8), sessions 0→0 ; Plage Sud -0.5 (écart moyen 0.6), sessions 0→0 ; Beauduc +1.3 (écart moyen 1.3), sessions 0→4 ; Le Jaï +0.9 (écart moyen 0.9), sessions 0→1 ; Hyères -2.0 (écart moyen 2.7), sessions 3→2 |
-| vent-la-franqui | ✅ | La Franqui : meteofrance_arome_france_hd, le plus juste à LFMP (erreur 0.88 m/s sur 80 mesures) ; 180 heures ; vent non corrigé |
-| vent-la-grande-motte | ✅ | La Grande-Motte : gfs_seamless, le plus juste à LFMT (erreur 0.94 m/s sur 80 mesures) ; 180 heures ; vent non corrigé |
-| vent-le-ponant | ✅ | Le Ponant : gfs_seamless, le plus juste à LFMT (erreur 0.94 m/s sur 80 mesures) ; 180 heures ; vent non corrigé |
-| vent-port-camargue | ✅ | Plage Sud : gfs_seamless, le plus juste à LFMT (erreur 0.94 m/s sur 80 mesures) ; 180 heures ; vent non corrigé |
-| vent-beauduc | ✅ | Beauduc : meteofrance_arome_france_hd, le plus juste à LFMI (erreur 1.15 m/s sur 80 mesures) ; 180 heures ; vent non corrigé |
-| vent-le-jai | ✅ | Le Jaï : meteofrance_arome_france_hd, le plus juste à LFML (erreur 1.1 m/s sur 80 mesures) ; 180 heures ; vent non corrigé |
-| vent-almanarre | ✅ | Hyères : icon_eu, le plus juste à LFTH (erreur 1.17 m/s sur 80 mesures) ; 180 heures ; vent non corrigé |
+| vent-la-franqui | ✅ | La Franqui : meteofrance_arome_france_hd, le plus juste à LFMP (erreur 0.86 m/s sur 80 mesures) ; 180 heures ; vent non corrigé |
+| vent-la-grande-motte | ✅ | La Grande-Motte : gfs_seamless, le plus juste à LFMT (erreur 0.96 m/s sur 80 mesures) ; 180 heures ; vent non corrigé |
+| vent-le-ponant | ✅ | Le Ponant : gfs_seamless, le plus juste à LFMT (erreur 0.96 m/s sur 80 mesures) ; 180 heures ; vent non corrigé |
+| vent-port-camargue | ✅ | Plage Sud : gfs_seamless, le plus juste à LFMT (erreur 0.96 m/s sur 80 mesures) ; 180 heures ; vent non corrigé |
+| vent-beauduc | ✅ | Beauduc : meteofrance_arome_france_hd, le plus juste à LFMI (erreur 1.16 m/s sur 80 mesures) ; 180 heures ; vent non corrigé |
+| vent-le-jai | ✅ | Le Jaï : meteofrance_arome_france_hd, le plus juste à LFML (erreur 1.14 m/s sur 80 mesures) ; 180 heures ; vent non corrigé |
+| vent-almanarre | ✅ | Hyères : icon_eu, le plus juste à LFTH (erreur 1.14 m/s sur 80 mesures) ; 180 heures ; vent non corrigé |
 | sorties-wing | ✅ | 7 spots notés (wing v2.3.0) ; 8 session(s) 2H en mode Sécu first sur les heures prévues |
 | sorties-kite | ✅ | 7 spots notés (kite v1.0.0) ; 5 session(s) 2H en mode Sécu first |
-| confidentialite-moteurs | ✅ | aucun relevé Winds-Up ni clé dans les sorties (seuls les facteurs de correction dérivés y figurent, comme dans l’app downwind actuelle) |
+| confidentialite-moteurs | ✅ | aucun relevé Winds-Up ni clé dans les sorties (version publique sans super prévision, D-66) |
 | copernicus-surf | ✅ | Copernicus Med-WAV inclus dans le moteur surf (comme l’app en service) |
 
 ## Meilleurs créneaux surf (7 jours)

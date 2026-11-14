@@ -1,5 +1,5 @@
 {
- "generatedAt": 1794666676607,
+ "generatedAt": 1794667075774,
  "checks": [
   {
    "id": "golden-surf",
@@ -39,12 +39,12 @@
   {
    "id": "ecart-prod-surf",
    "ok": true,
-   "detail": "notes surf OCEAN vs app en service (calcul prod. 40 min avant, même extrait Copernicus) : médiane 0.00, 90 % ≤ 0.00, max 0.10 sur 664 heures (max : palavas dim. 00:00, OCEAN 5.3 / prod 5.4)"
+   "detail": "notes surf OCEAN vs app en service (calcul prod. 46 min avant, même extrait Copernicus) : médiane 0.00, 90 % ≤ 0.00, max 4.00 sur 664 heures (max : carnon sam. 21:00, OCEAN 1.2 / prod 5.2)"
   },
   {
    "id": "ecart-prod-downwind",
    "ok": true,
-   "detail": "notes downwind (intermédiaire, de jour) OCEAN vs app en service (calcul prod. 27 min avant) : médiane 0.00, 90 % ≤ 0.00, max 7.80 sur 117 heures"
+   "detail": "notes downwind (intermédiaire, de jour) OCEAN vs app en service (calcul prod. 33 min avant) : médiane 0.00, 90 % ≤ 0.00, max 7.80 sur 117 heures"
   },
   {
    "id": "avant-apres-vent-wing",
@@ -54,37 +54,37 @@
   {
    "id": "vent-la-franqui",
    "ok": true,
-   "detail": "La Franqui : meteofrance_arome_france_hd, le plus juste à LFMP (erreur 0.88 m/s sur 80 mesures) ; 180 heures ; vent non corrigé"
+   "detail": "La Franqui : meteofrance_arome_france_hd, le plus juste à LFMP (erreur 0.86 m/s sur 80 mesures) ; 180 heures ; vent non corrigé"
   },
   {
    "id": "vent-la-grande-motte",
    "ok": true,
-   "detail": "La Grande-Motte : gfs_seamless, le plus juste à LFMT (erreur 0.94 m/s sur 80 mesures) ; 180 heures ; vent non corrigé"
+   "detail": "La Grande-Motte : gfs_seamless, le plus juste à LFMT (erreur 0.96 m/s sur 80 mesures) ; 180 heures ; vent non corrigé"
   },
   {
    "id": "vent-le-ponant",
    "ok": true,
-   "detail": "Le Ponant : gfs_seamless, le plus juste à LFMT (erreur 0.94 m/s sur 80 mesures) ; 180 heures ; vent non corrigé"
+   "detail": "Le Ponant : gfs_seamless, le plus juste à LFMT (erreur 0.96 m/s sur 80 mesures) ; 180 heures ; vent non corrigé"
   },
   {
    "id": "vent-port-camargue",
    "ok": true,
-   "detail": "Plage Sud : gfs_seamless, le plus juste à LFMT (erreur 0.94 m/s sur 80 mesures) ; 180 heures ; vent non corrigé"
+   "detail": "Plage Sud : gfs_seamless, le plus juste à LFMT (erreur 0.96 m/s sur 80 mesures) ; 180 heures ; vent non corrigé"
   },
   {
    "id": "vent-beauduc",
    "ok": true,
-   "detail": "Beauduc : meteofrance_arome_france_hd, le plus juste à LFMI (erreur 1.15 m/s sur 80 mesures) ; 180 heures ; vent non corrigé"
+   "detail": "Beauduc : meteofrance_arome_france_hd, le plus juste à LFMI (erreur 1.16 m/s sur 80 mesures) ; 180 heures ; vent non corrigé"
   },
   {
    "id": "vent-le-jai",
    "ok": true,
-   "detail": "Le Jaï : meteofrance_arome_france_hd, le plus juste à LFML (erreur 1.1 m/s sur 80 mesures) ; 180 heures ; vent non corrigé"
+   "detail": "Le Jaï : meteofrance_arome_france_hd, le plus juste à LFML (erreur 1.14 m/s sur 80 mesures) ; 180 heures ; vent non corrigé"
   },
   {
    "id": "vent-almanarre",
    "ok": true,
-   "detail": "Hyères : icon_eu, le plus juste à LFTH (erreur 1.17 m/s sur 80 mesures) ; 180 heures ; vent non corrigé"
+   "detail": "Hyères : icon_eu, le plus juste à LFTH (erreur 1.14 m/s sur 80 mesures) ; 180 heures ; vent non corrigé"
   },
   {
    "id": "sorties-wing",
@@ -99,7 +99,7 @@
   {
    "id": "confidentialite-moteurs",
    "ok": true,
-   "detail": "aucun relevé Winds-Up ni clé dans les sorties (seuls les facteurs de correction dérivés y figurent, comme dans l’app downwind actuelle)"
+   "detail": "aucun relevé Winds-Up ni clé dans les sorties (version publique sans super prévision, D-66)"
   },
   {
    "id": "copernicus-surf",
