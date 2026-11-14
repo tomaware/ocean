@@ -1,11 +1,11 @@
 {
- "generatedAt": 1794691024195,
+ "generatedAt": 1794694567878,
  "status": [
   {
    "id": "open-meteo-marine",
    "ok": true,
    "message": "ok",
-   "durationMs": 855,
+   "durationMs": 867,
    "points": 17,
    "models": [
     "meteofrance_wave",
@@ -24,7 +24,7 @@
    "id": "copernicus-medwav",
    "ok": true,
    "message": "ok",
-   "durationMs": 82,
+   "durationMs": 89,
    "points": 15,
    "models": [
     "copernicus"
@@ -39,7 +39,7 @@
    "id": "open-meteo-vent-moteurs",
    "ok": false,
    "message": "HTTP 429 {\"reason\":\"Daily API request limit exceeded. Please try again tomorrow.\",\"error\":true}",
-   "durationMs": 100291,
+   "durationMs": 100259,
    "points": 0,
    "models": [],
    "values": 0,
@@ -50,7 +50,7 @@
    "id": "open-meteo-meteo",
    "ok": false,
    "message": "HTTP 429 {\"reason\":\"Daily API request limit exceeded. Please try again tomorrow.\",\"error\":true}",
-   "durationMs": 100198,
+   "durationMs": 100221,
    "points": 0,
    "models": [],
    "values": 0,
@@ -61,7 +61,7 @@
    "id": "open-meteo-vent-spots",
    "ok": false,
    "message": "HTTP 429 {\"error\":true,\"reason\":\"Daily API request limit exceeded. Please try again tomorrow.\"}",
-   "durationMs": 100255,
+   "durationMs": 100260,
    "points": 0,
    "models": [],
    "values": 0,
@@ -71,8 +71,8 @@
   {
    "id": "open-meteo-vent-carte",
    "ok": false,
-   "message": "HTTP 429 {\"error\":true,\"reason\":\"Daily API request limit exceeded. Please try again tomorrow.\"}",
-   "durationMs": 100253,
+   "message": "HTTP 429 {\"reason\":\"Daily API request limit exceeded. Please try again tomorrow.\",\"error\":true}",
+   "durationMs": 100259,
    "points": 0,
    "models": [],
    "values": 0,
@@ -83,51 +83,51 @@
    "id": "super-prevision",
    "ok": true,
    "message": "ok",
-   "durationMs": 1550,
+   "durationMs": 1262,
    "points": 7,
    "models": [
     "super-prevision"
    ],
-   "values": 509,
+   "values": 502,
    "missing": 0,
    "rejected": 0,
-   "first": 1794686400000,
+   "first": 1794718800000,
    "last": 1795204800000
   },
   {
    "id": "candhis",
    "ok": true,
    "message": "ok",
-   "durationMs": 88,
+   "durationMs": 103,
    "points": 5,
    "models": [],
-   "values": 32880,
-   "missing": 3364,
+   "values": 32832,
+   "missing": 3360,
    "rejected": 0,
    "lastObservationAgeMin": {
-    "03001": 114,
-    "03404": 114,
-    "01102": 7644,
-    "01101": 114,
-    "06601": 35454
+    "03001": 173,
+    "03404": 173,
+    "01102": 7703,
+    "01101": 173,
+    "06601": 35513
    }
   },
   {
    "id": "metar",
    "ok": true,
    "message": "ok",
-   "durationMs": 131,
+   "durationMs": 142,
    "points": 5,
    "models": [],
    "values": 1200,
-   "missing": 412,
+   "missing": 411,
    "rejected": 0,
    "lastObservationAgeMin": {
-    "LFMT": 24,
-    "LFMP": 24,
-    "LFTH": 24,
-    "LFML": 24,
-    "LFMI": 24
+    "LFMT": 23,
+    "LFMP": 23,
+    "LFTH": 23,
+    "LFML": 23,
+    "LFMI": 23
    }
   }
  ],
@@ -155,7 +155,7 @@
   {
    "id": "fraicheur-copernicus",
    "ok": true,
-   "detail": "extrait de 2.6 h (15 points, 270 h) (seuil 30 h)"
+   "detail": "extrait de 3.6 h (15 points, 270 h) (seuil 30 h)"
   },
   {
    "id": "points-copernicus",
@@ -170,12 +170,12 @@
   {
    "id": "fraicheur-candhis",
    "ok": true,
-   "detail": "03001 114 min · 03404 114 min · 01101 114 min (seuil 180 min)"
+   "detail": "03001 173 min · 03404 173 min · 01101 173 min (seuil 180 min)"
   },
   {
    "id": "fraicheur-metar",
    "ok": true,
-   "detail": "LFMT 24 min · LFMP 24 min · LFTH 24 min · LFML 24 min · LFMI 24 min (seuil 120 min)"
+   "detail": "LFMT 23 min · LFMP 23 min · LFTH 23 min · LFML 23 min · LFMI 23 min (seuil 120 min)"
   },
   {
    "id": "confidentialite",
