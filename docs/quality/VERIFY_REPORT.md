@@ -1,6 +1,6 @@
 # Remise en question (③)
 
-Généré le 2026-11-14 14:07 UTC par `pipeline/verify/run.ts`.
+Généré le 2026-11-14 14:31 UTC par `pipeline/verify/run.ts`.
 
 Erreur = prévu − mesuré. Vent en m/s aux stations METAR (aéroports), vagues : hauteur significative en m aux bouées Candhis. « courtTerme » = modèles sur les 3 derniers jours (pas une vraie prévision) ; « archive » = prévisions réellement émises N h avant.
 
@@ -8,18 +8,19 @@ Erreur = prévu − mesuré. Vent en m/s aux stations METAR (aéroports), vagues
 
 | Contrôle | Résultat | Détail |
 |---|---|---|
-| court-terme | ✅ | 25 couples station × modèle (vent), 15 couples bouée × modèle (vagues) comparés aux mesures des 3 derniers jours |
-| archive | ✅ | 27 prévisions archivées sur 108 h ; 2679 comparaisons prévu / mesuré à échéance (l'archive se remplit : 30 jours pour un bilan complet) |
+| court-terme | ✅ | 31 couples station × modèle (vent), 15 couples bouée × modèle (vagues) comparés aux mesures des 3 derniers jours |
+| archive | ✅ | 27 prévisions archivées sur 108 h ; 2523 comparaisons prévu / mesuré à échéance (l'archive se remplit : 30 jours pour un bilan complet) |
 | calibration-moteurs | ✅ | moteur vagues recalé sur 5 bouée(s) ; vent downwind recalé sur 2 spot(s) de la super prévision |
 
 ## Vent : modèles classés par erreur moyenne (3 derniers jours, en nœuds)
 
 | Station | Classement |
 |---|---|
-| LFMT | gfs_seamless 2,0 · meteofrance_arome_france 2,1 · meteofrance_arome_france_hd 2,3 · icon_d2 2,4 · meteofrance_arpege_europe 2,4 · ecmwf_ifs025 2,6 · icon_eu 2,7 |
-| LFMP | meteofrance_arome_france_hd 1,9 · meteofrance_arome_france 2,0 · ecmwf_ifs025 2,7 · gfs_seamless 3,0 · meteofrance_arpege_europe 3,0 · icon_eu 3,0 |
-| LFTH | icon_eu 2,3 · meteofrance_arome_france 2,7 · meteofrance_arpege_europe 2,7 · meteofrance_arome_france_hd 2,7 · gfs_seamless 3,1 · ecmwf_ifs025 3,4 |
-| LFML | meteofrance_arome_france_hd 2,1 · meteofrance_arome_france 2,4 · icon_eu 2,4 · ecmwf_ifs025 3,3 · meteofrance_arpege_europe 3,7 · gfs_seamless 4,9 |
+| LFMT | gfs_seamless 1,8 · meteofrance_arome_france 2,0 · meteofrance_arpege_europe 2,1 · icon_d2 2,2 · meteofrance_arome_france_hd 2,3 · ecmwf_ifs025 2,5 · icon_eu 2,6 |
+| LFMP | meteofrance_arome_france_hd 1,7 · meteofrance_arome_france 1,8 · gfs_seamless 2,3 · icon_eu 2,4 · ecmwf_ifs025 2,4 · meteofrance_arpege_europe 2,6 |
+| LFTH | icon_eu 2,3 · meteofrance_arome_france 2,6 · meteofrance_arome_france_hd 2,6 · meteofrance_arpege_europe 2,6 · ecmwf_ifs025 3,0 · gfs_seamless 3,0 |
+| LFML | meteofrance_arome_france_hd 2,1 · icon_eu 2,4 · meteofrance_arome_france 2,6 · ecmwf_ifs025 3,3 · meteofrance_arpege_europe 4,0 · gfs_seamless 5,2 |
+| LFMI | meteofrance_arome_france_hd 2,2 · meteofrance_arome_france 2,3 · meteofrance_arpege_europe 2,5 · icon_eu 2,7 · gfs_seamless 3,3 · ecmwf_ifs025 3,5 |
 
 ## Vagues : modèles classés par erreur moyenne (3 derniers jours, en m)
 
@@ -37,13 +38,13 @@ Erreur = prévu − mesuré. Vent en m/s aux stations METAR (aéroports), vagues
   - 01102 : 
   - 01101 : meteofrance_wave poids 20.48, ×1.09 (MAE 0.14 m, n 173) ; ecmwf_wam025 poids 10.16, ×0.82 (MAE 0.24 m, n 173) ; ewam poids 12.01, ×0.91 (MAE 0.21 m, n 173) ; gwam poids 4.56, ×0.8 (MAE 0.3 m, n 173) ; ncep_gfswave025 poids 6.94, ×0.88 (MAE 0.22 m, n 173) ; copernicus poids 19.23, ×0.87 (MAE 0.18 m, n 102)
   - 06601 : 
-- Vent downwind : La Grande-Motte × 0.99, Port Camargue × 0.96 (super prévision + relevé récent).
+- Vent downwind : La Grande-Motte × 1.08, Port Camargue × 1.03 (super prévision + relevé récent).
 
 ## Prévisions archivées (vraie échéance)
 
 27 prévisions archivées. Classement à 24 h :
 
-- LFMT : meteofrance_arpege_europe 2,3 nd (n 8) · icon_eu 2,3 nd (n 8) · icon_d2 2,4 nd (n 8) · ecmwf_ifs025 2,6 nd (n 8) · meteofrance_arome_france 2,7 nd (n 8) · gfs_seamless 2,8 nd (n 8) · meteofrance_arome_france_hd 2,9 nd (n 8)
-- LFMP : meteofrance_arome_france 1,7 nd (n 8) · meteofrance_arome_france_hd 1,7 nd (n 8) · icon_eu 3,3 nd (n 8) · ecmwf_ifs025 3,4 nd (n 8) · meteofrance_arpege_europe 3,5 nd (n 8) · gfs_seamless 3,6 nd (n 8)
-- LFTH : icon_eu 2,1 nd (n 8) · ecmwf_ifs025 2,6 nd (n 8) · meteofrance_arpege_europe 2,6 nd (n 8) · meteofrance_arome_france_hd 2,7 nd (n 8) · meteofrance_arome_france 2,7 nd (n 8) · gfs_seamless 3,8 nd (n 8)
-- LFML : icon_eu 1,6 nd (n 8) · ecmwf_ifs025 1,8 nd (n 8) · meteofrance_arome_france_hd 2,6 nd (n 8) · meteofrance_arome_france 2,7 nd (n 8) · gfs_seamless 5,2 nd (n 8) · meteofrance_arpege_europe 6,1 nd (n 8)
+- LFMT : meteofrance_arpege_europe 2,1 nd (n 6) · gfs_seamless 2,2 nd (n 6) · meteofrance_arome_france_hd 2,4 nd (n 6) · ecmwf_ifs025 2,6 nd (n 6) · icon_eu 2,6 nd (n 6) · meteofrance_arome_france 2,7 nd (n 6) · icon_d2 2,7 nd (n 6)
+- LFMP : gfs_seamless 1,0 nd (n 6) · meteofrance_arome_france_hd 1,6 nd (n 6) · meteofrance_arome_france 1,6 nd (n 6) · ecmwf_ifs025 2,2 nd (n 6) · meteofrance_arpege_europe 2,3 nd (n 6) · icon_eu 2,4 nd (n 6)
+- LFTH : icon_eu 1,9 nd (n 6) · meteofrance_arpege_europe 2,0 nd (n 6) · ecmwf_ifs025 2,4 nd (n 6) · meteofrance_arome_france_hd 2,7 nd (n 6) · meteofrance_arome_france 2,7 nd (n 6) · gfs_seamless 4,4 nd (n 6)
+- LFML : icon_eu 1,6 nd (n 6) · meteofrance_arome_france_hd 1,7 nd (n 6) · meteofrance_arome_france 2,0 nd (n 6) · ecmwf_ifs025 2,0 nd (n 6) · gfs_seamless 4,8 nd (n 6) · meteofrance_arpege_europe 6,5 nd (n 6)
