@@ -1,5 +1,5 @@
 {
- "generatedAt": 1794673083233,
+ "generatedAt": 1794676638224,
  "checks": [
   {
    "id": "golden-surf",
@@ -19,7 +19,7 @@
   {
    "id": "avant-apres-vent-downwind",
    "ok": true,
-   "detail": "D-66, notes downwind (intermédiaire, de jour), après − avant : 120 heures, moyenne +0.08, écart moyen 0.11 ; meilleurs créneaux 0→1"
+   "detail": "D-66, notes downwind (intermédiaire, de jour), après − avant : 120 heures, moyenne -0.05, écart moyen 0.05 ; meilleurs créneaux 1→0"
   },
   {
    "id": "sorties-surf",
@@ -34,57 +34,57 @@
   {
    "id": "sorties-downwind",
    "ok": true,
-   "detail": "3/3 parcours notés ; 1 meilleurs créneaux"
+   "detail": "3/3 parcours notés ; 0 meilleurs créneaux"
   },
   {
    "id": "ecart-prod-surf",
    "ok": true,
-   "detail": "notes surf OCEAN vs app en service (calcul prod. 40 min avant, même extrait Copernicus) : médiane 0.10, 90 % ≤ 0.30, max 0.90 sur 664 heures (max : carnon mar. 05:00, OCEAN 3.1 / prod 2.2)"
+   "detail": "notes surf OCEAN vs app en service (calcul prod. 37 min avant, même extrait Copernicus) : médiane 0.00, 90 % ≤ 0.10, max 4.10 sur 664 heures (max : carnon sam. 22:00, OCEAN 6.7 / prod 2.6)"
   },
   {
    "id": "ecart-prod-downwind",
    "ok": true,
-   "detail": "notes downwind (intermédiaire, de jour) OCEAN vs app en service (calcul prod. 134 min avant) : médiane 0.00, 90 % ≤ 0.00, max 7.90 sur 111 heures"
+   "detail": "notes downwind (intermédiaire, de jour) OCEAN vs app en service (calcul prod. 20 min avant) : médiane 0.00, 90 % ≤ 0.00, max 4.50 sur 117 heures"
   },
   {
    "id": "avant-apres-vent-wing",
    "ok": true,
-   "detail": "D-66, notes wing Sécu first de jour, après − avant : 252 heures, écart moyen 1.01 ; La Franqui +0.1 (écart moyen 0.1), sessions 0→0 ; La Grande-Motte -0.1 (écart moyen 0.7), sessions 1→1 ; Le Ponant +0.8 (écart moyen 0.8), sessions 0→0 ; Plage Sud -0.6 (écart moyen 0.7), sessions 1→0 ; Beauduc +1.4 (écart moyen 1.4), sessions 0→4 ; Le Jaï +0.4 (écart moyen 0.5), sessions 0→1 ; Hyères -2.4 (écart moyen 2.9), sessions 1→2"
+   "detail": "D-66, notes wing Sécu first de jour, après − avant : 300 heures, écart moyen 1.25 ; La Franqui +0.3 (écart moyen 0.6), sessions 0→1 ; La Grande-Motte -0.1 (écart moyen 0.7), sessions 1→1 ; Le Ponant +0.8 (écart moyen 0.8), sessions 0→0 ; Plage Sud -1.1 (écart moyen 1.2), sessions 1→0 ; Beauduc +1.6 (écart moyen 1.6), sessions 0→3 ; Le Jaï +0.8 (écart moyen 1.2), sessions 0→1 ; Hyères -2.6 (écart moyen 3.1), sessions 2→2"
   },
   {
    "id": "vent-la-franqui",
    "ok": true,
-   "detail": "La Franqui : meteofrance_arome_france_hd, le plus juste à LFMP (erreur 0.83 m/s sur 80 mesures) ; 178 heures ; vent non corrigé"
+   "detail": "La Franqui : meteofrance_arome_france_hd, le plus juste à LFMP (erreur 0.85 m/s sur 80 mesures) ; 177 heures ; vent non corrigé"
   },
   {
    "id": "vent-la-grande-motte",
    "ok": true,
-   "detail": "La Grande-Motte : gfs_seamless, le plus juste à LFMT (erreur 0.98 m/s sur 80 mesures) ; 178 heures ; vent non corrigé"
+   "detail": "La Grande-Motte : gfs_seamless, le plus juste à LFMT (erreur 0.97 m/s sur 80 mesures) ; 177 heures ; vent non corrigé"
   },
   {
    "id": "vent-le-ponant",
    "ok": true,
-   "detail": "Le Ponant : gfs_seamless, le plus juste à LFMT (erreur 0.98 m/s sur 80 mesures) ; 178 heures ; vent non corrigé"
+   "detail": "Le Ponant : gfs_seamless, le plus juste à LFMT (erreur 0.97 m/s sur 80 mesures) ; 177 heures ; vent non corrigé"
   },
   {
    "id": "vent-port-camargue",
    "ok": true,
-   "detail": "Plage Sud : gfs_seamless, le plus juste à LFMT (erreur 0.98 m/s sur 80 mesures) ; 178 heures ; vent non corrigé"
+   "detail": "Plage Sud : gfs_seamless, le plus juste à LFMT (erreur 0.97 m/s sur 80 mesures) ; 177 heures ; vent non corrigé"
   },
   {
    "id": "vent-beauduc",
    "ok": true,
-   "detail": "Beauduc : meteofrance_arome_france_hd, le plus juste à LFMI (erreur 1.16 m/s sur 80 mesures) ; 178 heures ; vent non corrigé"
+   "detail": "Beauduc : meteofrance_arome_france_hd, le plus juste à LFMI (erreur 1.21 m/s sur 80 mesures) ; 177 heures ; vent non corrigé"
   },
   {
    "id": "vent-le-jai",
    "ok": true,
-   "detail": "Le Jaï : meteofrance_arome_france_hd, le plus juste à LFML (erreur 1.24 m/s sur 80 mesures) ; 178 heures ; vent non corrigé"
+   "detail": "Le Jaï : meteofrance_arome_france_hd, le plus juste à LFML (erreur 1.07 m/s sur 80 mesures) ; 177 heures ; vent non corrigé"
   },
   {
    "id": "vent-almanarre",
    "ok": true,
-   "detail": "Hyères : icon_eu, le plus juste à LFTH (erreur 1.19 m/s sur 80 mesures) ; 178 heures ; vent non corrigé"
+   "detail": "Hyères : icon_eu, le plus juste à LFTH (erreur 1.19 m/s sur 80 mesures) ; 177 heures ; vent non corrigé"
   },
   {
    "id": "sorties-wing",
@@ -94,7 +94,7 @@
   {
    "id": "sorties-kite",
    "ok": true,
-   "detail": "7 spots notés (kite v1.0.0) ; 5 session(s) 2H en mode Sécu first"
+   "detail": "7 spots notés (kite v1.0.0) ; 4 session(s) 2H en mode Sécu first"
   },
   {
    "id": "confidentialite-moteurs",
