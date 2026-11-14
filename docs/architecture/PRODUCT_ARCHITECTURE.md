@@ -410,3 +410,10 @@ Les apps actuelles restent en ligne jusqu'à ce que leur remplaçante soit véri
 - Balises retenues à la main dans le registre (`openStations`), seulement si elles représentent le spot. Au 14/11 : La Franqui ← Pioupiou 1538 (Leucate, 4,6 km) ; Hyères ← Pioupiou 2133 (La Capte, 2,8 km). Grande-Motte, Ponant, Plage Sud, Beauduc, Le Jaï : rien de représentatif chez Pioupiou (balises à plus de 10 km, dans les terres) → Météo-France / FFVL à sonder.
 - Affichage : module En direct et fiche spot, pour tout le monde, avec la source et la distance ; plus de 90 min = pas « en direct ». Mode perso : la balise libre s'affiche sous Winds-Up, et « Balises libres vs Winds-Up » compare sur l'appareil (jours « à 15 nd » d'accord, écart de la moyenne horaire max, écart heure par heure aujourd'hui). Rien de Winds-Up n'est publié.
 - Décision sur l'abonnement Winds-Up : à prendre spot par spot après 2 à 3 semaines de comparaison.
+
+### D-68 (14/11/2026) — VAGUE › En direct : bouées houlographes au large
+- Tom (14/11) : un onglet « En direct » en VAGUE avec les relevés des bouées au large (hauteur, direction, période).
+- Bouées Candhis (Cerema, Licence Ouverte) déjà utilisées par le moteur surf, relues toutes les 10 min avec les balises (D-67) dans l'historique publié par Super Prévi Surf (une mesure toutes les 30 min) : 24 h par bouée dans `releves.json` (Hs, Hmax, période moyenne, direction de provenance, étalement, eau).
+- Affichage : mesures seulement, aucune note, aucune couleur de « bonne » houle (pas de seuil validé). Bouées montrées seulement si elles servent un spot surf ; plus de 3 h sans mesure = « dernière mesure il y a … ». Au 14/11 : Espiguette, Sète, Leucate en service ; Port-la-Nouvelle sans mesure depuis 5 jours ; Banyuls hors service temps réel.
+- Réglage de base de VAGUE : En direct en premier (Profil pour le changer).
+- Les bouées ne mesurent pas le vent ni la vitesse de la houle : la période (s) est la mesure qui renseigne sur sa « puissance ».

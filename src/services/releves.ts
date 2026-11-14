@@ -1,7 +1,7 @@
 // Relevés en sources libres (D-67) : publiés toutes les 10 min sur la branche « releves », lus directement par l'app.
 import { useEffect, useState } from 'preact/hooks';
 import { RELEVES_URL, type Releves } from './releves-core';
-export { openLive, compare, type Releves } from './releves-core';
+export { openLive, compare, buoysLive, type Releves, type BuoyPt } from './releves-core';
 
 let last: Releves | null = null;
 export function useReleves(): Releves | null {

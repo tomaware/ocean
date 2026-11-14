@@ -7,7 +7,7 @@ import { setPrefs, usePrefs, type Reading } from '../services/prefs';
 import { publicLive, useHisto, useLive, type Histo, type Live } from '../services/perso';
 import { monthStats } from '../services/stats';
 import { windsUpUrl } from '../services/windsup';
-import { compare, openLive, useReleves, type Releves } from '../services/releves';
+import { buoysLive, compare, openLive, useReleves, type BuoyPt, type Releves } from '../services/releves';
 import { hourSlots } from './hourslots';
 import { goBack } from '../services/nav';
 import { EDITEURS, webcamsCherchees, webcamsOf } from '../services/webcams';
@@ -130,6 +130,68 @@ export function CompareBox({ rel, histo, spots }: { rel: Releves | null; histo: 
           </tr>))}</tbody>
       </table>
       <span class="faint small">Jour « à 15 nd » : au moins une heure de jour (8 h–19 h) à 15 nd de moyenne, même règle des deux côtés. « Aujourd’hui » : balise libre moins Winds-Up, heure par heure. Les balises libres ne sont collectées que depuis le 14/11 : il faut 2 à 3 semaines pour juger.</span>
+    </div>
+  );
+}
+
+/** VAGUE › En direct (D-68) : bouées houlographes Candhis au large, toutes les 30 min. Mesures seulement, aucune note. */
+const m1 = (x: number | null) => (x === null ? '—' : x.toFixed(1).replace('.', ','));
+export function BuoysBox({ rel }: { rel: Releves | null }) {
+  const [open, setOpen] = useState<string | null>(null);
+  const rows = buoysLive(rel);
+  if (!rel) return <div class="card empty">Chargement des bouées…</div>;
+  if (!rows.length) return <div class="card empty">Aucune bouée disponible.</div>;
+  return (
+    <div class="card" style={{ borderColor: 'var(--c-accent)' }}>
+      <div class="row"><Radio size={16} color="var(--c-accent)" /><strong>Bouées au large</strong></div>
+      <div class="list">
+        {rows.map((b) => {
+          const p = b.last, on = open === b.code && b.pts.length > 0;
+          const line = (
+            <>
+              <span class="stack" style={{ gap: 0 }}><span>{b.name}</span><span class="faint">{b.depthM ? `${b.depthM} m de fond · ` : ''}pour {b.spots.map((n) => n.replace(/\s*\(.*\)/, '')).join(', ')}</span></span>
+              {!b.fresh ? <span class="small faint">{p ? `dernière mesure ${ago(p[0])}` : 'hors service'}</span> : (
+                <span class="row small" style={{ gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                  <strong class="livekn">{m1(p![1])} m</strong>
+                  {p![3] !== null && <strong>{m1(p![3])} s</strong>}
+                  {p![4] !== null && <span class="row" style={{ gap: '3px' }}><span aria-hidden="true" style={{ display: 'inline-block', transform: `rotate(${(p![4] + 180) % 360}deg)` }}>↑</span>{compass(p![4])}</span>}
+                  <span class="faint">{ago(p![0])}</span>
+                </span>
+              )}
+            </>
+          );
+          return (
+            <div key={b.code} class="stack" style={{ gap: '8px' }}>
+              {b.fresh ? <button type="button" class="row between liverow" aria-expanded={on} onClick={() => setOpen(on ? null : b.code)}>{line}</button> : <div class="row between">{line}</div>}
+              {on && <BuoyDay b={b} />}
+            </div>
+          );
+        })}
+      </div>
+      <span class="faint small">Hauteur significative (moyenne du tiers des plus grosses vagues), période moyenne, direction d’où vient la houle. Toucher une bouée : les 24 dernières heures (max, étalement, température de l’eau). Candhis – Cerema, Licence Ouverte.</span>
+    </div>
+  );
+}
+function BuoyDay({ b }: { b: { name: string; pts: BuoyPt[] } }) {
+  const pts = b.pts.filter((p) => p[1] !== null).filter((_, i, a) => (a.length - 1 - i) % 2 === 0);   // une mesure par heure
+  const max = Math.max(1, ...pts.map((p) => p[2] ?? p[1]!));
+  const last = b.pts[b.pts.length - 1];
+  return (
+    <div class="stack" style={{ gap: '6px' }}>
+      <div class="dayread" role="table" aria-label={`Bouée ${b.name}, 24 dernières heures`}>
+        <div class="bars" role="row">
+          {pts.map((p) => (
+            <div key={p[0]} class="bar" role="cell" title={`${hourOf(p[0])} h : ${m1(p[1])} m (max ${m1(p[2])}), ${m1(p[3])} s, de ${compass(p[4])}`}>
+              <span class="v">{m1(p[1])}</span>
+              <span class="col livekn" style={{ height: `${Math.max(6, (p[1]! / max) * 64)}px` }} />
+              <span class="d">{p[3] === null ? '' : `${Math.round(p[3])} s`}</span>
+              <span class="d">{p[4] === null ? '' : compass(p[4])}</span>
+              <span class="t">{hourOf(p[0])}h</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <span class="faint small">Dernière mesure : vague max {m1(last[2])} m · étalement {last[5] === null ? '—' : Math.round(last[5]) + '°'} · eau {m1(last[6])} °C</span>
     </div>
   );
 }

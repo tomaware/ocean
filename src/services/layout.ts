@@ -6,7 +6,7 @@ export type TabLayout = { order: SubId[]; hidden: SubId[] };
 /** Réglage de base de l'app (Tom, 13/11) ; chacun peut le changer dans le Profil. */
 export const DEFAULT_LAYOUT: Record<string, TabLayout> = {
   wind: { order: ['direct', 'favoris', 'sessions', 'prevision', 'spots', 'meilleure'], hidden: ['meilleure'] },
-  vague: { order: ['favoris', 'sessions', 'prevision', 'spots', 'meilleure'], hidden: ['meilleure'] },
+  vague: { order: ['direct', 'favoris', 'sessions', 'prevision', 'spots', 'meilleure'], hidden: ['meilleure'] },
   houle: { order: ['prevision', 'spots', 'meilleure', 'favoris'], hidden: ['meilleure', 'favoris'] },
 };
 
@@ -40,5 +40,5 @@ export function toggleSub(available: SubId[], layout: TabLayout | undefined, id:
 
 // « spots » s'affiche « Carte » (Tom, 13/11) ; l'identifiant reste pour les adresses et les réglages déjà enregistrés
 export const SUB_LABEL: Record<SubId, string> = { meilleure: 'Meilleure session', favoris: 'Favoris', sessions: 'Sessions 2H', prevision: 'Prévision', spots: 'Carte', direct: 'En direct' };
-/** Modules disponibles par onglet : « En direct » en WIND seulement ; pas de Sessions 2H en HOULE (Tom, 11/11). */
-export const availableSubs = (disc: string): SubId[] => SUB_IDS.filter((x) => (x !== 'direct' || disc === 'wing') && (x !== 'sessions' || disc !== 'downwind'));
+/** Modules disponibles par onglet : « En direct » en WIND (balises) et VAGUE (bouées, D-68) ; pas de Sessions 2H en HOULE (Tom, 11/11). */
+export const availableSubs = (disc: string): SubId[] => SUB_IDS.filter((x) => (x !== 'direct' || disc === 'wing' || disc === 'surf') && (x !== 'sessions' || disc !== 'downwind'));

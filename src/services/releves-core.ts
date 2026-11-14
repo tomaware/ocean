@@ -42,3 +42,12 @@ export function compare(r: Releves | null, h: Histo | null, spot: string): Compa
       today: diffs.length ? { n: diffs.length, mean: r1(diffs.reduce((a, b) => a + b, 0) / diffs.length), mad: r1(diffs.reduce((a, b) => a + Math.abs(b), 0) / diffs.length) } : null };
   });
 }
+
+export type BuoyPt = [number, number | null, number | null, number | null, number | null, number | null, number | null];
+export type Buoy = { code: string; name: string; depthM: number | null; spots: string[]; pts: BuoyPt[]; status: string };
+/** Bouées affichées dans VAGUE › En direct (D-68) : celles qui servent au moins un spot surf, mesure récente d'abord. */
+export function buoysLive(r: Releves | null, now = Date.now()): (Buoy & { last: BuoyPt | null; fresh: boolean })[] {
+  const all = Object.values(((r as any)?.buoys ?? {}) as Record<string, Buoy>).filter((b) => b.spots.length);
+  return all.map((b) => { const last = [...b.pts].reverse().find((p) => p[1] !== null) ?? null; return { ...b, last, fresh: !!last && now - last[0] <= 3 * 3600e3 }; })
+    .sort((a, b) => Number(b.fresh) - Number(a.fresh));
+}

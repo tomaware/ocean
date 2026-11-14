@@ -13,7 +13,7 @@ import { MapPlayer } from '../components/MapPlayer';
 import { discName } from '../services/sport';
 import { availableSubs, shownSubIds, SUB_IDS, SUB_LABEL, type SubId, type TabLayout } from '../services/layout';
 import { seriesFor, type Series } from './series';
-import { bestScoreBySpot, CompareBox, Freshness, levelFor, LiveBox, matches, SpotStats, WindsUpLinks, moduleOf, upcoming } from './pages';
+import { bestScoreBySpot, BuoysBox, CompareBox, Freshness, levelFor, LiveBox, matches, SpotStats, WindsUpLinks, moduleOf, upcoming } from './pages';
 import { openLive, useReleves } from '../services/releves';
 
 export const SUBS = SUB_IDS.map((id) => ({ id, label: SUB_LABEL[id] }));
@@ -216,7 +216,7 @@ export function Module({ d, now, disc, sub, query }: { d: AllData; now: number; 
   const spots = d.spots.filter((s) => spotDiscipline(s) === disc);
   const live = useLive(disc === 'wing' ? spots.map((s) => s.id) : []);
   const histo = useHisto(disc === 'wing' && live.live?.length ? spots.map((s) => s.id) : []);
-  const rel = useReleves();
+  const rel = useReleves();   // balises (WIND) et bouées (VAGUE)
   const best = useMemo(() => bestScoreBySpot(d, prefs, now), [d, prefs, now]);
   const all = upcoming(d, now).filter((s) => s.discipline === disc && matches(s, prefs));
   const top = d.sessions.best[L]?.[disc] ?? null;
@@ -251,6 +251,7 @@ export function Module({ d, now, disc, sub, query }: { d: AllData; now: number; 
       {!prefs.perso.enabled && <WindsUpLinks spots={spots} />}
     </div>
   );
+  else if (sub === 'direct' && disc === 'surf') body = <BuoysBox rel={rel} />;
   else if (sub === 'prevision') body = <Prevision d={d} now={now} disc={disc} spots={spots} L={L} query={query} />;
   // Carte (Tom, 13/11) : vent et spots heure par heure sur 5 jours, façon Windy ; plus de liste de spots dessous
   else if (sub === 'spots') body = (

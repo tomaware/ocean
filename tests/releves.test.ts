@@ -65,3 +65,18 @@ test('app : balise libre en direct (90 min max) et comparaison avec l’historiq
   assert.equal(c.madMax, 2.7);                       // |16−12| + |24−22| + |20−18| = 8 / 3
   assert.deepEqual(c.today, { n: 2, mean: 0, mad: 2 }); // 13 h : 16 − 14 = +2 ; 14 h : 18 − 20 = −2
 });
+
+import { parseBuoys } from '../pipeline/collect/releves.ts';
+import { buoysLive } from '../src/services/releves-core.ts';
+test('bouées Candhis (D-68) : 24 h, valeurs hors bornes rejetées, spots servis, mesure ancienne signalée', () => {
+  const reg = loadRegistry();
+  const raw = { '03404': [{ t: NOW - 30 * 3600e3, hs: 1 }, { t: NOW - 3600e3, hs: 0.5, hmax: 0.8, tm: 5.1, dir: 168, spread: 30, sst: 17.1 }, { t: NOW - 1800e3, hs: 99, tm: 5 }],
+    '01102': [{ t: NOW - 5 * 3600e3, hs: 2.4, tm: 6, dir: 198 }] };
+  const b = parseBuoys(raw, reg, NOW);
+  assert.deepEqual(b['03404'].pts, [[NOW - 3600e3, 0.5, 0.8, 5.1, 168, 30, 17.1], [NOW - 1800e3, null, null, 5, null, null, null]]);
+  assert.ok(b['03404'].spots.some((n) => n.startsWith('Sète')) && b['03404'].spots.length === 4, b['03404'].spots.join());
+  assert.equal(b['03404'].status, 'ok'); assert.equal(b['01102'].status, 'mesure ancienne');
+  const live = buoysLive({ buoys: b } as any, NOW);
+  assert.equal(live[0].code, '03404'); assert.equal(live[0].fresh, true); assert.equal(live[0].last![1], 0.5, 'dernière mesure valide');
+  assert.ok(live.every((x) => x.spots.length), 'seulement les bouées qui servent un spot surf');
+});

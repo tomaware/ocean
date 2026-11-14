@@ -4,9 +4,9 @@ import assert from 'node:assert/strict';
 import { availableSubs, moveSub, orderedSubs, shownSubIds, toggleSub } from '../src/services/layout.ts';
 
 const wind = availableSubs('wing'), houle = availableSubs('downwind');
-test('modules disponibles : En direct en WIND seulement, pas de Sessions 2H en HOULE', () => {
+test('modules disponibles : En direct en WIND et VAGUE (bouées, D-68), pas de Sessions 2H en HOULE', () => {
   assert.deepEqual(wind, ['meilleure', 'favoris', 'sessions', 'prevision', 'spots', 'direct']);
-  assert.deepEqual(availableSubs('surf'), ['meilleure', 'favoris', 'sessions', 'prevision', 'spots']);
+  assert.deepEqual(availableSubs('surf'), ['meilleure', 'favoris', 'sessions', 'prevision', 'spots', 'direct']);
   assert.deepEqual(houle, ['meilleure', 'favoris', 'prevision', 'spots']);
 });
 test('par défaut tout est affiché dans l’ordre habituel', () => {
@@ -47,6 +47,6 @@ test('carte : 5 jours, 7 h → 21 h, lecture heure par heure', () => {
 import { DEFAULT_LAYOUT } from '../src/services/layout.ts';
 test('réglage de base de l’app (capture de Tom, 13/11)', () => {
   assert.deepEqual(shownSubIds(wind, DEFAULT_LAYOUT.wind), ['direct', 'favoris', 'sessions', 'prevision', 'spots']);
-  assert.deepEqual(shownSubIds(availableSubs('surf'), DEFAULT_LAYOUT.vague), ['favoris', 'sessions', 'prevision', 'spots']);
+  assert.deepEqual(shownSubIds(availableSubs('surf'), DEFAULT_LAYOUT.vague), ['direct', 'favoris', 'sessions', 'prevision', 'spots']);   // + En direct (D-68)
   assert.deepEqual(shownSubIds(houle, DEFAULT_LAYOUT.houle), ['prevision', 'spots']);
 });

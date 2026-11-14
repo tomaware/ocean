@@ -22,14 +22,36 @@ export type StationOut = { src: Src; id: string; name: string; lat: number | nul
 export type Day = [string, number, number];
 export type Releves = {
   version: 1; generatedAt: number;
-  sources: Record<Src, { ok: boolean; message: string; licence: string; attribution: string; url: string }>;
+  sources: Record<Src | 'candhis', { ok: boolean; message: string; licence: string; attribution: string; url: string }>;
   spots: Record<string, StationOut[]>;
   days: Record<string, Day[]>;          // clé : src:id
+  /** Bouées houlographes Candhis (D-68) : 24 h de mesures, toutes les 30 min. */
+  buoys?: Record<string, BuoyOut>;
 };
+/** Mesure de bouée : [heure, Hs m, Hmax m, période moyenne s, direction de provenance °, étalement °, eau °C] */
+export type BuoyPt = [number, number | null, number | null, number | null, number | null, number | null, number | null];
+export type BuoyOut = { code: string; name: string; lat: number; lon: number; depthM: number | null; spots: string[]; pts: BuoyPt[]; status: string };
+export const CANDHIS_URL = 'https://raw.githubusercontent.com/tomaware/super-previ-surf/main/data/history/buoys.json';
 
-export const LICENCE: Record<Src, { licence: string; attribution: string; url: string }> = {
+/** Historique Candhis (relu chez Super Prévi Surf, comme la collecte horaire) → 24 dernières heures par bouée du registre. */
+export function parseBuoys(raw: Record<string, any[]>, reg: Registry, now: number): Record<string, BuoyOut> {
+  const ok = (x: unknown, lo: number, hi: number) => { const v = num(x); return v !== null && v >= lo && v <= hi ? v : null; };
+  const out: Record<string, BuoyOut> = {};
+  for (const b of reg.buoys) {
+    const pts = (raw?.[b.code] ?? []).filter((o) => Number.isFinite(o?.t) && o.t >= now - KEEP_H * 3600e3 && o.t <= now + 10 * 60e3)
+      .sort((a, c) => a.t - c.t).filter((o, i, a) => !i || a[i - 1].t !== o.t)
+      .map((o) => [o.t, ok(o.hs, 0, 15), ok(o.hmax, 0, 30), ok(o.tm, 0, 30), ok(o.dir, 0, 360), ok(o.spread, 0, 180), ok(o.sst, -2, 35)] as BuoyPt);
+    const last = pts.filter((p) => p[1] !== null).pop();
+    const spots = reg.spots.filter((x) => x.disciplines.includes('surf') && x.buoys?.includes(b.code)).map((x) => x.name);
+    out[b.code] = { code: b.code, name: b.name, lat: b.lat, lon: b.lon, depthM: b.depthM ?? null, spots, pts, status: last ? (now - last[0] > 3 * 3600e3 ? 'mesure ancienne' : 'ok') : b.status === 'en service' ? 'pas de mesure sur 24 h' : b.status };
+  }
+  return out;
+}
+
+export const LICENCE: Record<Src | 'candhis', { licence: string; attribution: string; url: string }> = {
   pioupiou: { licence: 'données ouvertes, attribution + partage à l’identique', attribution: 'OpenWindMap / Pioupiou', url: 'https://www.openwindmap.org' },
   'meteo-france': { licence: 'Licence Ouverte Etalab 2.0', attribution: 'Météo-France', url: 'https://portail-api.meteofrance.fr' },
+  candhis: { licence: 'Licence Ouverte Etalab', attribution: 'Candhis – Cerema', url: 'https://candhis.cerema.fr' },
   ffvl: { licence: 'à confirmer avec la FFVL', attribution: 'FFVL – balisemeteo.com', url: 'https://www.balisemeteo.com' },
 };
 
@@ -105,7 +127,7 @@ export async function collectReleves(reg: Registry, prev: Releves | null, now: n
   const old = new Map<string, StationOut>(); for (const arr of Object.values(prev?.spots ?? {})) for (const x of arr) old.set(key(x), x);
   const got = new Map<string, { name?: string; lat: number | null; lon: number | null; pts: Pt[]; status: string }>();
   const sources = {} as Releves['sources'];
-  const mark = (src: Src, ok: boolean, message: string) => { sources[src] = { ok, message, ...LICENCE[src] }; };
+  const mark = (src: Src | 'candhis', ok: boolean, message: string) => { sources[src] = { ok, message, ...LICENCE[src] }; };
 
   // Pioupiou : un seul appel pour toutes les balises
   const pp = wanted.filter((w) => w.st.src === 'pioupiou').map((w) => w.st.id);
@@ -146,5 +168,12 @@ export async function collectReleves(reg: Registry, prev: Releves | null, now: n
     (spots[w.spot] ??= []).push({ src: w.st.src, id: w.st.id, name: g?.name ?? o?.name ?? w.st.name ?? w.st.id, lat, lon, km: lat !== null && lon !== null ? r1(km(w.lat, w.lon, lat, lon)) : null, pts, status: g?.status ?? (sources[w.st.src].ok ? 'non lue' : sources[w.st.src].message) });
     days[k] = updateDays(days[k] ?? [], pts, now);
   }
-  return { version: 1, generatedAt: now, sources, spots, days };
+  // bouées Candhis (D-68) : une source en panne garde les mesures précédentes (24 h glissantes)
+  let buoys: Record<string, BuoyOut> | undefined = prev?.buoys;
+  try {
+    const r = await f(CANDHIS_URL); if (!r.ok) throw new Error('HTTP ' + r.status);
+    buoys = parseBuoys(await r.json(), reg, now);
+    mark('candhis', true, `${Object.values(buoys).filter((b) => b.status === 'ok').length}/${reg.buoys.length} bouée(s) avec mesure récente`);
+  } catch (e) { mark('candhis', false, String((e as Error).message ?? e)); }
+  return { version: 1, generatedAt: now, sources, spots, days, ...(buoys ? { buoys } : {}) };
 }
