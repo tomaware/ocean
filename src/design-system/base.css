@@ -411,3 +411,6 @@ table.stats thead th:not(:first-child) { text-align: right; }
 .favday { font-size: var(--fs-md, 1.05rem); font-weight: 800; color: var(--c-ink); }
 
 .livespot .liverow > .small:first-child { text-align: left; }
+/* En direct : un spot sur deux sur une bande plus claire (15/11) */
+.livespot.alt { background: var(--c-surface-2); border-radius: 10px; margin-inline: -10px; padding: 8px 10px; }
+.livespot.alt .livekn:not(.k1):not(.k2):not(.k3):not(.kite) { background: var(--c-surface); }

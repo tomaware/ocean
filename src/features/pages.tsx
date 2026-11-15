@@ -63,8 +63,9 @@ export function LiveBox({ live, spot, names, histo, spots }: { live: Live[] | nu
       <div class="row"><Radio size={16} color="var(--c-accent)" /><strong>En direct</strong>{perso && <span class="chip accent">mode perso · visible sur cet appareil seulement</span>}</div>
       {/* un bloc par spot (Tom, 15/11) : le nom du spot une fois, puis une ligne par source */}
       <div class="list">
-        {order.map((sp) => (
-          <div key={sp} class="stack livespot" style={{ gap: '6px' }}>
+        {order.map((sp, i) => (
+          // une bande plus claire un spot sur deux (La Franqui, Sète Lido, Le Ponant, Beauduc, Hyères ; Tom, 15/11)
+          <div key={sp} class={`stack livespot${!spot && i % 2 === 0 ? ' alt' : ''}`} style={{ gap: '6px' }}>
             {!spot && (
               <div class="row between">
                 <strong>{names?.[sp] ?? rows.find((l) => l.spot === sp)?.name ?? sp}</strong>
