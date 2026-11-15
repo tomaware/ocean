@@ -22,16 +22,26 @@ try {
       const t = Date.parse(s.measurements?.date ?? ''); all.push({ src: 'pioupiou', id: String(s.id), name: s.meta?.name ?? '?', lat, lon, ageMin: Number.isFinite(t) ? Math.round((now - t) / 60000) : null }); } }
 } catch (e) { console.log('Pioupiou : ' + e); }
 
-// 2) FFVL (liste des balises)
-for (const u of ['https://data.ffvl.fr/json/balises.json', 'https://data.ffvl.fr/api/?base=balises&r=list&mode=json' + (process.env.FFVL_KEY ? '&key=' + process.env.FFVL_KEY : '')]) {
-  try { const r = await get(u); console.log(`FFVL ${u.split('?')[0].replace('https://', '')}${u.includes('api') ? ' (api)' : ''} : HTTP ${r.status}, ${r.text.length} octets`);
-    if (!r.ok) continue; let j: any; try { j = JSON.parse(r.text); } catch { console.log('  pas du JSON : ' + r.text.slice(0, 120).replace(/\s+/g, ' ')); continue; }
-    const arr = Array.isArray(j) ? j : Object.values(j);
-    let n = 0; for (const b of arr as any[]) { const lat = Number(b.latitude ?? b.lat), lon = Number(b.longitude ?? b.lon ?? b.lng); if (!Number.isFinite(lat)) continue; n++;
-      all.push({ src: 'ffvl', id: String(b.idBalise ?? b.id ?? '?'), name: String(b.nom ?? b.name ?? '?'), lat, lon, note: b.active === '0' ? 'inactive' : undefined }); }
-    console.log(`  ${n} balises avec coordonnées`); break;
-  } catch (e) { console.log('FFVL : ' + e); }
-}
+// 2) FFVL : open data sur data.gouv.fr (Licence Ouverte 2.0, sans clé) — balises.json + releves.json
+try {
+  const ds = await get('https://www.data.gouv.fr/api/1/datasets/reseau-de-balises-meteo-de-la-ffvl-federation-francaise-de-vol-libre/');
+  console.log(`FFVL data.gouv : HTTP ${ds.status}`);
+  if (ds.ok) { const j = JSON.parse(ds.text); console.log(`  licence : ${j.license} · mis à jour ${j.last_modified}`);
+    const files: Record<string, any> = {};
+    for (const r of j.resources ?? []) { console.log(`  ressource « ${r.title} » ${r.format} ${r.url} (modifiée ${r.last_modified})`);
+      if (/json/i.test(r.format ?? r.url)) { const x = await get(r.url); console.log(`    → HTTP ${x.status}, ${x.text.length} octets`); try { files[r.title] = JSON.parse(x.text); } catch { console.log('    pas du JSON'); } } }
+    for (const [t, v] of Object.entries(files)) { const arr: any[] = Array.isArray(v) ? v : Object.values(v as object); const o = arr[0];
+      console.log(`  « ${t} » : ${arr.length} éléments ; champs : ${o && typeof o === 'object' ? Object.keys(o).join(', ') : typeof o}`);
+      if (o) console.log('    exemple : ' + JSON.stringify(o).slice(0, 400)); }
+    const bal = Object.values(files).find((v: any) => { const a: any[] = Array.isArray(v) ? v : Object.values(v); return a[0]?.latitude !== undefined || a[0]?.lat !== undefined; }) as any;
+    const rel = Object.values(files).find((v) => v !== bal) as any;
+    const relArr: any[] = rel ? (Array.isArray(rel) ? rel : Object.values(rel)) : [];
+    const relById = new Map(relArr.map((o) => [String(o.idBalise ?? o.idbalise ?? o.id), o]));
+    for (const b of (bal ? (Array.isArray(bal) ? bal : Object.values(bal)) : []) as any[]) { const lat = Number(b.latitude ?? b.lat), lon = Number(b.longitude ?? b.lon); if (!Number.isFinite(lat)) continue;
+      const id = String(b.idBalise ?? b.idbalise ?? b.id); const r = relById.get(id); const t = Date.parse(r?.date ?? r?.dateRelevé ?? r?.dateReleve ?? '');
+      all.push({ src: 'ffvl', id, name: String(b.nom ?? b.name ?? '?'), lat, lon, ageMin: Number.isFinite(t) ? Math.round((now - t) / 60000) : null, note: r ? undefined : 'pas de relevé' }); }
+  }
+} catch (e) { console.log('FFVL : ' + e); }
 
 // 3) Météo-France, API Observations (DPObs) — clé dans le secret METEOFRANCE_KEY
 const MF = process.env.METEOFRANCE_KEY?.trim();
