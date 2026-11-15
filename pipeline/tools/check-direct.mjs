@@ -5,5 +5,6 @@ const calls = []; p.on('request', (r) => { if (r.url().includes('pioupiou')) cal
 await p.goto(process.argv[2] + '#/wind/direct'); await p.waitForTimeout(12000);
 const rows = await p.locator('button.liverow').allInnerTexts();
 console.log('appels Pioupiou depuis la page :', calls.length);
+const blocks = await p.locator('.livespot').allInnerTexts(); for (const b of blocks) console.log('bloc :', b.split('\n')[0]);
 for (const r of rows) if (/Pioupiou|Météo-France/.test(r)) console.log('ligne :', r.replace(/\d+[,.]?\d*\s*nd/g, '… nd').replace(/\s+/g, ' '));
 await b.close();
