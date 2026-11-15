@@ -86,3 +86,14 @@ test('FFVL open data : km/h → nœuds, champs de releves.json (vus le 15/11)', 
   const p = parseFfvl([{ idbalise: 10, date: '2026-11-15T16:19:11+01:00', vitesseVentMoy: 12, vitesseVentMax: 20, directVentMoy: 246 }, { idbalise: 11, date: 'x', vitesseVentMoy: 3 }], ['10', '11']);
   assert.deepEqual(p, { '10': [Date.parse('2026-11-15T15:19:11Z'), 6.5, 10.8, 246] });
 });
+
+import { pioupiouPt, withLive } from '../src/services/releves-core.ts';
+test('direct navigateur Pioupiou : dernière mesure ajoutée une seule fois', () => {
+  const p = pioupiouPt({ data: { measurements: { date: new Date(NOW).toISOString(), wind_speed_avg: 37.04, wind_speed_max: 51.86, wind_heading: 315 } } })!;
+  assert.deepEqual(p, [NOW, 20, 28, 315]);
+  const r: any = { spots: { 'la-franqui': [{ src: 'pioupiou', id: '1538', pts: [[NOW - 3600e3, 10, null, 300]] }] } };
+  const a = withLive(r, { 'pioupiou:1538': p });
+  assert.equal(a.spots['la-franqui'][0].pts.length, 2);
+  assert.equal(withLive(a, { 'pioupiou:1538': p }).spots['la-franqui'][0].pts.length, 2);
+  assert.equal(pioupiouPt({ data: { measurements: { date: 'x' } } }), null);
+});

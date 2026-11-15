@@ -52,3 +52,20 @@ export function buoysLive(r: Releves | null, now = Date.now()): (Buoy & { last: 
   return all.map((b) => { const last = [...b.pts].reverse().find((p) => p[1] !== null) ?? null; return { ...b, last, fresh: !!last && now - last[0] <= 3 * 3600e3 }; })
     .sort((a, b) => Number(b.fresh) - Number(a.fresh));
 }
+
+/** Direct navigateur (D-67) : la collecte GitHub ne passe en pratique que toutes les 40–50 min ; l'app lit donc elle-même la
+ *  dernière mesure Pioupiou (API ouverte, CORS autorisé) et l'ajoute aux relevés publiés. km/h → nœuds. */
+export function pioupiouPt(j: any): Pt | null {
+  const m = j?.data?.measurements, t = Date.parse(m?.date ?? ''), v = m?.wind_speed_avg, g = m?.wind_speed_max, d = m?.wind_heading;
+  if (!Number.isFinite(t) || typeof v !== 'number' || v < 0 || v >= 250) return null;
+  const r1 = (x: number) => Math.round(x * 10) / 10, k = 1 / 1.852;
+  return [t, r1(v * k), typeof g === 'number' ? r1(g * k) : null, typeof d === 'number' ? Math.round(d) % 360 : null];
+}
+export function withLive(r: Releves, live: Record<string, Pt>): Releves {
+  const spots: Releves['spots'] = {};
+  for (const [s, arr] of Object.entries(r.spots)) spots[s] = arr.map((st) => {
+    const p = live[st.src + ':' + st.id]; if (!p || st.pts.some((q) => q[0] === p[0])) return st;
+    return { ...st, pts: [...st.pts, p].sort((a, b) => a[0] - b[0]) };
+  });
+  return { ...r, spots };
+}
