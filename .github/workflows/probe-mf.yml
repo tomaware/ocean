@@ -12,4 +12,6 @@ jobs:
           node-version: 22
       - env:
           METEOFRANCE_KEY: ${{ secrets.METEOFRANCE_KEY }}
-        run: node pipeline/tools/probe-mf.ts
+          METEOFRANCE_KEY_OBS2: ${{ secrets.METEOFRANCE_KEY_OBS2 }}
+          METEOFRANCE_KEY_PACK2: ${{ secrets.METEOFRANCE_KEY_PACK2 }}
+        run: node pipeline/tools/probe-mf2.ts
