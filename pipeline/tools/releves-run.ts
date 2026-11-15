@@ -13,7 +13,7 @@ const leaks = [/winds-up/i.test(text) && 'Winds-Up', /script\.google/.test(text)
 if (leaks.length) { console.log('FUITE : ' + leaks.join(', ')); process.exit(2); }
 writeFileSync(outPath, text);
 for (const [s, x] of Object.entries(out.sources)) console.log(`[relevés] ${x.ok ? 'OK ' : 'KO '} ${s} : ${x.message}`);
-for (const [spot, arr] of Object.entries(out.spots)) for (const x of arr) console.log(`[relevés]     ${spot} ← ${x.src} ${x.id} (${x.km ?? '?'} km) : ${x.pts.length} relevé(s) sur 24 h, ${x.status}`);
+for (const [spot, arr] of Object.entries(out.spots)) for (const x of arr) { const l = x.pts[x.pts.length - 1]; console.log(`[relevés]     ${spot} ← ${x.src} ${x.id} (${x.km ?? '?'} km) : ${x.pts.length} relevé(s) sur 24 h, ${x.status}${l ? ` ; dernière : ${Math.round((Date.now() - l[0]) / 60000)} min, ${l[1]} nd, ${l[3] ?? '?'}°` : ''}`); }
 for (const b of Object.values(out.buoys ?? {})) console.log(`[relevés]     bouée ${b.name} (${b.code}) : ${b.pts.length} mesure(s) sur 24 h, ${b.status}`);
 const n = Object.values(out.spots).flat().filter((x) => x.pts.length).length + Object.values(out.buoys ?? {}).filter((b) => b.pts.length).length;
 if (!n) { console.log('aucun relevé : publication précédente gardée'); process.exit(3); }

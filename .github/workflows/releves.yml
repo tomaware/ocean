@@ -1,41 +1,42 @@
 name: Relevés en sources libres
-# D-67 : balises publiques (OpenWindMap/Pioupiou, Météo-France, FFVL) toutes les 10 min, publiées sur la branche
-# « releves » (un seul commit, fichier releves.json), lue directement par l'app. Indépendant de la collecte horaire.
+# D-67 / D-68 : balises (OpenWindMap/Pioupiou, Météo-France, FFVL) et bouées Candhis, publiées sur la branche « releves »
+# (un seul commit, releves.json) et lues directement par l'app.
+# Les planifications GitHub « toutes les 10 min » ne passent en pratique que toutes les 40–50 min (constat du 15/11) :
+# une exécution par heure fait donc elle-même 6 collectes espacées de 10 min.
 on:
   schedule:
-    - cron: '*/10 * * * *'
+    - cron: '7 * * * *'
   workflow_dispatch:
 permissions:
   contents: write
 concurrency:
   group: releves
-  cancel-in-progress: false
+  cancel-in-progress: true
 jobs:
   releves:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 62
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Relevés précédents
-        run: git fetch -q --depth 1 origin releves && git show origin/releves:releves.json > /tmp/prev.json || echo '{}' > /tmp/prev.json
-      - name: Collecte
-        id: run
+      - name: Collectes toutes les 10 min pendant une heure
         env:
           METEOFRANCE_KEY: ${{ secrets.METEOFRANCE_KEY }}
           FFVL_KEY: ${{ secrets.FFVL_KEY }}
-        run: |
-          set +e; node pipeline/tools/releves-run.ts /tmp/prev.json /tmp/releves.json; c=$?
-          if [ $c -eq 3 ]; then echo "::warning::aucun relevé lu ; publication précédente gardée"; echo "skip=true" >> $GITHUB_OUTPUT; exit 0; fi
-          exit $c
-      - name: Publier (branche releves)
-        if: steps.run.outputs.skip != 'true'
-        env:
           GH_TOKEN: ${{ github.token }}
+          RUNS: ${{ github.event_name == 'workflow_dispatch' && '1' || '6' }}
         run: |
-          D=$(mktemp -d) && cp /tmp/releves.json $D/ && cd $D
-          git init -q -b releves && git config user.name ocean-bot && git config user.email ocean-bot@users.noreply.github.com
-          git add -A && git commit -qm "relevés $(date -u +%Y-%m-%dT%H:%MZ)"
-          git push -qf "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" releves
+          REPO="https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git"
+          for i in $(seq 1 $RUNS); do
+            echo "::group::collecte $i/$RUNS ($(date -u +%H:%MZ))"
+            (git fetch -q --depth 1 origin releves && git show origin/releves:releves.json > /tmp/prev.json) || echo '{}' > /tmp/prev.json
+            node pipeline/tools/releves-run.ts /tmp/prev.json /tmp/releves.json; c=$?
+            if [ $c -eq 0 ]; then
+              D=$(mktemp -d) && cp /tmp/releves.json $D/ && ( cd $D && git init -q -b releves && git config user.name ocean-bot && git config user.email ocean-bot@users.noreply.github.com && git add -A && git commit -qm "relevés $(date -u +%Y-%m-%dT%H:%MZ)" && git push -qf "$REPO" releves )
+            elif [ $c -eq 3 ]; then echo "::warning::aucun relevé lu ; publication précédente gardée"
+            else echo "::endgroup::"; exit $c; fi
+            echo "::endgroup::"
+            [ $i -lt $RUNS ] && sleep 600
+          done

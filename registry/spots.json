@@ -43,6 +43,12 @@
           "id": "1538",
           "name": "Aéromodélisme Leucatois",
           "note": "4,6 km, plateau de Leucate (diagnostic du 14/11) ; représentativité à confirmer par la comparaison avec Winds-Up"
+        },
+        {
+          "src": "meteo-france",
+          "id": "11202001",
+          "name": "Leucate",
+          "note": "Météo-France, station à 3,1 km, cap Leucate (diagnostic du 15/11) ; vent moyen 6 min, sans rafales"
         }
       ]
     },
@@ -79,7 +85,15 @@
         "kind": "best-model",
         "station": "LFMT",
         "note": "Prévision vent (publique, D-66) : modèle Open-Meteo le plus juste aux mesures METAR de la station sur 3 jours, relayé au-delà de son horizon. La super prévision (corrigée Winds-Up) reste privée."
-      }
+      },
+      "openStations": [
+        {
+          "src": "meteo-france",
+          "id": "30133005",
+          "name": "L'Espiguette",
+          "note": "Météo-France, station à 7,8 km, littoral (diagnostic du 15/11) ; vent moyen 6 min, sans rafales"
+        }
+      ]
     },
     {
       "id": "le-ponant",
@@ -120,7 +134,15 @@
         "kind": "best-model",
         "station": "LFMT",
         "note": "Prévision vent (publique, D-66) : modèle Open-Meteo le plus juste aux mesures METAR de la station sur 3 jours, relayé au-delà de son horizon. La super prévision (corrigée Winds-Up) reste privée."
-      }
+      },
+      "openStations": [
+        {
+          "src": "meteo-france",
+          "id": "30133005",
+          "name": "L'Espiguette",
+          "note": "Météo-France, station à 9 km, littoral (diagnostic du 15/11) ; vent moyen 6 min, sans rafales"
+        }
+      ]
     },
     {
       "id": "port-camargue",
@@ -155,7 +177,15 @@
         "kind": "best-model",
         "station": "LFMT",
         "note": "Prévision vent (publique, D-66) : modèle Open-Meteo le plus juste aux mesures METAR de la station sur 3 jours, relayé au-delà de son horizon. La super prévision (corrigée Winds-Up) reste privée."
-      }
+      },
+      "openStations": [
+        {
+          "src": "meteo-france",
+          "id": "30133005",
+          "name": "L'Espiguette",
+          "note": "Météo-France, station à 1,2 km (diagnostic du 15/11) ; vent moyen 6 min, sans rafales"
+        }
+      ]
     },
     {
       "id": "beauduc",
@@ -234,7 +264,15 @@
         "vvanat.fr : plage du Jaï, wingfoil",
         "winds-up.com/spot/26-le-jai : balise Winds-Up du Jaï (Tom, 10/11)"
       ],
-      "notes": "Ajouté le 10/11 à la demande de Tom (étang de Berre), nommé « Le Jaï ». Tant que la super prévision ne couvre pas ce spot : vent = meilleur modèle aux mesures de Marignane (LFML) sur 3 jours, non corrigé ; dès qu'elle le couvre, vent corrigé de la super prévision. Orientation confirmée par Tom le 11/11/2026."
+      "notes": "Ajouté le 10/11 à la demande de Tom (étang de Berre), nommé « Le Jaï ». Tant que la super prévision ne couvre pas ce spot : vent = meilleur modèle aux mesures de Marignane (LFML) sur 3 jours, non corrigé ; dès qu'elle le couvre, vent corrigé de la super prévision. Orientation confirmée par Tom le 11/11/2026.",
+      "openStations": [
+        {
+          "src": "meteo-france",
+          "id": "13054001",
+          "name": "Marignane",
+          "note": "Météo-France, station à 3,6 km, aéroport au bord de l'étang (diagnostic du 15/11) ; vent moyen 6 min, sans rafales"
+        }
+      ]
     },
     {
       "id": "almanarre",
@@ -278,6 +316,12 @@
           "id": "2133",
           "name": "CAPT'ain NAUTIC – La Capte",
           "note": "2,8 km, La Capte, côté est du tombolo (diagnostic du 14/11) ; représentativité à confirmer par la comparaison avec Winds-Up"
+        },
+        {
+          "src": "meteo-france",
+          "id": "83069001",
+          "name": "Hyères",
+          "note": "Météo-France, station à 4,7 km, aéroport (diagnostic du 15/11) ; vent moyen 6 min, sans rafales"
         }
       ]
     },

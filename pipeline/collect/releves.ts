@@ -1,6 +1,6 @@
 // RELEVÉS EN SOURCES LIBRES (D-67) — balises de vent publiques près des spots, en parallèle du lien Winds-Up.
 // Sources : OpenWindMap / Pioupiou (sans clé ; données ouvertes « attribution + partage à l'identique »),
-// Météo-France API Observations 6 min (clé METEOFRANCE_KEY, Licence Ouverte), FFVL (open data data.gouv.fr, sans clé, Licence Ouverte 2.0).
+// Météo-France « Package Observations » 6 min (clé METEOFRANCE_KEY, Licence Ouverte), FFVL (open data data.gouv.fr, sans clé, Licence Ouverte 2.0).
 // Les balises retenues pour un spot sont listées à la main dans le registre (`openStations`) : une balise n'est gardée que
 // si elle représente le spot (distance, exposition). Unités publiées : nœuds, degrés, heure de mesure (ms).
 // Aucune donnée Winds-Up ici.
@@ -72,10 +72,11 @@ export function parsePioupiou(json: any, ids: string[]): Record<string, { name: 
   return out;
 }
 
-/** Météo-France DPObs station/infrahoraire-6m (format json) : ff et fxi10 en m/s, dd en degrés, validity_time ISO.
+/** Météo-France DPPaquetObs paquet/infrahoraire-6m (format json) : environ 4 à 5 jours au pas de 6 min pour la station ;
+ *  ff (vent moyen) en m/s, dd en degrés, validity_time ISO. Vu le 15/11 sur la vraie réponse : fxi10 / dxi10 (rafales) vides au pas de 6 min.
  *  Format lu sur l'exemple de la documentation ; à valider sur une vraie réponse dès que la clé est en place. */
-export function parseMeteoFrance(json: any): { lat: number | null; lon: number | null; pts: Pt[] } {
-  const rows: any[] = Array.isArray(json) ? json : json ? [json] : [];
+export function parseMeteoFrance(json: any, id?: string): { lat: number | null; lon: number | null; pts: Pt[] } {
+  const rows: any[] = (Array.isArray(json) ? json : json ? [json] : []).filter((o) => !id || o.geo_id_insee == null || String(o.geo_id_insee) === id);
   let lat: number | null = null, lon: number | null = null;
   const pts: Pt[] = [];
   for (const o of rows) {
@@ -161,9 +162,9 @@ export async function collectReleves(reg: Registry, prev: Releves | null, now: n
     let n = 0, err = '';
     for (const id of [...new Set(mf)]) {
       try {
-        const r = await f(`https://public-api.meteofrance.fr/public/DPObs/v1/station/infrahoraire-6m?id_station=${id}&format=json`, { apikey: env.METEOFRANCE_KEY, accept: '*/*' });
+        const r = await f(`https://public-api.meteofrance.fr/public/DPPaquetObs/v1/paquet/infrahoraire-6m?id_station=${id}&format=json`, { apikey: env.METEOFRANCE_KEY, accept: '*/*' });
         if (!r.ok) throw new Error('HTTP ' + r.status);
-        const x = parseMeteoFrance(await r.json()); got.set('meteo-france:' + id, { ...x, status: x.pts.length ? 'ok' : 'pas de vent mesuré' }); if (x.pts.length) n++;
+        const x = parseMeteoFrance(await r.json(), id); got.set('meteo-france:' + id, { ...x, status: x.pts.length ? 'ok' : 'pas de vent mesuré' }); if (x.pts.length) n++;
       } catch (e) { err = String((e as Error).message ?? e); got.set('meteo-france:' + id, { lat: null, lon: null, pts: [], status: err }); }
     }
     mark('meteo-france', n > 0, `${n}/${new Set(mf).size} station(s) avec mesure${err ? ' ; dernière erreur : ' + err : ''}`);

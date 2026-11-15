@@ -17,7 +17,7 @@ test('Pioupiou : km/h → nœuds, cap en degrés, balises non retenues ignorées
 });
 
 test('Météo-France 6 min : m/s → nœuds, rafale fxi10, direction', () => {
-  const x = parseMeteoFrance([{ lat: 43.4, lon: 3.69, validity_time: '2026-11-14T12:54:00Z', ff: 7.2, fxi10: 9.8, dd: 320 }, { validity_time: 'x', ff: 3 }]);
+  const x = parseMeteoFrance([{ geo_id_insee: '34154001', lat: 43.4, lon: 3.69, validity_time: '2026-11-14T12:54:00Z', ff: 7.2, fxi10: 9.8, dd: 320 }, { validity_time: 'x', ff: 3 }, { geo_id_insee: '99', validity_time: '2026-11-14T12:54:00Z', ff: 5 }], '34154001');
   assert.deepEqual(x.pts, [[Date.parse('2026-11-14T12:54:00Z'), 14, 19, 320]]);
   assert.equal(x.lat, 43.4);
 });
