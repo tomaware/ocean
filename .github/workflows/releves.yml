@@ -38,5 +38,5 @@ jobs:
             elif [ $c -eq 3 ]; then echo "::warning::aucun relevé lu ; publication précédente gardée"
             else echo "::endgroup::"; exit $c; fi
             echo "::endgroup::"
-            [ $i -lt $RUNS ] && sleep 600
+            if [ $i -lt $RUNS ]; then sleep 600; fi
           done
