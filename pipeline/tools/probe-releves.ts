@@ -22,6 +22,11 @@ try {
       const t = Date.parse(s.measurements?.date ?? ''); all.push({ src: 'pioupiou', id: String(s.id), name: s.meta?.name ?? '?', lat, lon, ageMin: Number.isFinite(t) ? Math.round((now - t) / 60000) : null }); } }
 } catch (e) { console.log('Pioupiou : ' + e); }
 
+// accès direct depuis le navigateur (CORS) : l'app pourrait lire le direct sans attendre la collecte
+for (const u of ['https://api.pioupiou.fr/v1/live/1538', 'https://www.data.gouv.fr/api/1/datasets/reseau-de-balises-meteo-de-la-ffvl-federation-francaise-de-vol-libre/']) {
+  try { const r = await fetch(u, { headers: { Origin: 'https://tomaware.github.io' } }); console.log(`CORS ${u.split('/')[2]} : HTTP ${r.status}, Access-Control-Allow-Origin = ${r.headers.get('access-control-allow-origin') ?? 'absent'}`); } catch (e) { console.log('CORS ' + u + ' : ' + e); }
+}
+
 // 2) FFVL : open data sur data.gouv.fr (Licence Ouverte 2.0, sans clé) — balises.json + releves.json
 try {
   const ds = await get('https://www.data.gouv.fr/api/1/datasets/reseau-de-balises-meteo-de-la-ffvl-federation-francaise-de-vol-libre/');
