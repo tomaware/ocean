@@ -20,6 +20,8 @@ test('Météo-France 6 min : m/s → nœuds, rafale fxi10, direction', () => {
   const x = parseMeteoFrance([{ geo_id_insee: '34154001', lat: 43.4, lon: 3.69, validity_time: '2026-11-14T12:54:00Z', ff: 7.2, fxi10: 9.8, dd: 320 }, { validity_time: 'x', ff: 3 }, { geo_id_insee: '99', validity_time: '2026-11-14T12:54:00Z', ff: 5 }], '34154001');
   assert.deepEqual(x.pts, [[Date.parse('2026-11-14T12:54:00Z'), 14, 19, 320]]);
   assert.equal(x.lat, 43.4);
+  // v2 : rafale raf10 (m/s)
+  assert.deepEqual(parseMeteoFrance([{ validity_time: '2026-11-14T12:54:00Z', ff: 7.2, raf10: 11.3, dd: 320 }]).pts[0], [Date.parse('2026-11-14T12:54:00Z'), 14, 22, 320]);
 });
 
 test('fusion : sans doublon, 24 h glissantes ; bilan du jour au format de l’historique Winds-Up', () => {

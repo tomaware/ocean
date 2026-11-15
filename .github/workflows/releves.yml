@@ -24,6 +24,7 @@ jobs:
       - name: Collectes toutes les 10 min pendant une heure
         env:
           METEOFRANCE_KEY: ${{ secrets.METEOFRANCE_KEY }}
+          METEOFRANCE_KEY_PACK2: ${{ secrets.METEOFRANCE_KEY_PACK2 }}
           FFVL_KEY: ${{ secrets.FFVL_KEY }}
           GH_TOKEN: ${{ github.token }}
           RUNS: ${{ github.event_name == 'workflow_dispatch' && '1' || '6' }}

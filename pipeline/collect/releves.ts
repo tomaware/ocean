@@ -73,7 +73,8 @@ export function parsePioupiou(json: any, ids: string[]): Record<string, { name: 
 }
 
 /** Météo-France DPPaquetObs paquet/infrahoraire-6m (format json) : environ 4 à 5 jours au pas de 6 min pour la station ;
- *  ff (vent moyen) en m/s, dd en degrés, validity_time ISO. Vu le 15/11 sur la vraie réponse : fxi10 / dxi10 (rafales) vides au pas de 6 min.
+ *  ff (vent moyen) en m/s, dd en degrés, validity_time ISO. Vu le 15/11 sur les vraies réponses : la v1 n'a pas de rafales au pas de 6 min (fxi10 vide) ; la v2 ajoute raf10
+ *  (rafale max sur 10 min, m/s) et ddraf10, avec le même historique et le même décalage → v2 utilisée si sa clé est là.
  *  Format lu sur l'exemple de la documentation ; à valider sur une vraie réponse dès que la clé est en place. */
 export function parseMeteoFrance(json: any, id?: string): { lat: number | null; lon: number | null; pts: Pt[] } {
   const rows: any[] = (Array.isArray(json) ? json : json ? [json] : []).filter((o) => !id || o.geo_id_insee == null || String(o.geo_id_insee) === id);
@@ -81,7 +82,7 @@ export function parseMeteoFrance(json: any, id?: string): { lat: number | null; 
   const pts: Pt[] = [];
   for (const o of rows) {
     lat ??= num(o.lat); lon ??= num(o.lon);
-    const t = Date.parse(o.validity_time ?? ''), ff = num(o.ff), fx = num(o.fxi10 ?? o.fxi), dd = num(o.dd);
+    const t = Date.parse(o.validity_time ?? ''), ff = num(o.ff), fx = num(o.raf10 ?? o.fxi10 ?? o.fxi), dd = num(o.dd);
     if (Number.isFinite(t) && ff !== null && ff >= 0 && ff < 80) pts.push([t, r1(ff * MS_TO_KN), fx === null ? null : r1(fx * MS_TO_KN), dd === null ? null : Math.round(dd) % 360]);
   }
   return { lat, lon, pts };
@@ -133,7 +134,7 @@ type Fetch = (url: string, headers?: Record<string, string>) => Promise<{ ok: bo
 const defaultFetch: Fetch = (u, h) => fetch(u, { headers: { 'User-Agent': 'OCEAN (prévisions sports nautiques, usage non commercial ; github.com/tomaware/ocean)', ...h } });
 
 /** Collecte complète : lit les sources, fusionne avec la publication précédente. Une source en panne garde ses anciens relevés. */
-export async function collectReleves(reg: Registry, prev: Releves | null, now: number, env: { METEOFRANCE_KEY?: string; FFVL_KEY?: string }, f: Fetch = defaultFetch): Promise<Releves> {
+export async function collectReleves(reg: Registry, prev: Releves | null, now: number, env: { METEOFRANCE_KEY?: string; METEOFRANCE_KEY_PACK2?: string; FFVL_KEY?: string }, f: Fetch = defaultFetch): Promise<Releves> {
   const wanted: { spot: string; lat: number; lon: number; st: OpenStation }[] = [];
   for (const s of reg.spots) for (const st of ((s as any).openStations ?? []) as OpenStation[]) { const g = s.geometry as { lat: number; lon: number }; wanted.push({ spot: s.id, lat: g.lat, lon: g.lon, st }); }
   const key = (st: OpenStation) => st.src + ':' + st.id;
@@ -156,13 +157,13 @@ export async function collectReleves(reg: Registry, prev: Releves | null, now: n
 
   // Météo-France : un appel par station (dernière mesure 6 min)
   const mf = wanted.filter((w) => w.st.src === 'meteo-france').map((w) => w.st.id);
-  if (!env.METEOFRANCE_KEY) mark('meteo-france', false, 'clé METEOFRANCE_KEY absente');
+  if (!env.METEOFRANCE_KEY && !env.METEOFRANCE_KEY_PACK2) mark('meteo-france', false, 'clé METEOFRANCE_KEY absente');
   else if (!mf.length) mark('meteo-france', true, 'aucune station retenue');
   else {
     let n = 0, err = '';
     for (const id of [...new Set(mf)]) {
       try {
-        const r = await f(`https://public-api.meteofrance.fr/public/DPPaquetObs/v1/paquet/infrahoraire-6m?id_station=${id}&format=json`, { apikey: env.METEOFRANCE_KEY, accept: '*/*' });
+        const r = await f(`https://public-api.meteofrance.fr/public/DPPaquetObs/${env.METEOFRANCE_KEY_PACK2 ? 'v2' : 'v1'}/paquet/infrahoraire-6m?id_station=${id}&format=json`, { apikey: (env.METEOFRANCE_KEY_PACK2 || env.METEOFRANCE_KEY)!, accept: '*/*' });
         if (!r.ok) throw new Error('HTTP ' + r.status);
         const x = parseMeteoFrance(await r.json(), id); got.set('meteo-france:' + id, { ...x, status: x.pts.length ? 'ok' : 'pas de vent mesuré' }); if (x.pts.length) n++;
       } catch (e) { err = String((e as Error).message ?? e); got.set('meteo-france:' + id, { lat: null, lon: null, pts: [], status: err }); }

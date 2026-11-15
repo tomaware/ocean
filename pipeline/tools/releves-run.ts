@@ -6,10 +6,10 @@ import { collectReleves, type Releves } from '../collect/releves.ts';
 
 const [prevPath, outPath] = process.argv.slice(2);
 const prev: Releves | null = prevPath && prevPath !== '-' && existsSync(prevPath) ? JSON.parse(readFileSync(prevPath, 'utf8')) : null;
-const out = await collectReleves(loadRegistry(), prev, Date.now(), { METEOFRANCE_KEY: process.env.METEOFRANCE_KEY?.trim(), FFVL_KEY: process.env.FFVL_KEY?.trim() });
+const out = await collectReleves(loadRegistry(), prev, Date.now(), { METEOFRANCE_KEY: process.env.METEOFRANCE_KEY?.trim(), METEOFRANCE_KEY_PACK2: process.env.METEOFRANCE_KEY_PACK2?.trim(), FFVL_KEY: process.env.FFVL_KEY?.trim() });
 const text = JSON.stringify(out);
 // confidentialité : rien de Winds-Up, aucune clé
-const leaks = [/winds-up/i.test(text) && 'Winds-Up', /script\.google/.test(text) && 'Apps Script', ...[process.env.METEOFRANCE_KEY, process.env.FFVL_KEY].filter((k) => k && k.length > 8 && text.includes(k)).map(() => 'une clé')].filter(Boolean);
+const leaks = [/winds-up/i.test(text) && 'Winds-Up', /script\.google/.test(text) && 'Apps Script', ...[process.env.METEOFRANCE_KEY, process.env.METEOFRANCE_KEY_PACK2, process.env.FFVL_KEY].filter((k) => k && k.length > 8 && text.includes(k)).map(() => 'une clé')].filter(Boolean);
 if (leaks.length) { console.log('FUITE : ' + leaks.join(', ')); process.exit(2); }
 writeFileSync(outPath, text);
 for (const [s, x] of Object.entries(out.sources)) console.log(`[relevés] ${x.ok ? 'OK ' : 'KO '} ${s} : ${x.message}`);
