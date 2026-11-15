@@ -1,5 +1,5 @@
 {
- "generatedAt": 1794762600644,
+ "generatedAt": 1794763049740,
  "checks": [
   {
    "id": "golden-surf",
@@ -19,7 +19,7 @@
   {
    "id": "avant-apres-vent-downwind",
    "ok": true,
-   "detail": "D-66, notes downwind (intermédiaire, de jour), après − avant : 120 heures, moyenne -0.05, écart moyen 0.05 ; meilleurs créneaux 0→0"
+   "detail": "D-66, notes downwind (intermédiaire, de jour), après − avant : 120 heures, moyenne -0.04, écart moyen 0.04 ; meilleurs créneaux 0→0"
   },
   {
    "id": "sorties-surf",
@@ -39,17 +39,17 @@
   {
    "id": "ecart-prod-surf",
    "ok": true,
-   "detail": "notes surf OCEAN vs app en service (calcul prod. 29 min avant, même extrait Copernicus) : médiane 0.00, 90 % ≤ 0.20, max 2.00 sur 664 heures (max : vias dim. 21:00, OCEAN 7 / prod 5)"
+   "detail": "notes surf OCEAN vs app en service (calcul prod. 36 min avant, même extrait Copernicus) : médiane 0.00, 90 % ≤ 0.40, max 2.50 sur 664 heures (max : carnon mar. 12:00, OCEAN 7.6 / prod 5.1)"
   },
   {
    "id": "ecart-prod-downwind",
    "ok": true,
-   "detail": "notes downwind (intermédiaire, de jour) OCEAN vs app en service (calcul prod. 12 min avant) : médiane 0.00, 90 % ≤ 0.00, max 1.30 sur 117 heures"
+   "detail": "notes downwind (intermédiaire, de jour) OCEAN vs app en service (calcul prod. 19 min avant) : médiane 0.00, 90 % ≤ 0.00, max 1.30 sur 117 heures"
   },
   {
    "id": "avant-apres-vent-wing",
    "ok": true,
-   "detail": "D-66, notes wing Sécu first de jour, après − avant : 252 heures, écart moyen 1.42 ; La Franqui +0.0 (écart moyen 0.0), sessions 0→0 ; La Grande-Motte -0.1 (écart moyen 0.1), sessions 0→0 ; Le Ponant +1.7 (écart moyen 1.7), sessions 0→3 ; Plage Sud -1.0 (écart moyen 1.3), sessions 3→4 ; Beauduc +0.4 (écart moyen 0.9), sessions 3→4 ; Le Jaï +0.9 (écart moyen 0.9), sessions 0→1 ; Hyères +4.8 (écart moyen 5.0), sessions 2→7"
+   "detail": "D-66, notes wing Sécu first de jour, après − avant : 252 heures, écart moyen 1.43 ; La Franqui +0.0 (écart moyen 0.0), sessions 0→0 ; La Grande-Motte -0.1 (écart moyen 0.1), sessions 0→0 ; Le Ponant +1.7 (écart moyen 1.7), sessions 0→3 ; Plage Sud -1.0 (écart moyen 1.3), sessions 3→4 ; Beauduc +0.1 (écart moyen 1.0), sessions 3→4 ; Le Jaï +0.9 (écart moyen 0.9), sessions 0→1 ; Hyères +4.8 (écart moyen 5.0), sessions 2→7"
   },
   {
    "id": "vent-la-franqui",
@@ -74,7 +74,7 @@
   {
    "id": "vent-beauduc",
    "ok": true,
-   "detail": "Beauduc : meteofrance_arome_france_hd, le plus juste à LFMI (erreur 1.22 m/s sur 80 mesures) ; 177 heures ; vent non corrigé"
+   "detail": "Beauduc : meteofrance_arome_france_hd, le plus juste à LFMI (erreur 1.23 m/s sur 80 mesures) ; 177 heures ; vent non corrigé"
   },
   {
    "id": "vent-le-jai",
