@@ -1,5 +1,5 @@
 {
- "generatedAt": 1794763049740,
+ "generatedAt": 1794763459304,
  "checks": [
   {
    "id": "golden-surf",
@@ -19,7 +19,7 @@
   {
    "id": "avant-apres-vent-downwind",
    "ok": true,
-   "detail": "D-66, notes downwind (intermédiaire, de jour), après − avant : 120 heures, moyenne -0.04, écart moyen 0.04 ; meilleurs créneaux 0→0"
+   "detail": "D-66, notes downwind (intermédiaire, de jour), après − avant : 120 heures, moyenne -0.02, écart moyen 0.03 ; meilleurs créneaux 0→0"
   },
   {
    "id": "sorties-surf",
@@ -39,17 +39,17 @@
   {
    "id": "ecart-prod-surf",
    "ok": true,
-   "detail": "notes surf OCEAN vs app en service (calcul prod. 36 min avant, même extrait Copernicus) : médiane 0.00, 90 % ≤ 0.40, max 2.50 sur 664 heures (max : carnon mar. 12:00, OCEAN 7.6 / prod 5.1)"
+   "detail": "notes surf OCEAN vs app en service (calcul prod. 43 min avant, même extrait Copernicus) : médiane 0.10, 90 % ≤ 0.80, max 4.30 sur 664 heures (max : vias jeu. 02:00, OCEAN 2.1 / prod 6.4)"
   },
   {
    "id": "ecart-prod-downwind",
    "ok": true,
-   "detail": "notes downwind (intermédiaire, de jour) OCEAN vs app en service (calcul prod. 19 min avant) : médiane 0.00, 90 % ≤ 0.00, max 1.30 sur 117 heures"
+   "detail": "notes downwind (intermédiaire, de jour) OCEAN vs app en service (calcul prod. 26 min avant) : médiane 0.00, 90 % ≤ 0.00, max 1.30 sur 117 heures"
   },
   {
    "id": "avant-apres-vent-wing",
    "ok": true,
-   "detail": "D-66, notes wing Sécu first de jour, après − avant : 252 heures, écart moyen 1.43 ; La Franqui +0.0 (écart moyen 0.0), sessions 0→0 ; La Grande-Motte -0.1 (écart moyen 0.1), sessions 0→0 ; Le Ponant +1.7 (écart moyen 1.7), sessions 0→3 ; Plage Sud -1.0 (écart moyen 1.3), sessions 3→4 ; Beauduc +0.1 (écart moyen 1.0), sessions 3→4 ; Le Jaï +0.9 (écart moyen 0.9), sessions 0→1 ; Hyères +4.8 (écart moyen 5.0), sessions 2→7"
+   "detail": "D-66, notes wing Sécu first de jour, après − avant : 392 heures, écart moyen 1.05 ; La Franqui +0.0 (écart moyen 0.0), sessions 0→0 ; Gruissan +0.0 (écart moyen 0.0), sessions 0→0 ; Sète Lido +0.0 (écart moyen 0.0), sessions 0→0 ; La Grande-Motte +0.0 (écart moyen 0.5), sessions 0→1 ; Le Ponant +2.1 (écart moyen 2.1), sessions 0→4 ; Plage Sud -0.8 (écart moyen 1.5), sessions 3→4 ; Beauduc -0.2 (écart moyen 1.4), sessions 3→4 ; Le Jaï +0.9 (écart moyen 0.9), sessions 0→1 ; Hyères +4.8 (écart moyen 5.0), sessions 2→7"
   },
   {
    "id": "vent-la-franqui",
@@ -57,19 +57,29 @@
    "detail": "La Franqui : icon_eu, le plus juste à LFMP (erreur 0.77 m/s sur 80 mesures) ; 177 heures ; vent non corrigé"
   },
   {
+   "id": "vent-gruissan",
+   "ok": true,
+   "detail": "Gruissan : icon_eu, le plus juste à LFMP (erreur 0.77 m/s sur 80 mesures) ; 177 heures ; vent non corrigé"
+  },
+  {
+   "id": "vent-sete-lido",
+   "ok": true,
+   "detail": "Sète Lido : meteofrance_arpege_europe, le plus juste à LFMT (erreur 1.23 m/s sur 80 mesures) ; 177 heures ; vent non corrigé"
+  },
+  {
    "id": "vent-la-grande-motte",
    "ok": true,
-   "detail": "La Grande-Motte : icon_d2, le plus juste à LFMT (erreur 1.27 m/s sur 80 mesures) ; 177 heures ; vent non corrigé"
+   "detail": "La Grande-Motte : meteofrance_arpege_europe, le plus juste à LFMT (erreur 1.23 m/s sur 80 mesures) ; 177 heures ; vent non corrigé"
   },
   {
    "id": "vent-le-ponant",
    "ok": true,
-   "detail": "Le Ponant : icon_d2, le plus juste à LFMT (erreur 1.27 m/s sur 80 mesures) ; 177 heures ; vent non corrigé"
+   "detail": "Le Ponant : meteofrance_arpege_europe, le plus juste à LFMT (erreur 1.23 m/s sur 80 mesures) ; 177 heures ; vent non corrigé"
   },
   {
    "id": "vent-port-camargue",
    "ok": true,
-   "detail": "Plage Sud : icon_d2, le plus juste à LFMT (erreur 1.27 m/s sur 80 mesures) ; 177 heures ; vent non corrigé"
+   "detail": "Plage Sud : meteofrance_arpege_europe, le plus juste à LFMT (erreur 1.23 m/s sur 80 mesures) ; 177 heures ; vent non corrigé"
   },
   {
    "id": "vent-beauduc",
@@ -89,12 +99,12 @@
   {
    "id": "sorties-wing",
    "ok": true,
-   "detail": "7 spots notés (wing v2.3.0) ; 19 session(s) 2H en mode Sécu first sur les heures prévues"
+   "detail": "9 spots notés (wing v2.3.0) ; 21 session(s) 2H en mode Sécu first sur les heures prévues"
   },
   {
    "id": "sorties-kite",
    "ok": true,
-   "detail": "7 spots notés (kite v1.0.0) ; 11 session(s) 2H en mode Sécu first"
+   "detail": "9 spots notés (kite v1.0.0) ; 13 session(s) 2H en mode Sécu first"
   },
   {
    "id": "confidentialite-moteurs",
