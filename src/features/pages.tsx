@@ -47,43 +47,58 @@ export function liveTone(kn: number | null | undefined, sport: 'wing' | 'kite'):
   if (sport === 'wing' && kn > 28) return 'kite';
   return kn >= 25 ? 'k3' : kn >= 20 ? 'k2' : kn >= 15 ? 'k1' : '';
 }
-export function LiveBox({ live, spot, names, histo }: { live: Live[] | null; spot?: string; names?: Record<string, string>; histo?: Histo | null }) {
+export function LiveBox({ live, spot, names, histo, spots }: { live: Live[] | null; spot?: string; names?: Record<string, string>; histo?: Histo | null; spots?: string[] }) {
   const prefs = usePrefs();
   const [open, setOpen] = useState<string | null>(null);
   // la balise Winds-Up (mode perso) passe avant le METAR du même spot (Le Jaï : Marignane) ; les balises publiques en
   // source libre (D-67) restent toujours affichées, juste sous Winds-Up, pour comparer
   const all = (live ?? []).filter((l) => !spot || l.spot === spot);
-  const rows = all.filter((l) => !l.src || l.open || !all.some((x) => !x.src && x.spot === l.spot));
-  if (!rows.length) return null;
+  // le METAR (Le Jaï) s'efface aussi devant une station Météo-France / balise libre du même spot (15/11)
+  const rows = all.filter((l) => !l.src || l.open || !all.some((x) => (!x.src || x.open) && x.spot === l.spot));
   const perso = rows.some((l) => !l.src);
+  const order = spots ?? [...new Set(rows.map((l) => l.spot))];
+  if (!rows.length && !spots) return null;
   return (
     <div class="card" style={{ borderColor: 'var(--c-accent)' }}>
       <div class="row"><Radio size={16} color="var(--c-accent)" /><strong>En direct</strong>{perso && <span class="chip accent">mode perso · visible sur cet appareil seulement</span>}</div>
+      {/* un bloc par spot (Tom, 15/11) : le nom du spot une fois, puis une ligne par source */}
       <div class="list">
-        {rows.map((l) => {
-          // noms de l'app (Plage Sud, Hyères…) plutôt que ceux de Winds-Up
-          const k = l.spot + (l.src ?? ''), name = names?.[l.spot] ?? l.name, can = !l.panne && (!l.src || !!l.pts?.length), on = can && open === k;
-          const line = (
-            <>
-              <span class="stack" style={{ gap: 0 }}><span>{name}</span>{l.src && <span class="faint">{l.src}</span>}</span>
-              {l.panne ? <span class="small">anémomètre en panne</span> : (
-                <span class="row small" style={{ gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-                  <strong class={`livekn ${liveTone(l.kn, prefs.sport)}`}>{n0(l.kn)} nd {l.dir ?? ''}{liveTone(l.kn, prefs.sport) === 'kite' ? ' · Kite' : ''}</strong>
-                  {l.gust != null && <strong>raf. {n0(l.gust)}</strong>}
-                  {l.t && <span class="faint">{ago(l.t)}</span>}
-                </span>
-              )}
-            </>
-          );
-          return (
-            <div key={k} class="stack" style={{ gap: '8px' }}>
-              {can ? <button type="button" class="row between liverow" aria-expanded={on} onClick={() => setOpen(on ? null : k)}>{line}</button>
-                : <div class="row between">{line}</div>}
-              {on && <DayReadings l={l} h={l.src ? null : histo?.spots[l.spot] ?? null} sport={prefs.sport} />}
-            </div>
-          );
-        })}
+        {order.map((sp) => (
+          <div key={sp} class="stack livespot" style={{ gap: '6px' }}>
+            {!spot && (
+              <div class="row between">
+                <strong>{names?.[sp] ?? rows.find((l) => l.spot === sp)?.name ?? sp}</strong>
+                {/* sans abonnement : lien vers la balise Winds-Up du spot, dans son bloc */}
+                {!rows.some((l) => l.spot === sp && !l.src) && windsUpUrl(sp) && <a class="small" href={windsUpUrl(sp)!} target="_blank" rel="noopener">Winds-Up ↗</a>}
+              </div>
+            )}
+            {!rows.some((l) => l.spot === sp) && <span class="faint small">Pas de balise libre représentative pour ce spot.</span>}
+            {rows.filter((l) => l.spot === sp).map((l) => {
+              const k = l.spot + (l.src ?? ''), can = !l.panne && (!l.src || !!l.pts?.length), on = can && open === k;
+              const line = (
+                <>
+                  <span class="small">{l.src ?? 'Winds-Up'}</span>
+                  {l.panne ? <span class="small">anémomètre en panne</span> : (
+                    <span class="row small" style={{ gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                      <strong class={`livekn ${liveTone(l.kn, prefs.sport)}`}>{n0(l.kn)} nd {l.dir ?? ''}{liveTone(l.kn, prefs.sport) === 'kite' ? ' · Kite' : ''}</strong>
+                      {l.gust != null && <strong>raf. {n0(l.gust)}</strong>}
+                      {l.t && <span class="faint">{ago(l.t)}</span>}
+                    </span>
+                  )}
+                </>
+              );
+              return (
+                <div key={k} class="stack" style={{ gap: '8px' }}>
+                  {can ? <button type="button" class="row between liverow" aria-expanded={on} onClick={() => setOpen(on ? null : k)}>{line}</button>
+                    : <div class="row between">{line}</div>}
+                  {on && <DayReadings l={{ ...l, name: names?.[l.spot] ?? l.name }} h={l.src ? null : histo?.spots[l.spot] ?? null} sport={prefs.sport} />}
+                </div>
+              );
+            })}
+          </div>
+        ))}
       </div>
+      {!perso && spots && <span class="faint small">Mesures en sources libres (Météo-France, OpenWindMap / Pioupiou), toucher une ligne pour la journée. Winds-Up ↗ : leurs balises, décalées de 2 h sans abonnement.</span>}
     </div>
   );
 }
