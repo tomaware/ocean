@@ -1,6 +1,6 @@
 // RELEVÉS EN SOURCES LIBRES (D-67) — balises de vent publiques près des spots, en parallèle du lien Winds-Up.
 // Sources : OpenWindMap / Pioupiou (sans clé ; données ouvertes « attribution + partage à l'identique »),
-// Météo-France API Observations 6 min (clé METEOFRANCE_KEY, Licence Ouverte), FFVL (clé FFVL_KEY, format à valider).
+// Météo-France API Observations 6 min (clé METEOFRANCE_KEY, Licence Ouverte), FFVL (open data data.gouv.fr, sans clé, Licence Ouverte 2.0).
 // Les balises retenues pour un spot sont listées à la main dans le registre (`openStations`) : une balise n'est gardée que
 // si elle représente le spot (distance, exposition). Unités publiées : nœuds, degrés, heure de mesure (ms).
 // Aucune donnée Winds-Up ici.
@@ -52,7 +52,7 @@ export const LICENCE: Record<Src | 'candhis', { licence: string; attribution: st
   pioupiou: { licence: 'données ouvertes, attribution + partage à l’identique', attribution: 'OpenWindMap / Pioupiou', url: 'https://www.openwindmap.org' },
   'meteo-france': { licence: 'Licence Ouverte Etalab 2.0', attribution: 'Météo-France', url: 'https://portail-api.meteofrance.fr' },
   candhis: { licence: 'Licence Ouverte Etalab', attribution: 'Candhis – Cerema', url: 'https://candhis.cerema.fr' },
-  ffvl: { licence: 'à confirmer avec la FFVL', attribution: 'FFVL – balisemeteo.com', url: 'https://www.balisemeteo.com' },
+  ffvl: { licence: 'Licence Ouverte 2.0', attribution: 'FFVL – balisemeteo.com', url: 'https://www.balisemeteo.com' },
 };
 
 const r1 = (x: number) => Math.round(x * 10) / 10;
@@ -84,6 +84,18 @@ export function parseMeteoFrance(json: any): { lat: number | null; lon: number |
     if (Number.isFinite(t) && ff !== null && ff >= 0 && ff < 80) pts.push([t, r1(ff * MS_TO_KN), fx === null ? null : r1(fx * MS_TO_KN), dd === null ? null : Math.round(dd) % 360]);
   }
   return { lat, lon, pts };
+}
+
+export const FFVL_DATASET = 'https://www.data.gouv.fr/api/1/datasets/reseau-de-balises-meteo-de-la-ffvl-federation-francaise-de-vol-libre/';
+/** FFVL releves.json : vitesses en km/h, direction moyenne en degrés, date ISO avec décalage. Champs vus le 15/11 sur la vraie réponse. */
+export function parseFfvl(json: any, ids: string[]): Record<string, Pt> {
+  const out: Record<string, Pt> = {};
+  for (const o of (Array.isArray(json) ? json : Object.values(json ?? {})) as any[]) {
+    const id = String(o?.idbalise ?? o?.idBalise); if (!ids.includes(id)) continue;
+    const t = Date.parse(o.date ?? ''), v = num(o.vitesseVentMoy), g = num(o.vitesseVentMax), d = num(o.directVentMoy);
+    if (Number.isFinite(t) && v !== null && v >= 0 && v < 250) out[id] = [t, r1(v * KMH_TO_KN), g === null ? null : r1(g * KMH_TO_KN), d === null ? null : Math.round(d) % 360];
+  }
+  return out;
 }
 
 /** Ajoute les nouveaux relevés, sans doublon, et ne garde que les 24 dernières heures. */
@@ -157,8 +169,19 @@ export async function collectReleves(reg: Registry, prev: Releves | null, now: n
     mark('meteo-france', n > 0, `${n}/${new Set(mf).size} station(s) avec mesure${err ? ' ; dernière erreur : ' + err : ''}`);
   }
 
-  // FFVL : clé demandée le 14/11 ; lecture branchée dès qu'on connaît le format de leur réponse
-  mark('ffvl', false, env.FFVL_KEY ? 'clé présente : format des relevés FFVL à brancher' : 'clé FFVL_KEY absente (demandée)');
+  // FFVL : open data sur data.gouv.fr (FFVL, 15/11 : pas de clé), releves.json réécrit toutes les 5 min
+  const fv = wanted.filter((w) => w.st.src === 'ffvl').map((w) => w.st.id);
+  if (!fv.length) mark('ffvl', true, 'aucune balise retenue');
+  else {
+    try {
+      const ds = await f(FFVL_DATASET); if (!ds.ok) throw new Error('data.gouv HTTP ' + ds.status);
+      const url = ((await ds.json()).resources ?? []).find((r: any) => r.title === 'releves.json')?.url; if (!url) throw new Error('releves.json introuvable');
+      const r = await f(url); if (!r.ok) throw new Error('HTTP ' + r.status);
+      const p = parseFfvl(await r.json(), fv);
+      for (const id of fv) got.set('ffvl:' + id, { lat: null, lon: null, pts: p[id] ? [p[id]] : [], status: p[id] ? 'ok' : 'pas de relevé' });
+      mark('ffvl', true, `${Object.keys(p).length}/${fv.length} balise(s) avec mesure`);
+    } catch (e) { mark('ffvl', false, String((e as Error).message ?? e)); }
+  }
 
   const spots: Releves['spots'] = {}, days: Releves['days'] = { ...(prev?.days ?? {}) };
   for (const w of wanted) {

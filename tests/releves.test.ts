@@ -80,3 +80,9 @@ test('bouées Candhis (D-68) : 24 h, valeurs hors bornes rejetées, spots servis
   assert.equal(live[0].code, '03404'); assert.equal(live[0].fresh, true); assert.equal(live[0].last![1], 0.5, 'dernière mesure valide');
   assert.ok(live.every((x) => x.spots.length || x.pts.length), 'une bouée sans mesure ni spot surf est cachée');
 });
+
+import { parseFfvl } from '../pipeline/collect/releves.ts';
+test('FFVL open data : km/h → nœuds, champs de releves.json (vus le 15/11)', () => {
+  const p = parseFfvl([{ idbalise: 10, date: '2026-11-15T16:19:11+01:00', vitesseVentMoy: 12, vitesseVentMax: 20, directVentMoy: 246 }, { idbalise: 11, date: 'x', vitesseVentMoy: 3 }], ['10', '11']);
+  assert.deepEqual(p, { '10': [Date.parse('2026-11-15T15:19:11Z'), 6.5, 10.8, 246] });
+});

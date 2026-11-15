@@ -417,3 +417,5 @@ Les apps actuelles restent en ligne jusqu'à ce que leur remplaçante soit véri
 - Affichage : mesures seulement, aucune note, aucune couleur de « bonne » houle (pas de seuil validé). Bouées montrées seulement si elles servent un spot surf ; plus de 3 h sans mesure = « dernière mesure il y a … ». Au 14/11 : Espiguette, Sète, Leucate en service ; Port-la-Nouvelle sans mesure depuis 5 jours ; Banyuls hors service temps réel.
 - Réglage de base de VAGUE : En direct en premier (Profil pour le changer).
 - Les bouées ne mesurent pas le vent ni la vitesse de la houle : la période (s) est la mesure qui renseigne sur sa « puissance ».
+
+- Mise à jour 15/11 (FFVL) : la FFVL (J. Soucany) indique son open data : sur data.gouv.fr, sans clé, Licence Ouverte 2.0 ; `balises.json` (liste) et `releves.json` (dernière mesure, réécrit toutes les 5 min, vitesses en km/h). Lecture branchée et testée sur les champs réels. Aucune balise FFVL ne représente nos spots aujourd'hui (la plus proche : Gruissan étang de Mateille, 19,8 km de La Franqui, sans relevé) → aucune retenue. `balises.json` contient des noms et téléphones de contacts : jamais recopiés.
