@@ -13,7 +13,8 @@ for (const [name, key, url] of tries) {
   if (!key) { console.log(`${name} : clé absente`); continue; }
   for (const id of ST) {
     await new Promise((ok) => setTimeout(ok, 1500));
-    const r = await fetch(url.replace('{id}', id), { headers: { apikey: key, accept: '*/*' } }); const t = await r.text();
+    let r: Response | null = null; for (let k = 0; k < 3 && !r; k++) { try { r = await fetch(url.replace('{id}', id), { headers: { apikey: key, accept: '*/*' } }); } catch (e) { console.log(`${name} ${id} : ${(e as any).cause?.code ?? e}`); await new Promise((ok) => setTimeout(ok, 5000)); } }
+    if (!r) continue; const t = await r.text();
     if (!r.ok) { console.log(`${name} ${id} : HTTP ${r.status} ${t.slice(0, 140).replace(/\s+/g, ' ')}`); if (r.status === 404 || r.status === 403) break; continue; }
     let a: any[]; try { const j = JSON.parse(t); a = Array.isArray(j) ? j : [j]; } catch { console.log(`${name} ${id} : pas du JSON : ${t.slice(0, 100)}`); continue; }
     const mine = a.filter((o) => o.geo_id_insee == null || String(o.geo_id_insee) === id);
