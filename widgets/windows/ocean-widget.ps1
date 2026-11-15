@@ -22,7 +22,7 @@ param([switch]$Install, [switch]$Uninstall, [string]$Model, [string]$Capture, [s
 $DATA_URL = 'https://tomaware.github.io/ocean/data/widget-wind.json'
 $SURF_URL = 'https://tomaware.github.io/ocean/data/widget-surf.json'
 $APP_URL  = 'https://tomaware.github.io/ocean/'
-$NEAR     = @('la-grande-motte', 'le-ponant', 'port-camargue')   # < 55 km de Montpellier (comme les Sessions 2H)
+$NEAR     = @('sete-lido', 'la-grande-motte', 'le-ponant', 'port-camargue')   # < 55 km de Montpellier (comme les Sessions 2H)
 $LIVE_MAX_MIN = 90                                               # balise plus vieille : on affiche la prévision de l'heure
 $DATA_REFRESH_MIN = 15
 $LIVE_REFRESH_MIN = 5

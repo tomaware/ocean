@@ -53,6 +53,86 @@
       ]
     },
     {
+      "id": "gruissan",
+      "name": "Gruissan",
+      "kind": "spot",
+      "geometry": {
+        "lat": 43.0985,
+        "lon": 3.1135
+      },
+      "disciplines": [
+        "wing"
+      ],
+      "waterBody": "sea",
+      "orientation": {
+        "seaward": 115,
+        "confidence": "medium",
+        "source": "plage des Chalets, côte orientée ESE (carte, 15/11) ; tramontane (NO) de terre → mode Offshore"
+      },
+      "windStations": {
+        "metar": "LFMP"
+      },
+      "confidence": "low",
+      "sources": [
+        "ajouté à la demande de Tom (15/11)"
+      ],
+      "notes": "Ajouté le 15/11 (D-69). Orientation proposée d'après la carte ; à confirmer par Tom.",
+      "windSource": {
+        "kind": "best-model",
+        "station": "LFMP",
+        "note": "Prévision vent (publique, D-66) : modèle Open-Meteo le plus juste aux mesures METAR de la station sur 3 jours, relayé au-delà de son horizon. La super prévision (corrigée Winds-Up) reste privée."
+      },
+      "openStations": [
+        {
+          "src": "pioupiou",
+          "id": "602",
+          "name": "Akila Gruissan – étang de Mateille",
+          "note": "2,1 km, étang de Mateille (diagnostic du 15/11)"
+        }
+      ],
+      "legacy": {}
+    },
+    {
+      "id": "sete-lido",
+      "name": "Sète Lido",
+      "kind": "spot",
+      "geometry": {
+        "lat": 43.39,
+        "lon": 3.645
+      },
+      "disciplines": [
+        "wing"
+      ],
+      "waterBody": "sea",
+      "orientation": {
+        "seaward": 150,
+        "confidence": "medium",
+        "source": "plage de Villeroy / Lido, côte orientée SSE (carte, 15/11)"
+      },
+      "windStations": {
+        "metar": "LFMT"
+      },
+      "confidence": "low",
+      "sources": [
+        "ajouté à la demande de Tom (15/11)"
+      ],
+      "notes": "Ajouté le 15/11 (D-69), Villeroy / Lido. Orientation proposée d'après la carte ; à confirmer par Tom.",
+      "windSource": {
+        "kind": "best-model",
+        "station": "LFMT",
+        "note": "Prévision vent (publique, D-66) : modèle Open-Meteo le plus juste aux mesures METAR de la station sur 3 jours, relayé au-delà de son horizon. La super prévision (corrigée Winds-Up) reste privée."
+      },
+      "openStations": [
+        {
+          "src": "meteo-france",
+          "id": "34301002",
+          "name": "Sète",
+          "note": "Météo-France, station à 6,6 km (diagnostic du 15/11) ; vent moyen et rafales 6 min"
+        }
+      ],
+      "legacy": {}
+    },
+    {
       "id": "la-grande-motte",
       "name": "La Grande-Motte",
       "kind": "spot",

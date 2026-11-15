@@ -38,7 +38,7 @@ async function majAuto() {
 }
 
 const K_MODE = "ocean.creneaux.mode", K_SPOTS = "ocean.creneaux.spots";
-const NEAR = ["la-grande-motte", "le-ponant", "port-camargue"];   // < 55 km de Montpellier (comme les Sessions 2H)
+const NEAR = ["sete-lido", "la-grande-motte", "le-ponant", "port-camargue"];   // < 55 km de Montpellier (comme les Sessions 2H)
 const REFRESH_MIN = 30;
 
 const dyn = (light, dark) => Color.dynamic(new Color(light), new Color(dark));

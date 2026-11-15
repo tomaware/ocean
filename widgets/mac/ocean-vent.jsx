@@ -31,7 +31,7 @@ const THEME = "auto";                // "auto" (comme le Mac), "clair" ou "sombr
 const DATA = "https://tomaware.github.io/ocean/data/widget-wind.json";
 const SURF = "https://tomaware.github.io/ocean/data/widget-surf.json";
 const APP = "https://tomaware.github.io/ocean/";
-const NEAR = ["la-grande-motte", "le-ponant", "port-camargue"];
+const NEAR = ["sete-lido", "la-grande-motte", "le-ponant", "port-camargue"];
 const LIVE_MAX_MIN = 90;
 const SEP = "@@OCEAN@@", NOLINK = "@@NOLINK@@";
 const WIDGETS_DIR = "$HOME/Library/Application Support/Übersicht/widgets";
