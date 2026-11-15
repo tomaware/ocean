@@ -48,31 +48,39 @@ try {
   }
 } catch (e) { console.log('FFVL : ' + e); }
 
-// 3) Météo-France, API Observations (DPObs) — clé dans le secret METEOFRANCE_KEY
+// 3) Météo-France — clé dans le secret METEOFRANCE_KEY ; essaie l'API Observations (DPObs) et le paquet (DPPaquetObs)
 const MF = process.env.METEOFRANCE_KEY?.trim();
 if (!MF) console.log('Météo-France : secret METEOFRANCE_KEY absent → non sondé');
 else {
-  const base = 'https://public-api.meteofrance.fr/public/DPObs/v1';
-  try {
-    const r = await get(base + '/liste-stations', { apikey: MF, accept: '*/*' });
-    console.log(`Météo-France liste-stations : HTTP ${r.status}, ${r.text.length} octets`);
-    if (r.ok) {
-      const rows = r.text.trim().split('\n'); const head = rows[0].split(';').map((x) => x.trim().toLowerCase());
-      console.log('  colonnes : ' + head.join(' | '));
-      const iId = head.findIndex((h) => h.includes('id')), iNom = head.findIndex((h) => h.includes('nom')), iLat = head.findIndex((h) => h.startsWith('lat')), iLon = head.findIndex((h) => h.startsWith('lon'));
-      for (const line of rows.slice(1)) { const c = line.split(';'); const lat = Number(c[iLat]), lon = Number(c[iLon]); if (Number.isFinite(lat)) all.push({ src: 'meteo-france', id: c[iId], name: c[iNom], lat, lon }); }
-      // pas de temps 6 min : on vérifie, pour la station la plus proche de chaque spot, qu'elle mesure le vent (sans afficher la valeur)
-      for (const s of spots) {
-        const near = all.filter((x) => x.src === 'meteo-france').map((x) => ({ x, d: km(s.lat, s.lon, x.lat, x.lon) })).sort((a, b) => a.d - b.d).slice(0, 3);
-        for (const { x } of near) { await new Promise((ok) => setTimeout(ok, 1200));
-          const q = await get(`${base}/station/infrahoraire-6m?id_station=${x.id}&format=json`, { apikey: MF, accept: '*/*' });
-          let note = `HTTP ${q.status}`;
-          if (q.ok) { try { const a = JSON.parse(q.text); const last = Array.isArray(a) ? a[a.length - 1] ?? a[0] : a; const t = Date.parse(last?.validity_time ?? '');
-            x.ageMin = Number.isFinite(t) ? Math.round((now - t) / 60000) : null; note = `vent ${last?.ff != null ? 'oui' : 'non'}, rafales ${last?.fxi10 != null || last?.fxi != null ? 'oui' : 'non'}, direction ${last?.dd != null ? 'oui' : 'non'}`; } catch { note = 'réponse illisible'; } }
-          x.note = note; }
-      }
+  const H = { apikey: MF, accept: '*/*' };
+  let list: string | null = null, base = '';
+  for (const b of ['https://public-api.meteofrance.fr/public/DPObs/v1', 'https://public-api.meteofrance.fr/public/DPPaquetObs/v1']) {
+    const r = await get(b + '/liste-stations', H);
+    console.log(`Météo-France ${b.split('/').slice(-2).join('/')} liste-stations : HTTP ${r.status}, ${r.text.length} octets${r.ok ? '' : ' — ' + r.text.slice(0, 160).replace(/\s+/g, ' ')}`);
+    if (r.ok && !list) { list = r.text; base = b; }
+  }
+  if (list) {
+    const rows = list.trim().split('\n'); const sep = rows[0].includes(';') ? ';' : ',';
+    const head = rows[0].split(sep).map((x) => x.trim().toLowerCase().replace(/"/g, ''));
+    console.log('  colonnes : ' + head.join(' | ') + ` ; ${rows.length - 1} stations`);
+    const iId = head.findIndex((h) => h.includes('id')), iNom = head.findIndex((h) => h.includes('nom')), iLat = head.findIndex((h) => h.startsWith('lat')), iLon = head.findIndex((h) => h.startsWith('lon'));
+    for (const line of rows.slice(1)) { const c = line.split(sep).map((x) => x.replace(/"/g, '').trim()); const lat = Number(c[iLat]), lon = Number(c[iLon]); if (Number.isFinite(lat)) all.push({ src: 'meteo-france', id: c[iId], name: c[iNom], lat, lon }); }
+    const tried = new Set<string>();
+    for (const s of spots) {
+      const near = all.filter((x) => x.src === 'meteo-france').map((x) => ({ x, d: km(s.lat, s.lon, x.lat, x.lon) })).filter((y) => y.d <= MAX_KM).sort((a, b) => a.d - b.d).slice(0, 4);
+      for (const { x } of near) { if (tried.has(x.id)) continue; tried.add(x.id); await new Promise((ok) => setTimeout(ok, 1500));
+        const path = base.includes('Paquet') ? `/paquet/infrahoraire-6m?id_station=${x.id}&format=json` : `/station/infrahoraire-6m?id_station=${x.id}&format=json`;
+        const q = await get(base + path, H);
+        let note = `HTTP ${q.status}`;
+        if (q.ok) { try { const a = JSON.parse(q.text); const arr = Array.isArray(a) ? a : [a]; const last = arr.reduce((m: any, o: any) => (!m || Date.parse(o.validity_time) > Date.parse(m.validity_time) ? o : m), null);
+            if (tried.size === 1) console.log('  champs : ' + Object.keys(last ?? {}).join(', '));
+            const n = arr.filter((o: any) => o.ff != null).length; const t = Date.parse(last?.validity_time ?? '');
+            x.ageMin = Number.isFinite(t) ? Math.round((now - t) / 60000) : null;
+            note = `${arr.length} lignes sur 24 h, ${n} avec vent ; rafales ${last?.fxi10 != null || last?.fxi != null ? 'oui' : 'non'}, direction ${last?.dd != null ? 'oui' : 'non'}`; } catch { note = 'réponse illisible : ' + q.text.slice(0, 80); } }
+        else note += ' — ' + q.text.slice(0, 120).replace(/\s+/g, ' ');
+        x.note = note; }
     }
-  } catch (e) { console.log('Météo-France : ' + e); }
+  }
 }
 
 console.log(`\nBalises publiques à moins de ${MAX_KM} km de chaque spot (distance, âge de la dernière mesure) :`);
