@@ -1,6 +1,6 @@
 # Rapport d'analyse (② ANALYSE)
 
-Généré le 2026-11-16 19:39 UTC par `pipeline/engines/run.ts`, juste après la collecte.
+Généré le 2026-11-16 20:30 UTC par `pipeline/engines/run.ts`, juste après la collecte.
 
 Les moteurs des apps actuelles (copies non modifiées dans `legacy/`) sont alimentés par la collecte commune. Le test golden refait le calcul comme les apps actuelles, avec leurs propres parseurs sur les mêmes réponses brutes, et exige les mêmes notes à ±0.1.
 
@@ -11,22 +11,22 @@ Les moteurs des apps actuelles (copies non modifiées dans `legacy/`) sont alime
 | golden-surf | ✅ | 3114 valeurs (note, hauteur, vent × 6 spots), écart max 0 ; créneaux identiques (tolérance 0.1) |
 | golden-downwind | ✅ | 1440 valeurs (vent, houle, 3 notes × 3 parcours), écart max 0 ; créneaux identiques ; correction du vent identique (tolérance 0.1) |
 | correction-vent-downwind | ✅ | aucune correction Winds-Up dans la version publique (D-66) : vent des modèles AROME / ECMWF, comme quand la super prévision est absente ; super prévision lue pour la comparaison avant/après seulement |
-| avant-apres-vent-downwind | ✅ | D-66, notes downwind (intermédiaire, de jour), après − avant : 120 heures, moyenne +0.02, écart moyen 0.04 ; meilleurs créneaux 0→0 |
+| avant-apres-vent-downwind | ✅ | D-66, notes downwind (intermédiaire, de jour), après − avant : 120 heures, moyenne +0.04, écart moyen 0.06 ; meilleurs créneaux 0→0 |
 | sorties-surf | ✅ | 6/6 spots notés ; 12 créneaux |
 | houle-direction-downwind | ✅ | direction de la houle (affichage, carte) : 288/288 heures |
 | sorties-downwind | ✅ | 3/3 parcours notés ; 0 meilleurs créneaux |
-| ecart-prod-surf | ✅ | notes surf OCEAN vs app en service (calcul prod. 143 min avant, même extrait Copernicus) : médiane 0.10, 90 % ≤ 0.40, max 2.80 sur 660 heures (max : vias mer. 02:00, OCEAN 7.7 / prod 4.9) |
-| ecart-prod-downwind | ✅ | notes downwind (intermédiaire, de jour) OCEAN vs app en service (calcul prod. 19 min avant) : médiane 0.00, 90 % ≤ 0.10, max 1.00 sur 120 heures |
-| avant-apres-vent-wing | ✅ | D-66, notes wing Sécu first de jour, après − avant : 560 heures, écart moyen 1.00 ; La Franqui +0.1 (écart moyen 0.1), sessions 0→0 ; Gruissan +0.0 (écart moyen 0.0), sessions 0→0 ; Sète Lido +0.0 (écart moyen 0.0), sessions 0→0 ; La Grande-Motte +0.2 (écart moyen 0.2), sessions 0→0 ; Le Ponant +1.2 (écart moyen 1.2), sessions 0→2 ; Plage Sud -0.0 (écart moyen 0.5), sessions 3→4 ; Beauduc -0.5 (écart moyen 1.0), sessions 3→3 ; Le Jaï -0.4 (écart moyen 0.7), sessions 0→0 ; Hyères +3.0 (écart moyen 5.7), sessions 3→6 |
-| vent-la-franqui | ✅ | La Franqui : gfs_seamless, le plus juste à LFMP (erreur 0.98 m/s sur 80 mesures) ; 175 heures ; vent non corrigé |
-| vent-gruissan | ✅ | Gruissan : gfs_seamless, le plus juste à LFMP (erreur 0.98 m/s sur 80 mesures) ; 175 heures ; vent non corrigé |
-| vent-sete-lido | ✅ | Sète Lido : meteofrance_arome_france, le plus juste à LFMT (erreur 1.11 m/s sur 80 mesures) ; 175 heures ; vent non corrigé |
-| vent-la-grande-motte | ✅ | La Grande-Motte : meteofrance_arome_france, le plus juste à LFMT (erreur 1.11 m/s sur 80 mesures) ; 175 heures ; vent non corrigé |
-| vent-le-ponant | ✅ | Le Ponant : meteofrance_arome_france, le plus juste à LFMT (erreur 1.11 m/s sur 80 mesures) ; 175 heures ; vent non corrigé |
-| vent-port-camargue | ✅ | Plage Sud : meteofrance_arome_france, le plus juste à LFMT (erreur 1.11 m/s sur 80 mesures) ; 175 heures ; vent non corrigé |
-| vent-beauduc | ✅ | Beauduc : meteofrance_arome_france, le plus juste à LFMI (erreur 0.99 m/s sur 80 mesures) ; 175 heures ; vent non corrigé |
-| vent-le-jai | ✅ | Le Jaï : ecmwf_ifs025, le plus juste à LFML (erreur 1.01 m/s sur 80 mesures) ; 175 heures ; vent non corrigé |
-| vent-almanarre | ✅ | Hyères : ecmwf_ifs025, le plus juste à LFTH (erreur 1.12 m/s sur 80 mesures) ; 175 heures ; vent non corrigé |
+| ecart-prod-surf | ✅ | notes surf OCEAN vs app en service (calcul prod. 34 min avant, même extrait Copernicus) : médiane 0.00, 90 % ≤ 0.00, max 0.30 sur 664 heures (max : palavas ven. 05:00, OCEAN 3.1 / prod 2.8) |
+| ecart-prod-downwind | ✅ | notes downwind (intermédiaire, de jour) OCEAN vs app en service (calcul prod. 18 min avant) : médiane 0.00, 90 % ≤ 0.10, max 1.50 sur 120 heures |
+| avant-apres-vent-wing | ✅ | D-66, notes wing Sécu first de jour, après − avant : 560 heures, écart moyen 0.99 ; La Franqui +0.1 (écart moyen 0.1), sessions 0→0 ; Gruissan +0.0 (écart moyen 0.0), sessions 0→0 ; Sète Lido +0.0 (écart moyen 0.0), sessions 0→0 ; La Grande-Motte +0.1 (écart moyen 0.2), sessions 0→0 ; Le Ponant +1.2 (écart moyen 1.2), sessions 0→2 ; Plage Sud +0.2 (écart moyen 0.4), sessions 3→4 ; Beauduc -0.5 (écart moyen 1.0), sessions 3→3 ; Le Jaï -0.2 (écart moyen 0.6), sessions 0→0 ; Hyères +3.0 (écart moyen 5.7), sessions 4→6 |
+| vent-la-franqui | ✅ | La Franqui : gfs_seamless, le plus juste à LFMP (erreur 0.98 m/s sur 80 mesures) ; 174 heures ; vent non corrigé |
+| vent-gruissan | ✅ | Gruissan : gfs_seamless, le plus juste à LFMP (erreur 0.98 m/s sur 80 mesures) ; 174 heures ; vent non corrigé |
+| vent-sete-lido | ✅ | Sète Lido : meteofrance_arome_france, le plus juste à LFMT (erreur 1.12 m/s sur 80 mesures) ; 174 heures ; vent non corrigé |
+| vent-la-grande-motte | ✅ | La Grande-Motte : meteofrance_arome_france, le plus juste à LFMT (erreur 1.12 m/s sur 80 mesures) ; 174 heures ; vent non corrigé |
+| vent-le-ponant | ✅ | Le Ponant : meteofrance_arome_france, le plus juste à LFMT (erreur 1.12 m/s sur 80 mesures) ; 174 heures ; vent non corrigé |
+| vent-port-camargue | ✅ | Plage Sud : meteofrance_arome_france, le plus juste à LFMT (erreur 1.12 m/s sur 80 mesures) ; 174 heures ; vent non corrigé |
+| vent-beauduc | ✅ | Beauduc : meteofrance_arome_france, le plus juste à LFMI (erreur 0.97 m/s sur 80 mesures) ; 174 heures ; vent non corrigé |
+| vent-le-jai | ✅ | Le Jaï : ecmwf_ifs025, le plus juste à LFML (erreur 0.99 m/s sur 80 mesures) ; 174 heures ; vent non corrigé |
+| vent-almanarre | ✅ | Hyères : ecmwf_ifs025, le plus juste à LFTH (erreur 1.12 m/s sur 80 mesures) ; 174 heures ; vent non corrigé |
 | sorties-wing | ✅ | 9 spots notés (wing v2.3.0) ; 15 session(s) 2H en mode Sécu first sur les heures prévues |
 | sorties-kite | ✅ | 9 spots notés (kite v1.0.0) ; 14 session(s) 2H en mode Sécu first |
 | confidentialite-moteurs | ✅ | aucun relevé Winds-Up ni clé dans les sorties (version publique sans super prévision, D-66) |
@@ -36,11 +36,11 @@ Les moteurs des apps actuelles (copies non modifiées dans `legacy/`) sont alime
 
 | Quand | Spot | Note moyenne | Pic |
 |---|---|---|---|
-| mer. 18 08:00 → mer. 18 18:00 | La Couronne (Martigues) | 7.66 | 8.94 |
-| mer. 18 08:00 → mer. 18 15:00 | Saintes-Maries-de-la-Mer | 6.93 | 8.77 |
-| mar. 17 12:00 → mar. 17 18:00 | La Couronne (Martigues) | 6.93 | 8.19 |
-| mar. 17 08:00 → mar. 17 18:00 | Sète (Lazaret / Fontaine) | 6.75 | 8.39 |
-| mar. 17 08:00 → mar. 17 18:00 | Carnon | 6.75 | 8.26 |
+| mer. 18 08:00 → mer. 18 18:00 | La Couronne (Martigues) | 7.6 | 8.78 |
+| mer. 18 08:00 → mer. 18 15:00 | Saintes-Maries-de-la-Mer | 6.92 | 8.67 |
+| mar. 17 12:00 → mar. 17 18:00 | La Couronne (Martigues) | 6.95 | 8.27 |
+| mar. 17 08:00 → mar. 17 18:00 | Sète (Lazaret / Fontaine) | 6.7 | 8.48 |
+| mar. 17 08:00 → mar. 17 18:00 | Carnon | 6.66 | 8.37 |
 
 ## Meilleurs créneaux downwind (4 jours)
 
