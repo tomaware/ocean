@@ -1,11 +1,11 @@
 {
- "generatedAt": 1794864598541,
+ "generatedAt": 1794868127258,
  "status": [
   {
    "id": "open-meteo-marine",
    "ok": true,
    "message": "ok",
-   "durationMs": 1510,
+   "durationMs": 1493,
    "points": 17,
    "models": [
     "meteofrance_wave",
@@ -24,29 +24,29 @@
    "id": "copernicus-medwav",
    "ok": true,
    "message": "ok",
-   "durationMs": 214,
+   "durationMs": 197,
    "points": 15,
    "models": [
     "copernicus"
    ],
-   "values": 56700,
+   "values": 56070,
    "missing": 0,
    "rejected": 0,
-   "first": 1794679200000,
+   "first": 1794690000000,
    "last": 1795647600000
   },
   {
    "id": "open-meteo-vent-moteurs",
    "ok": true,
    "message": "ok",
-   "durationMs": 671,
+   "durationMs": 280,
    "points": 77,
    "models": [
     "meteofrance_seamless",
     "ecmwf_ifs025"
    ],
    "values": 121968,
-   "missing": 17787,
+   "missing": 16401,
    "rejected": 0,
    "first": 1794528000000,
    "last": 1795474800000
@@ -55,7 +55,7 @@
    "id": "open-meteo-meteo",
    "ok": true,
    "message": "ok",
-   "durationMs": 137,
+   "durationMs": 87,
    "points": 18,
    "models": [
     "best_match"
@@ -70,7 +70,7 @@
    "id": "open-meteo-vent-spots",
    "ok": true,
    "message": "ok",
-   "durationMs": 456,
+   "durationMs": 79,
    "points": 14,
    "models": [
     "meteofrance_arome_france_hd",
@@ -82,7 +82,7 @@
     "gfs_seamless"
    ],
    "values": 69696,
-   "missing": 17712,
+   "missing": 17172,
    "rejected": 0,
    "first": 1794528000000,
    "last": 1795474800000
@@ -91,13 +91,13 @@
    "id": "open-meteo-vent-carte",
    "ok": true,
    "message": "ok",
-   "durationMs": 1050,
+   "durationMs": 324,
    "points": 200,
    "models": [
     "meteofrance_seamless"
    ],
    "values": 48000,
-   "missing": 2000,
+   "missing": 0,
    "rejected": 0,
    "first": 1794787200000,
    "last": 1795215600000
@@ -106,7 +106,7 @@
    "id": "super-prevision",
    "ok": true,
    "message": "ok",
-   "durationMs": 1127,
+   "durationMs": 1456,
    "points": 7,
    "models": [
     "super-prevision"
@@ -121,36 +121,36 @@
    "id": "candhis",
    "ok": true,
    "message": "ok",
-   "durationMs": 166,
+   "durationMs": 217,
    "points": 5,
    "models": [],
-   "values": 32304,
-   "missing": 3217,
+   "values": 32328,
+   "missing": 3213,
    "rejected": 0,
    "lastObservationAgeMin": {
-    "03001": 120,
-    "03404": 120,
-    "01102": 10530,
-    "01101": 120,
-    "06601": 38340
+    "03001": 59,
+    "03404": 59,
+    "01102": 10589,
+    "01101": 59,
+    "06601": 38399
    }
   },
   {
    "id": "metar",
    "ok": true,
    "message": "ok",
-   "durationMs": 2606,
+   "durationMs": 611,
    "points": 5,
    "models": [],
    "values": 1200,
-   "missing": 428,
+   "missing": 427,
    "rejected": 0,
    "lastObservationAgeMin": {
-    "LFMT": 30,
-    "LFMP": 30,
-    "LFTH": 30,
-    "LFML": 30,
-    "LFMI": 30
+    "LFMT": 29,
+    "LFMP": 29,
+    "LFTH": 29,
+    "LFML": 29,
+    "LFMI": 29
    }
   }
  ],
@@ -178,7 +178,7 @@
   {
    "id": "fraicheur-copernicus",
    "ok": true,
-   "detail": "extrait de 2.6 h (15 points, 270 h) (seuil 30 h)"
+   "detail": "extrait de 0.7 h (15 points, 267 h) (seuil 30 h)"
   },
   {
    "id": "points-copernicus",
@@ -188,7 +188,7 @@
   {
    "id": "fidelite-vent",
    "ok": true,
-   "detail": "104181 valeurs comparées au parseur des moteurs surf / downwind, 0 écart(s)"
+   "detail": "105567 valeurs comparées au parseur des moteurs surf / downwind, 0 écart(s)"
   },
   {
    "id": "grille-open-meteo-vent-moteurs",
@@ -223,7 +223,7 @@
   {
    "id": "modeles-open-meteo-vent-spots",
    "ok": true,
-   "detail": "wind_speed_10m sur 48 h : meteofrance_arome_france_hd 94 % · meteofrance_arome_france 94 % · icon_d2 27 % · ecmwf_ifs025 100 % · icon_eu 100 % · meteofrance_arpege_europe 100 % · gfs_seamless 100 %"
+   "detail": "wind_speed_10m sur 48 h : meteofrance_arome_france_hd 92 % · meteofrance_arome_france 92 % · icon_d2 28 % · ecmwf_ifs025 100 % · icon_eu 100 % · meteofrance_arpege_europe 100 % · gfs_seamless 100 %"
   },
   {
    "id": "couverture-open-meteo-vent-carte",
@@ -238,12 +238,12 @@
   {
    "id": "fraicheur-candhis",
    "ok": true,
-   "detail": "03001 120 min · 03404 120 min · 01101 120 min (seuil 180 min)"
+   "detail": "03001 59 min · 03404 59 min · 01101 59 min (seuil 180 min)"
   },
   {
    "id": "fraicheur-metar",
    "ok": true,
-   "detail": "LFMT 30 min · LFMP 30 min · LFTH 30 min · LFML 30 min · LFMI 30 min (seuil 120 min)"
+   "detail": "LFMT 29 min · LFMP 29 min · LFTH 29 min · LFML 29 min · LFMI 29 min (seuil 120 min)"
   },
   {
    "id": "confidentialite",
