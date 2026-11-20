@@ -1,11 +1,11 @@
 {
- "generatedAt": 1795210149596,
+ "generatedAt": 1795213610500,
  "status": [
   {
    "id": "open-meteo-marine",
    "ok": true,
    "message": "ok",
-   "durationMs": 1535,
+   "durationMs": 863,
    "points": 17,
    "models": [
     "meteofrance_wave",
@@ -24,89 +24,66 @@
    "id": "copernicus-medwav",
    "ok": true,
    "message": "ok",
-   "durationMs": 202,
+   "durationMs": 213,
    "points": 15,
    "models": [
     "copernicus"
    ],
-   "values": 56700,
+   "values": 56070,
    "missing": 0,
    "rejected": 0,
-   "first": 1795024800000,
+   "first": 1795035600000,
    "last": 1795993200000
   },
   {
    "id": "open-meteo-vent-moteurs",
-   "ok": true,
-   "message": "ok",
-   "durationMs": 260,
-   "points": 77,
-   "models": [
-    "meteofrance_seamless",
-    "ecmwf_ifs025"
-   ],
-   "values": 121968,
-   "missing": 17787,
-   "rejected": 0,
-   "first": 1794873600000,
-   "last": 1795820400000
+   "ok": false,
+   "message": "HTTP 429 {\"error\":true,\"reason\":\"Daily API request limit exceeded. Please try again tomorrow.\"}",
+   "durationMs": 100346,
+   "points": 0,
+   "models": [],
+   "values": 0,
+   "missing": 0,
+   "rejected": 0
   },
   {
    "id": "open-meteo-meteo",
-   "ok": true,
-   "message": "ok",
-   "durationMs": 58,
-   "points": 18,
-   "models": [
-    "best_match"
-   ],
-   "values": 15552,
+   "ok": false,
+   "message": "HTTP 429 {\"error\":true,\"reason\":\"Daily API request limit exceeded. Please try again tomorrow.\"}",
+   "durationMs": 100250,
+   "points": 0,
+   "models": [],
+   "values": 0,
    "missing": 0,
-   "rejected": 0,
-   "first": 1795046400000,
-   "last": 1795820400000
+   "rejected": 0
   },
   {
    "id": "open-meteo-vent-spots",
-   "ok": true,
-   "message": "ok",
-   "durationMs": 117,
-   "points": 14,
-   "models": [
-    "meteofrance_arome_france_hd",
-    "meteofrance_arome_france",
-    "icon_d2",
-    "ecmwf_ifs025",
-    "icon_eu",
-    "meteofrance_arpege_europe",
-    "gfs_seamless"
-   ],
-   "values": 69696,
-   "missing": 17460,
-   "rejected": 0,
-   "first": 1794873600000,
-   "last": 1795820400000
+   "ok": false,
+   "message": "HTTP 429 {\"error\":true,\"reason\":\"Daily API request limit exceeded. Please try again tomorrow.\"}",
+   "durationMs": 100288,
+   "points": 0,
+   "models": [],
+   "values": 0,
+   "missing": 0,
+   "rejected": 0
   },
   {
    "id": "open-meteo-vent-carte",
-   "ok": true,
-   "message": "ok",
-   "durationMs": 345,
-   "points": 200,
-   "models": [
-    "meteofrance_seamless"
-   ],
-   "values": 48000,
-   "missing": 2000,
-   "rejected": 0,
-   "first": 1795132800000,
-   "last": 1795561200000
+   "ok": false,
+   "message": "HTTP 429 {\"reason\":\"Daily API request limit exceeded. Please try again tomorrow.\",\"error\":true}",
+   "durationMs": 100300,
+   "points": 0,
+   "models": [],
+   "values": 0,
+   "missing": 0,
+   "rejected": 0
   },
   {
    "id": "super-prevision",
    "ok": true,
    "message": "ok",
-   "durationMs": 1628,
+   "durationMs": 1455,
    "points": 7,
    "models": [
     "super-prevision"
@@ -121,35 +98,35 @@
    "id": "candhis",
    "ok": true,
    "message": "ok",
-   "durationMs": 184,
+   "durationMs": 108,
    "points": 5,
    "models": [],
-   "values": 30324,
-   "missing": 2707,
+   "values": 30264,
+   "missing": 2697,
    "rejected": 0,
    "lastObservationAgeMin": {
-    "03001": 599,
-    "03404": 599,
-    "01102": 16289,
-    "01101": 599
+    "03001": 664,
+    "03404": 664,
+    "01102": 16354,
+    "01101": 664
    }
   },
   {
    "id": "metar",
    "ok": true,
    "message": "ok",
-   "durationMs": 421,
+   "durationMs": 13097,
    "points": 5,
    "models": [],
    "values": 1200,
-   "missing": 371,
+   "missing": 376,
    "rejected": 0,
    "lastObservationAgeMin": {
-    "LFMT": 29,
-    "LFMP": 29,
-    "LFTH": 29,
-    "LFML": 29,
-    "LFMI": 29
+    "LFMT": 4,
+    "LFMP": 4,
+    "LFTH": 4,
+    "LFML": 4,
+    "LFMI": 4
    }
   }
  ],
@@ -177,57 +154,12 @@
   {
    "id": "fraicheur-copernicus",
    "ok": true,
-   "detail": "extrait de 2.5 h (15 points, 270 h) (seuil 30 h)"
+   "detail": "extrait de 0.6 h (15 points, 267 h) (seuil 30 h)"
   },
   {
    "id": "points-copernicus",
    "ok": true,
    "detail": "11 points surf couverts par Copernicus ; ignorés : gruissan, canet, paulilles, perafita"
-  },
-  {
-   "id": "fidelite-vent",
-   "ok": true,
-   "detail": "104181 valeurs comparées au parseur des moteurs surf / downwind, 0 écart(s)"
-  },
-  {
-   "id": "grille-open-meteo-vent-moteurs",
-   "ok": true,
-   "detail": "264 heures, 2026-11-17T00h → 2026-11-27T23h UTC"
-  },
-  {
-   "id": "couverture-open-meteo-vent-moteurs",
-   "ok": true,
-   "detail": "77 points, 48 h à venir dans la grille ; tous complets (≥ 90 % sur 48 h)"
-  },
-  {
-   "id": "modeles-open-meteo-vent-moteurs",
-   "ok": true,
-   "detail": "wind_speed_10m sur 48 h : meteofrance_seamless 100 % · ecmwf_ifs025 100 %"
-  },
-  {
-   "id": "couverture-open-meteo-meteo",
-   "ok": true,
-   "detail": "18 points, 48 h à venir dans la grille ; tous complets (≥ 90 % sur 48 h)"
-  },
-  {
-   "id": "grille-open-meteo-vent-spots",
-   "ok": true,
-   "detail": "264 heures, 2026-11-17T00h → 2026-11-27T23h UTC"
-  },
-  {
-   "id": "couverture-open-meteo-vent-spots",
-   "ok": true,
-   "detail": "14 points, 48 h à venir dans la grille ; tous complets (≥ 90 % sur 48 h)"
-  },
-  {
-   "id": "modeles-open-meteo-vent-spots",
-   "ok": true,
-   "detail": "wind_speed_10m sur 48 h : meteofrance_arome_france_hd 94 % · meteofrance_arome_france 94 % · icon_d2 27 % · ecmwf_ifs025 100 % · icon_eu 100 % · meteofrance_arpege_europe 100 % · gfs_seamless 100 %"
-  },
-  {
-   "id": "couverture-open-meteo-vent-carte",
-   "ok": true,
-   "detail": "200 points, 48 h à venir dans la grille ; tous complets (≥ 90 % sur 48 h)"
   },
   {
    "id": "couverture-super-prevision",
@@ -237,12 +169,12 @@
   {
    "id": "fraicheur-candhis",
    "ok": false,
-   "detail": "03001 599 min · 03404 599 min · 01101 599 min (seuil 180 min)"
+   "detail": "03001 664 min · 03404 664 min · 01101 664 min (seuil 180 min)"
   },
   {
    "id": "fraicheur-metar",
    "ok": true,
-   "detail": "LFMT 29 min · LFMP 29 min · LFTH 29 min · LFML 29 min · LFMI 29 min (seuil 120 min)"
+   "detail": "LFMT 4 min · LFMP 4 min · LFTH 4 min · LFML 4 min · LFMI 4 min (seuil 120 min)"
   },
   {
    "id": "confidentialite",
