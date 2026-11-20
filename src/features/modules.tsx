@@ -282,11 +282,11 @@ export function Module({ d, now, disc, sub, query }: { d: AllData; now: number; 
     <>
       <header class="page-head">
         <span class="eyebrow">{m.tab} · {discName(disc, prefs.sport, DISC_LABEL[disc])}</span>
-        <h1>{kite ? 'Où naviguer en kite ?' : m.title}</h1>
+        <h1>{m.title}</h1>
         <span class="muted">{kite ? m.sub.replace('Wing foil', 'Kitesurf') : m.sub}</span>
+        {/* Wing / Kite, Sécu first / Offshore et niveau downwind : dans Profil › Mon niveau (Tom, 20/11) */}
         <div class="row between"><Freshness d={d} now={now} />
-          <div class="row" style={{ gap: '8px', flexWrap: 'wrap' }}>{disc === 'wing' && <SportSeg />}
-          {disc !== 'surf' && <Seg<Level> label={disc === 'wing' ? 'Mode' : `Niveau ${DISC_LABEL[disc]}`} value={L} onChange={(v) => setPrefs((p) => ({ ...p, levels: { ...p.levels, [disc]: v } }))} options={LEVELS_FOR[disc].map((l) => [l, LEVEL_LABEL[l]] as [Level, string])} />}</div>
+          {disc !== 'surf' && <a class="chip" href="#/profil">{disc === 'wing' ? `${kite ? 'Kite' : 'Wing'} · ${LEVEL_LABEL[L]}` : LEVEL_LABEL[L]} ⚙</a>}
         </div>
       </header>
       <div class="module">

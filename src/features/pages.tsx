@@ -283,7 +283,7 @@ export function Webcams({ id }: { id: string }) {
 
 // ------------------------------------------------------------------ Modules WIND / VAGUE / HOULE
 export const MODULES: { slug: string; disc: Discipline; tab: string; title: string; sub: string }[] = [
-  { slug: 'wind', disc: 'wing', tab: 'WIND', title: 'Où naviguer en wing ?', sub: 'Wing foil · prévision vent OCEAN, du Barcarès à Hyères' },
+  { slug: 'wind', disc: 'wing', tab: 'WIND', title: 'Où naviguer ?', sub: 'Wing foil · prévision vent OCEAN, du Barcarès à Hyères' },
   { slug: 'vague', disc: 'surf', tab: 'VAGUE', title: 'Où surfer ?', sub: 'Surf · vagues à la côte, recalées sur les bouées, de Perafita à Carnon' },
   { slug: 'houle', disc: 'downwind', tab: 'HOULE', title: 'Quel downwind ?', sub: 'Downwind wing foil · vent + houle au large, Frontignan → Espiguette' },
 ];
@@ -451,6 +451,8 @@ export function Profile({ d }: { d: AllData }) {
       <header class="page-head"><h1>Profil</h1><span class="muted">Réglages gardés sur cet appareil (rien n’est envoyé).</span></header>
       <Section title="Mon niveau">
         <div class="card stack" style={{ gap: 'var(--s-4)' }}>
+          {/* Wing / Kite et Sécu first / Offshore : réglés ici, plus dans l'en-tête de WIND (Tom, 20/11) */}
+          <div class="row between"><div class="row"><DiscIcon d="wing" /><span>Sport (WIND)</span></div><SportSeg /></div>
           {(['wing', 'downwind'] as Discipline[]).map((disc) => (
             <div key={disc} class="row between"><div class="row"><DiscIcon d={disc} /><span>{DISC_LABEL[disc]}</span></div>
               <Seg<Level> label={`Niveau ${DISC_LABEL[disc]}`} value={prefs.levels[disc]} onChange={(v) => setPrefs((p) => ({ ...p, levels: { ...p.levels, [disc]: v } }))} options={LEVELS_FOR[disc].map((l) => [l, LEVEL_LABEL[l]] as [Level, string])} /></div>
